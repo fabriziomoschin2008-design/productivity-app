@@ -1,0 +1,100 @@
+# CLAUDE.md — Productivity App
+
+App personale di produttività con 4 moduli: Finance, Note, Calendario, To-do.
+Target: Windows desktop (build da Windows), poi Android in futuro.
+Stack: Flutter 3.44+ / Dart 3.12+, Riverpod, Drift (SQLite), GoRouter.
+
+## Comandi essenziali
+
+```bash
+# Generare il codice Drift dopo ogni modifica a database.dart
+dart run build_runner build --delete-conflicting-outputs
+
+# Analisi statica (deve restituire "No issues found")
+flutter analyze
+
+# Eseguire i test
+flutter test
+
+# Build Windows (da eseguire su macchina Windows)
+flutter build windows --release
+```
+
+## Architettura
+
+```
+lib/
+  core/
+    constants/      # categorie finance, costanti globali
+    theme/          # AppColors, AppTextStyles, AppTheme
+    utils/          # currency_formatter, date_formatter
+  data/
+    local/
+      database.dart   # schema Drift — modificare qui, poi build_runner
+      database.g.dart # GENERATO — non toccare
+  features/
+    finance/
+      providers/    # Riverpod providers
+      screens/      # screen-level widget
+      state/        # StateNotifier + FinanceState
+      widgets/      # widget componibili
+    notes/          # Fase 3
+    calendar/       # Fase 4
+    todo/           # Fase 2
+  shared/
+    navigation/     # router.dart (GoRouter + ShellRoute)
+    widgets/        # NavSidebar e widget condivisi
+  main.dart
+```
+
+## Convenzioni di codice
+
+**State management:** Riverpod base (no codegen). Usare `StateNotifier` + `StateNotifierProvider`. Non usare `@riverpod` annotation.
+
+**Database:** Drift con stream per dati reattivi. Le query che ritornano dati live usano `watch*`, quelle one-shot usano `get*`. Dopo ogni modifica allo schema, rigenerare con `build_runner`.
+
+**Navigazione:** GoRouter con `ShellRoute`. La sidebar è in `_AppShell`, i contenuti nelle route figlie. Aggiungere nuove route solo in `router.dart`.
+
+**Stili:** usare sempre `AppTextStyles.*` e `AppColors.*`. Non usare colori o stili hardcoded nei widget.
+
+**Valuta:** sempre `formatCurrency()` da `core/utils/currency_formatter.dart`. Locale `it_IT`.
+
+**ID:** UUID v4 generati client-side (`uuid` package). Drift `clientDefault`.
+
+**Commenti:** solo se il "perché" non è ovvio. Niente docstring multi-riga.
+
+## Dipendenze
+
+| Package | Versione | Uso |
+|---------|----------|-----|
+| flutter_riverpod | ^2.6.1 | state management |
+| drift | ^2.23.0 | ORM SQLite |
+| drift_flutter | ^0.2.4 | driver SQLite desktop/mobile |
+| go_router | ^14.6.2 | navigazione dichiarativa |
+| fl_chart | ^0.70.2 | grafici (Pie, Bar, Line) |
+| intl | ^0.20.1 | locale it_IT, date/currency |
+| uuid | ^4.5.1 | generazione ID client-side |
+| google_fonts | ^6.2.1 | font Inter |
+| build_runner | ^2.4.13 | codegen (dev) |
+| drift_dev | ^2.23.0 | codegen Drift (dev) |
+
+## Workflow per fasi
+
+1. Implementare una fase alla volta
+2. `flutter analyze` deve essere pulito prima del commit
+3. Commit con messaggio descrittivo
+4. L'utente testa e approva prima di passare alla fase successiva
+
+## Fasi
+
+- [x] Fase 1 — Finance (conti, transazioni, grafici)
+- [ ] Fase 2 — To-do (task, liste, scadenze)
+- [ ] Fase 3 — Note (rich text)
+- [ ] Fase 4 — Calendario (nativo, eventi)
+
+## Note importanti
+
+- Il sync con Supabase è rimandato — architettura offline-first con SQLite come fonte di verità
+- `Value` di Drift: importare con `import 'package:drift/drift.dart' show Value;` nei file che usano i Companion
+- Il `DropdownButtonFormField` usa `value:` (non `initialValue:`) per mantenere la reattività — suppress con `// ignore: deprecated_member_use`
+- Locale `it_IT` inizializzato in `main()` con `initializeDateFormatting` prima di `runApp`

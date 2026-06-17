@@ -1,0 +1,61 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+
+enum LogLevel { info, warning, error }
+
+class AppLogger {
+  AppLogger._();
+
+  static final AppLogger instance = AppLogger._();
+
+  File? _logFile;
+
+  void init() {
+    try {
+      final dir = _resolveLogDir();
+      if (!dir.existsSync()) dir.createSync(recursive: true);
+      final today = _fmtDate(DateTime.now());
+      _logFile = File('${dir.path}${Platform.pathSeparator}$today.log');
+      info('Logger inizializzato — ${_logFile!.path}');
+    } catch (e) {
+      debugPrint('[AppLogger] init error: $e');
+    }
+  }
+
+  Directory _resolveLogDir() {
+    if (Platform.isWindows) {
+      final local = Platform.environment['LOCALAPPDATA'];
+      if (local != null) {
+        return Directory(
+            '$local${Platform.pathSeparator}ProductivityApp${Platform.pathSeparator}logs');
+      }
+    }
+    return Directory(
+        '${Directory.current.path}${Platform.pathSeparator}logs');
+  }
+
+  void info(String message) => _write(LogLevel.info, message);
+  void warning(String message) => _write(LogLevel.warning, message);
+  void error(String message) => _write(LogLevel.error, message);
+
+  void _write(LogLevel level, String message) {
+    final ts = _fmtDateTime(DateTime.now());
+    final lvl = level.name.toUpperCase().padRight(7);
+    final line = '[$ts] [$lvl] $message';
+
+    // Visibile nel terminale VS Code durante flutter run
+    debugPrint(line);
+
+    try {
+      _logFile?.writeAsStringSync('$line\n', mode: FileMode.append);
+    } catch (_) {}
+  }
+
+  static String _fmtDate(DateTime dt) =>
+      '${dt.year}-${_p(dt.month)}-${_p(dt.day)}';
+
+  static String _fmtDateTime(DateTime dt) =>
+      '${_fmtDate(dt)} ${_p(dt.hour)}:${_p(dt.minute)}:${_p(dt.second)}';
+
+  static String _p(int n) => n.toString().padLeft(2, '0');
+}
