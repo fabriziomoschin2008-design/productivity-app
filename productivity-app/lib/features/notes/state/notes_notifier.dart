@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/services/error_handler.dart';
 import '../../../core/services/logger_service.dart';
 import '../../../data/local/database.dart';
 import 'notes_state.dart';
@@ -42,13 +43,17 @@ class NotesNotifier extends StateNotifier<NotesState> {
   }
 
   Future<void> createNote() async {
-    final id = _uuid.v4();
-    await _db.insertNote(NotesCompanion(
-      id: Value(id),
-      folderId: Value(state.selectedFolderId),
-    ));
-    state = state.copyWith(selectedNoteId: id);
-    AppLogger.instance.info('Nota creata: $id');
+    try {
+      final id = _uuid.v4();
+      await _db.insertNote(NotesCompanion(
+        id: Value(id),
+        folderId: Value(state.selectedFolderId),
+      ));
+      state = state.copyWith(selectedNoteId: id);
+      AppLogger.instance.info('Nota creata: $id');
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
+    }
   }
 
   Future<void> updateNote({
@@ -56,47 +61,67 @@ class NotesNotifier extends StateNotifier<NotesState> {
     required String title,
     required String content,
   }) async {
-    await _db.updateNote(NotesCompanion(
-      id: Value(id),
-      title: Value(title),
-      content: Value(content),
-      updatedAt: Value(DateTime.now()),
-    ));
+    try {
+      await _db.updateNote(NotesCompanion(
+        id: Value(id),
+        title: Value(title),
+        content: Value(content),
+        updatedAt: Value(DateTime.now()),
+      ));
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s, showUi: false);
+    }
   }
 
   Future<void> togglePin(String id) async {
-    final note = state.notes.where((n) => n.id == id).firstOrNull;
-    if (note == null) return;
-    await _db.updateNote(NotesCompanion(
-      id: Value(id),
-      isPinned: Value(!note.isPinned),
-      updatedAt: Value(DateTime.now()),
-    ));
-    AppLogger.instance.info('Pin ${note.isPinned ? 'rimosso' : 'aggiunto'} sulla nota: $id');
+    try {
+      final note = state.notes.where((n) => n.id == id).firstOrNull;
+      if (note == null) return;
+      await _db.updateNote(NotesCompanion(
+        id: Value(id),
+        isPinned: Value(!note.isPinned),
+        updatedAt: Value(DateTime.now()),
+      ));
+      AppLogger.instance.info('Pin ${note.isPinned ? 'rimosso' : 'aggiunto'} sulla nota: $id');
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
+    }
   }
 
   Future<void> deleteNote(String id) async {
-    if (state.selectedNoteId == id) {
-      state = state.copyWith(selectedNoteId: null);
+    try {
+      if (state.selectedNoteId == id) {
+        state = state.copyWith(selectedNoteId: null);
+      }
+      await _db.deleteNoteById(id);
+      AppLogger.instance.info('Nota eliminata: $id');
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
     }
-    await _db.deleteNoteById(id);
-    AppLogger.instance.info('Nota eliminata: $id');
   }
 
   Future<void> createFolder(String name) async {
-    final id = _uuid.v4();
-    await _db.insertNoteFolder(NoteFoldersCompanion(
-      id: Value(id),
-      name: Value(name),
-    ));
-    AppLogger.instance.info('Cartella creata: $name');
+    try {
+      final id = _uuid.v4();
+      await _db.insertNoteFolder(NoteFoldersCompanion(
+        id: Value(id),
+        name: Value(name),
+      ));
+      AppLogger.instance.info('Cartella creata: $name');
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
+    }
   }
 
   Future<void> deleteFolder(String id) async {
-    if (state.selectedFolderId == id) {
-      state = state.copyWith(selectedFolderId: null, selectedNoteId: null);
+    try {
+      if (state.selectedFolderId == id) {
+        state = state.copyWith(selectedFolderId: null, selectedNoteId: null);
+      }
+      await _db.deleteNoteFolderById(id);
+      AppLogger.instance.info('Cartella eliminata: $id');
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
     }
-    await _db.deleteNoteFolderById(id);
-    AppLogger.instance.info('Cartella eliminata: $id');
   }
 }

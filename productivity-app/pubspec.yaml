@@ -21,6 +21,7 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_quill: ^11.5.1
   table_calendar: ^3.1.2
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/services/error_handler.dart';
 import '../../../data/local/database.dart';
 import 'calendar_state.dart';
 
@@ -54,48 +55,66 @@ class CalendarNotifier extends StateNotifier<CalendarState> {
 
   // Cycles: '' → 'done' → 'skip' → 'na' → ''
   Future<void> logHabit(String habitId, DateTime date) async {
-    final day = DateTime(date.year, date.month, date.day);
-    final current = state.statusForHabit(habitId, day);
-    final next = switch (current) {
-      '' => 'done',
-      'done' => 'skip',
-      'skip' => 'na',
-      _ => '',
-    };
-    if (next.isEmpty) {
-      await _db.clearHabitLog(habitId, day);
-    } else {
-      await _db.setHabitLog(HabitLogsCompanion(
-        habitId: Value(habitId),
-        date: Value(day),
-        status: Value(next),
-      ));
+    try {
+      final day = DateTime(date.year, date.month, date.day);
+      final current = state.statusForHabit(habitId, day);
+      final next = switch (current) {
+        '' => 'done',
+        'done' => 'skip',
+        'skip' => 'na',
+        _ => '',
+      };
+      if (next.isEmpty) {
+        await _db.clearHabitLog(habitId, day);
+      } else {
+        await _db.setHabitLog(HabitLogsCompanion(
+          habitId: Value(habitId),
+          date: Value(day),
+          status: Value(next),
+        ));
+      }
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
     }
   }
 
   Future<void> setHabitStatus(
       String habitId, DateTime date, String status) async {
-    final day = DateTime(date.year, date.month, date.day);
-    if (status.isEmpty) {
-      await _db.clearHabitLog(habitId, day);
-    } else {
-      await _db.setHabitLog(HabitLogsCompanion(
-        habitId: Value(habitId),
-        date: Value(day),
-        status: Value(status),
-      ));
+    try {
+      final day = DateTime(date.year, date.month, date.day);
+      if (status.isEmpty) {
+        await _db.clearHabitLog(habitId, day);
+      } else {
+        await _db.setHabitLog(HabitLogsCompanion(
+          habitId: Value(habitId),
+          date: Value(day),
+          status: Value(status),
+        ));
+      }
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
     }
   }
 
   Future<void> createHabit(String name, String category) async {
-    await _db.insertHabit(HabitsCompanion(
-      id: Value(_uuid.v4()),
-      name: Value(name),
-      category: Value(category),
-    ));
+    try {
+      await _db.insertHabit(HabitsCompanion(
+        id: Value(_uuid.v4()),
+        name: Value(name),
+        category: Value(category),
+      ));
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
+    }
   }
 
-  Future<void> deleteHabit(String id) => _db.deleteHabitById(id);
+  Future<void> deleteHabit(String id) async {
+    try {
+      await _db.deleteHabitById(id);
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
+    }
+  }
 
   Future<void> createEvent({
     required String title,
@@ -105,18 +124,28 @@ class CalendarNotifier extends StateNotifier<CalendarState> {
     bool allDay = true,
     int colorValue = 0xFF6C63FF,
   }) async {
-    await _db.insertCalendarEvent(CalendarEventsCompanion(
-      id: Value(_uuid.v4()),
-      title: Value(title),
-      note: Value(note),
-      startDate: Value(startDate),
-      endDate: Value(endDate),
-      allDay: Value(allDay),
-      colorValue: Value(colorValue),
-    ));
+    try {
+      await _db.insertCalendarEvent(CalendarEventsCompanion(
+        id: Value(_uuid.v4()),
+        title: Value(title),
+        note: Value(note),
+        startDate: Value(startDate),
+        endDate: Value(endDate),
+        allDay: Value(allDay),
+        colorValue: Value(colorValue),
+      ));
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
+    }
   }
 
-  Future<void> deleteEvent(String id) => _db.deleteCalendarEventById(id);
+  Future<void> deleteEvent(String id) async {
+    try {
+      await _db.deleteCalendarEventById(id);
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
+    }
+  }
 
   @override
   void dispose() {

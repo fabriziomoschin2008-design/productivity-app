@@ -76,6 +76,7 @@ class TodoListsPanel extends ConsumerWidget {
       BuildContext context, WidgetRef ref, TodoList list) {
     showDialog(
       context: context,
+      useRootNavigator: false,
       builder: (_) => AlertDialog(
         title: const Text('Elimina lista'),
         content: Text(

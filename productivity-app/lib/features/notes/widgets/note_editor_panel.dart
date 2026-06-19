@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/local/database.dart';
@@ -161,11 +162,19 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
           child: SingleChildScrollView(
             child: QuillEditor.basic(
               controller: _controller,
-              config: const QuillEditorConfig(
+              config: QuillEditorConfig(
                 placeholder: 'Inizia a scrivere...',
-                padding: EdgeInsets.fromLTRB(40, 16, 40, 80),
+                padding: const EdgeInsets.fromLTRB(40, 16, 40, 80),
                 scrollable: false,
                 expands: false,
+                onLaunchUrl: (url) async {
+                  final uri = Uri.tryParse(url);
+                  if (uri != null) {
+                    try {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    } catch (_) {}
+                  }
+                },
               ),
             ),
           ),

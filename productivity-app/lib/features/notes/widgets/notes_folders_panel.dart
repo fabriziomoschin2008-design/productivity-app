@@ -78,6 +78,7 @@ class NotesFoldersPanel extends ConsumerWidget {
       BuildContext context, WidgetRef ref, String id, String name) async {
     final ok = await showDialog<bool>(
       context: context,
+      useRootNavigator: false,
       builder: (_) => AlertDialog(
         title: const Text('Elimina cartella'),
         content: Text(

@@ -118,18 +118,19 @@ class _HabitTile extends StatelessWidget {
           if (v == 'delete') {
             showDialog(
               context: context,
-              builder: (_) => AlertDialog(
+              useRootNavigator: false,
+              builder: (dialogCtx) => AlertDialog(
                 title: const Text('Elimina abitudine'),
                 content: const Text(
                     'Vuoi eliminare questa abitudine? Verranno rimossi anche tutti i log.'),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => Navigator.of(dialogCtx).pop(),
                     child: const Text('Annulla'),
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      Navigator.of(dialogCtx).pop();
                       onDelete();
                     },
                     style: ElevatedButton.styleFrom(

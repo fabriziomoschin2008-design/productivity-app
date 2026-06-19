@@ -36,7 +36,12 @@ class AppLogger {
 
   void info(String message) => _write(LogLevel.info, message);
   void warning(String message) => _write(LogLevel.warning, message);
-  void error(String message) => _write(LogLevel.error, message);
+  void error(String message, [StackTrace? stack]) {
+    final full = stack != null
+        ? '$message\n${stack.toString().split('\n').take(12).join('\n')}'
+        : message;
+    _write(LogLevel.error, full);
+  }
 
   void _write(LogLevel level, String message) {
     final ts = _fmtDateTime(DateTime.now());

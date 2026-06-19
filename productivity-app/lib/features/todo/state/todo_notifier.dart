@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/services/error_handler.dart';
 import '../../../core/services/logger_service.dart';
 import '../../../data/local/database.dart';
 import 'todo_state.dart';
@@ -31,19 +32,27 @@ class TodoNotifier extends StateNotifier<TodoState> {
     required String name,
     required int colorValue,
   }) async {
-    AppLogger.instance.info('Lista todo aggiunta: $name');
-    await _db.insertTodoList(TodoListsCompanion.insert(
-      name: name,
-      colorValue: colorValue,
-    ));
+    try {
+      AppLogger.instance.info('Lista todo aggiunta: $name');
+      await _db.insertTodoList(TodoListsCompanion.insert(
+        name: name,
+        colorValue: colorValue,
+      ));
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
+    }
   }
 
   Future<void> deleteList(String listId) async {
-    AppLogger.instance.info('Lista todo eliminata: id=$listId');
-    if (state.selectedViewId == listId) {
-      state = state.copyWith(selectedViewId: null);
+    try {
+      AppLogger.instance.info('Lista todo eliminata: id=$listId');
+      if (state.selectedViewId == listId) {
+        state = state.copyWith(selectedViewId: null);
+      }
+      await _db.deleteTodoListWithItems(listId);
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
     }
-    await _db.deleteTodoListWithItems(listId);
   }
 
   Future<void> addTask({
@@ -54,31 +63,43 @@ class TodoNotifier extends StateNotifier<TodoState> {
     DateTime? dueDate,
     bool hasDueTime = false,
   }) async {
-    AppLogger.instance.info('Task aggiunto: "$title"');
-    await _db.insertTodoItem(TodoItemsCompanion.insert(
-      title: title,
-      listId: Value(listId),
-      note: Value(note),
-      priority: Value(priority),
-      dueDate: Value(dueDate),
-      hasDueTime: Value(hasDueTime),
-    ));
+    try {
+      AppLogger.instance.info('Task aggiunto: "$title"');
+      await _db.insertTodoItem(TodoItemsCompanion.insert(
+        title: title,
+        listId: Value(listId),
+        note: Value(note),
+        priority: Value(priority),
+        dueDate: Value(dueDate),
+        hasDueTime: Value(hasDueTime),
+      ));
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
+    }
   }
 
   Future<void> toggleTask(TodoItem item) async {
-    final done = !item.isDone;
-    AppLogger.instance
-        .info('Task ${done ? 'completato' : 'riaperto'}: "${item.title}"');
-    await _db.updateTodoItem(TodoItemsCompanion(
-      id: Value(item.id),
-      isDone: Value(done),
-      completedAt: Value(done ? DateTime.now() : null),
-    ));
+    try {
+      final done = !item.isDone;
+      AppLogger.instance
+          .info('Task ${done ? 'completato' : 'riaperto'}: "${item.title}"');
+      await _db.updateTodoItem(TodoItemsCompanion(
+        id: Value(item.id),
+        isDone: Value(done),
+        completedAt: Value(done ? DateTime.now() : null),
+      ));
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s, showUi: false);
+    }
   }
 
   Future<void> deleteTask(String id) async {
-    AppLogger.instance.info('Task eliminato: id=$id');
-    await _db.deleteTodoItemById(id);
+    try {
+      AppLogger.instance.info('Task eliminato: id=$id');
+      await _db.deleteTodoItemById(id);
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
+    }
   }
 
   @override
