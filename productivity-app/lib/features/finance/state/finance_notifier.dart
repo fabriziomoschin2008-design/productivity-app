@@ -17,6 +17,13 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
 
   void _subscribeToAccounts() {
     _accountsSub = _db.watchAccounts().listen((accountList) async {
+      // Cancel transaction sub immediately when no accounts remain, to prevent
+      // _refreshBalances from restoring deleted accounts via stale state.
+      if (accountList.isEmpty) {
+        _transactionsSub?.cancel();
+        _transactionsSub = null;
+      }
+
       final withBalances = await _computeBalances(accountList);
 
       String? selectedId = state.selectedAccountId;
@@ -31,7 +38,12 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
       state = state.copyWith(
           accounts: withBalances, selectedAccountId: selectedId);
 
-      if (selectedId != null) _subscribeToTransactions(selectedId);
+      if (selectedId != null) {
+        _subscribeToTransactions(selectedId);
+      } else {
+        _transactionsSub?.cancel();
+        _transactionsSub = null;
+      }
     });
   }
 
@@ -54,8 +66,13 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
   }
 
   Future<void> _refreshBalances() async {
+    final count = state.accounts.length;
+    if (count == 0) return;
     final updated =
         await _computeBalances(state.accounts.map((a) => a.account).toList());
+    // If accounts were added or removed while we were computing, discard this
+    // stale result — _subscribeToAccounts will have already set the correct state.
+    if (state.accounts.length != count) return;
     state = state.copyWith(accounts: updated);
   }
 

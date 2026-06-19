@@ -63,18 +63,19 @@ class AccountsPanel extends ConsumerWidget {
       BuildContext context, WidgetRef ref, AccountWithBalance awb) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      useRootNavigator: false,
+      builder: (dialogCtx) => AlertDialog(
         title: const Text('Elimina conto'),
         content: Text(
             'Eliminare "${awb.account.name}" e tutti i suoi movimenti?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.of(dialogCtx).pop(),
             child: const Text('Annulla'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.of(dialogCtx).pop();
               ref
                   .read(financeProvider.notifier)
                   .deleteAccount(awb.account.id);
