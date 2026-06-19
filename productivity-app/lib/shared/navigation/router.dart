@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/finance/screens/finance_screen.dart';
+import '../../features/todo/screens/todo_screen.dart';
 import '../widgets/nav_sidebar.dart';
 
 final appRouter = GoRouter(
@@ -23,7 +24,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: '/todo',
-          builder: (ctx, state) => const _PlaceholderScreen(title: 'To-do'),
+          builder: (ctx, state) => const TodoScreen(),
         ),
       ],
     ),

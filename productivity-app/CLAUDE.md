@@ -87,8 +87,8 @@ lib/
 
 ## Fasi
 
-- [x] Fase 1 — Finance (conti, transazioni, grafici)
-- [ ] Fase 2 — To-do (task, liste, scadenze)
+- [x] Fase 1 — Finance (conti, transazioni, grafici, obiettivi, modifica conto, categoria personalizzata)
+- [x] Fase 2 — To-do (task, liste, scadenze, ora specifica)
 - [ ] Fase 3 — Note (rich text)
 - [ ] Fase 4 — Calendario (nativo, eventi)
 
@@ -98,3 +98,8 @@ lib/
 - `Value` di Drift: importare con `import 'package:drift/drift.dart' show Value;` nei file che usano i Companion
 - Il `DropdownButtonFormField` usa `value:` (non `initialValue:`) per mantenere la reattività — suppress con `// ignore: deprecated_member_use`
 - Locale `it_IT` inizializzato in `main()` con `initializeDateFormatting` prima di `runApp`
+- **Schema attuale: versione 4** — v1: base, v2: goals, v3: todo_lists+todo_items, v4: hasDueTime su todo_items
+- **`hasDueTime` (TodoItems):** quando false, la scadenza è salvata come 23:59:59 del giorno (scade a mezzanotte); quando true, l'utente ha scelto un'ora specifica e il confronto "scaduto" usa `DateTime.now()` esatto
+- **Architettura moduli:** To-do = task lavorative/scolastiche (priorità, scadenze); Calendario (Fase 4) = habit tracker giornaliero (sessioni, abitudini, routine)
+- **Logger:** `AppLogger.instance` — init in `main()`, scrive su `%LOCALAPPDATA%\ProductivityApp\logs\YYYY-MM-DD.log` e sul terminale VS Code
+- I parametri wildcard multipli nei callback usano `_` (non `__`) per evitare il lint `unnecessary_underscores`

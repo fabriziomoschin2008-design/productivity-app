@@ -9,3 +9,9 @@ String formatDateShort(DateTime date) => _short.format(date);
 String formatDateMedium(DateTime date) => _medium.format(date);
 String formatMonthYear(DateTime date) => _monthYear.format(date);
 String formatMonthShort(DateTime date) => _monthShort.format(date);
+
+String formatTime(DateTime date) {
+  final h = date.hour.toString().padLeft(2, '0');
+  final m = date.minute.toString().padLeft(2, '0');
+  return '$h:$m';
+}
