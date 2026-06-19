@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/calendar/screens/calendar_screen.dart';
 import '../../features/finance/screens/finance_screen.dart';
 import '../../features/notes/screens/notes_screen.dart';
 import '../../features/todo/screens/todo_screen.dart';
@@ -21,7 +22,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: '/calendar',
-          builder: (ctx, state) => const _PlaceholderScreen(title: 'Calendario'),
+          builder: (ctx, state) => const CalendarScreen(),
         ),
         GoRoute(
           path: '/todo',
@@ -45,23 +46,6 @@ class _AppShell extends StatelessWidget {
           const VerticalDivider(width: 1),
           Expanded(child: child),
         ],
-      ),
-    );
-  }
-}
-
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const _PlaceholderScreen({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        '$title — in arrivo',
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.grey,
-            ),
       ),
     );
   }
