@@ -83,12 +83,39 @@ class TodoItems extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems])
+class NoteFolders extends Table {
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get name => text()();
+  DateTimeColumn get createdAt =>
+      dateTime().named('created_at').withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class Notes extends Table {
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get title => text().withDefault(const Constant(''))();
+  TextColumn get content => text().withDefault(const Constant(''))();
+  TextColumn get folderId => text().named('folder_id').nullable()();
+  BoolColumn get isPinned =>
+      boolean().named('is_pinned').withDefault(const Constant(false))();
+  DateTimeColumn get createdAt =>
+      dateTime().named('created_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftDatabase(
+    tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems, NoteFolders, Notes])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -100,6 +127,10 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(todoItems);
           }
           if (from < 4) await m.addColumn(todoItems, todoItems.hasDueTime);
+          if (from < 5) {
+            await m.createTable(noteFolders);
+            await m.createTable(notes);
+          }
         },
       );
 
@@ -190,4 +221,35 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteTodoItemById(String id) =>
       (delete(todoItems)..where((t) => t.id.equals(id))).go();
+
+  // --- Note Folders ---
+
+  Stream<List<NoteFolder>> watchNoteFolders() =>
+      (select(noteFolders)..orderBy([(f) => OrderingTerm.asc(f.createdAt)]))
+          .watch();
+
+  Future<void> insertNoteFolder(NoteFoldersCompanion entry) =>
+      into(noteFolders).insert(entry);
+
+  Future<void> deleteNoteFolderById(String folderId) async {
+    await transaction(() async {
+      await (update(notes)..where((n) => n.folderId.equals(folderId)))
+          .write(const NotesCompanion(folderId: Value(null)));
+      await (delete(noteFolders)..where((f) => f.id.equals(folderId))).go();
+    });
+  }
+
+  // --- Notes ---
+
+  Stream<List<Note>> watchNotes() =>
+      (select(notes)..orderBy([(n) => OrderingTerm.desc(n.updatedAt)])).watch();
+
+  Future<void> insertNote(NotesCompanion entry) =>
+      into(notes).insert(entry);
+
+  Future<void> updateNote(NotesCompanion entry) =>
+      (update(notes)..where((n) => n.id.equals(entry.id.value))).write(entry);
+
+  Future<void> deleteNoteById(String id) =>
+      (delete(notes)..where((n) => n.id.equals(id))).go();
 }

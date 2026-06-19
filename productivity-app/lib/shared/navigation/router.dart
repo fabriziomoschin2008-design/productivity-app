@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/finance/screens/finance_screen.dart';
+import '../../features/notes/screens/notes_screen.dart';
 import '../../features/todo/screens/todo_screen.dart';
 import '../widgets/nav_sidebar.dart';
 
@@ -16,7 +17,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: '/notes',
-          builder: (ctx, state) => const _PlaceholderScreen(title: 'Note'),
+          builder: (ctx, state) => const NotesScreen(),
         ),
         GoRoute(
           path: '/calendar',
