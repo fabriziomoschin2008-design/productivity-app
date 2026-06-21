@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/notifications/notification_scheduler.dart';
 import '../../../core/services/error_handler.dart';
 import '../../../core/services/logger_service.dart';
 import '../../../data/local/database.dart';
@@ -17,6 +18,7 @@ class TodoNotifier extends StateNotifier<TodoState> {
     });
     _itemsSub = _db.watchTodoItems().listen((items) {
       state = state.copyWith(allItems: items);
+      NotificationScheduler.instance.scheduleTodoMorningReminder(items);
     });
   }
 

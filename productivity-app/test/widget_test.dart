@@ -1,7 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 
 void main() {
-  testWidgets('placeholder', (tester) async {
-    expect(true, isTrue);
+  test('quill editor config is valid', () {
+    const config = QuillEditorConfig();
+    expect(config.customShortcuts, isEmpty);
+    expect(config.customActions, isEmpty);
   });
 }

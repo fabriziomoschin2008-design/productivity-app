@@ -3,7 +3,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/services/logger_service.dart';
 import '../../../core/theme/app_colors.dart';
+
 import '../../../core/theme/app_text_styles.dart';
 
 const chartEmbedKey = 'note_chart';
@@ -173,57 +175,82 @@ class _ChartEmbedWidget extends StatelessWidget {
   }
 
   void _delete() {
-    _withOffset(
-        (offset) => controller.replaceText(offset, 1, '', null));
+    FocusManager.instance.primaryFocus?.unfocus();
+    _withOffset((offset) {
+      AppLogger.instance.info('Elimino grafico al offset $offset');
+      controller.replaceText(offset, 1, '', null);
+    });
   }
 
   void _withOffset(void Function(int) callback) {
     // Strategia primaria: calcola l'offset assoluto percorrendo l'albero dei nodi
-    // a partire dall'embedNode. Ogni Node.offset dà la posizione relativa al parent;
-    // sommando fino alla root otteniamo la posizione assoluta nel documento.
-    try {
-      int offset = 0;
-      dynamic current = embedNode;
-      while (current?.parent != null) {
-        offset += (current.offset as int);
-        current = current.parent;
+    // solo se il nodo è effettivamente attaccato (il parent non è nullo).
+    // Se il parent è nullo (es. nodo disattivato o rimosso da rebuild asincroni),
+    // questa strategia darebbe 0 erroneamente, quindi la saltiamo per usare il fallback.
+    if (embedNode != null && embedNode.parent != null) {
+      try {
+        final offset = (embedNode as Node).documentOffset;
+        AppLogger.instance.info('Offset grafico trovato via albero nodi: $offset');
+        callback(offset);
+        return;
+      } catch (e) {
+        AppLogger.instance.warning('Fallita strategia primaria di offset: $e');
       }
-      callback(offset);
-      return;
-    } catch (_) {
-      // fallthrough alla strategia di fallback
     }
 
-    // Fallback: percorre il Delta alla ricerca dell'embed tramite ID.
-    // Meno affidabile in alcuni scenari flutter_quill v11, ma mantenuto
-    // come safety net per embed senza nodo valido (es. embed legacy).
-    final selfId = (jsonDecode(rawData) as Map<String, dynamic>)['id'];
-    int offset = 0;
-    for (final op in controller.document.toDelta().toList()) {
-      if (op.isInsert && op.data is Map) {
-        final d = op.data as Map;
-        final stored = d[chartEmbedKey];
-        if (stored != null) {
-          try {
-            final storedId =
-                (jsonDecode(stored as String) as Map<String, dynamic>)['id'];
-            if (storedId == selfId) {
-              callback(offset);
-              return;
+    // Fallback robusto: percorre il Delta per trovare l'embed tramite il suo ID.
+    // Funziona anche se il widget/nodo ha perso l'aggancio all'albero dei nodi.
+    try {
+      final selfId = (jsonDecode(rawData) as Map<String, dynamic>)['id'];
+      AppLogger.instance.info('Ricerca offset grafico nel Delta con ID: $selfId');
+      int offset = 0;
+      for (final op in controller.document.toDelta().toList()) {
+        if (op.isInsert && op.data is Map) {
+          final map = op.data as Map;
+          dynamic stored;
+          
+          if (map.containsKey(chartEmbedKey)) {
+            stored = map[chartEmbedKey];
+          } else if (map.containsKey('custom')) {
+            final customVal = map['custom'];
+            if (customVal is Map) {
+              stored = customVal[chartEmbedKey];
+            } else if (customVal is String) {
+              try {
+                final decoded = jsonDecode(customVal) as Map;
+                stored = decoded[chartEmbedKey];
+              } catch (_) {}
             }
-          } catch (_) {
-            if (stored == rawData) {
-              callback(offset);
-              return;
+          }
+
+          if (stored != null) {
+            try {
+              final storedId =
+                  (jsonDecode(stored as String) as Map<String, dynamic>)['id'];
+              if (storedId == selfId) {
+                AppLogger.instance.info('Offset grafico trovato via Delta (ID matching): $offset');
+                callback(offset);
+                return;
+              }
+            } catch (_) {
+              if (stored == rawData) {
+                AppLogger.instance.info('Offset grafico trovato via Delta (raw matching): $offset');
+                callback(offset);
+                return;
+              }
             }
           }
         }
+        final d = op.data;
+        offset += d is String ? d.length : 1;
       }
-      final d = op.data;
-      offset += d is String ? d.length : 1;
+      AppLogger.instance.warning('Impossibile trovare l\'offset del grafico nel Delta');
+    } catch (e) {
+      AppLogger.instance.error('Errore durante la ricerca fallback nel Delta: $e');
     }
   }
 }
+
 
 // ---------------------------------------------------------------------------
 // Chart renderers

@@ -43,7 +43,6 @@ class _AppShell extends StatelessWidget {
       body: Row(
         children: [
           const NavSidebar(),
-          const VerticalDivider(width: 1),
           Expanded(child: child),
         ],
       ),

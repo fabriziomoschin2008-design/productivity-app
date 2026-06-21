@@ -21,9 +21,9 @@ App desktop per Windows (target futuro: Android) che raccoglie in un'unica inter
 | Modulo | Stato | Descrizione |
 |--------|-------|-------------|
 | Finance | ✅ Completo | Conti, movimenti, grafici, obiettivi |
-| To-do | ⬜ Fase 2 | Task, liste, scadenze |
-| Note | ⬜ Fase 3 | Rich text, tag |
-| Calendario | ⬜ Fase 4 | Eventi, promemoria |
+| To-do | ✅ Completo | Task, liste, scadenze con ore specifiche e priorità |
+| Note | ✅ Completo | Cartelle, note con editor rich text Quill, grafici e tabelle embed |
+| Calendario | ✅ Completo | Habit tracker (abitudini e log) + calendario eventi |
 
 La filosofia è **offline-first**: SQLite è la fonte di verità. Nessun backend, nessun sync cloud (rimandato).
 
@@ -114,7 +114,7 @@ Ogni volta che si modifica `database.dart`, rigenerare con:
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-### Schema attuale (versione 2)
+### Schema attuale (versione 6)
 
 #### Tabella `accounts`
 ```
@@ -149,39 +149,89 @@ is_completed   BOOLEAN  DEFAULT false
 created_at     DATETIME DEFAULT NOW
 ```
 
+#### Tabella `todo_lists` (Fase 2)
+```
+id          TEXT     PRIMARY KEY (UUID v4)
+name        TEXT     NOT NULL
+color_value INTEGER  NOT NULL
+created_at  DATETIME DEFAULT NOW
+```
+
+#### Tabella `todo_items` (Fase 2)
+```
+id           TEXT     PRIMARY KEY (UUID v4)
+list_id      TEXT     NULLABLE    (riferimento a todo_lists.id)
+title        TEXT     NOT NULL
+note         TEXT     NULLABLE
+is_done      BOOLEAN  DEFAULT false
+priority     INTEGER  DEFAULT 0   (0: Bassa, 1: Media, 2: Alta)
+due_date     DATETIME NULLABLE
+has_due_time BOOLEAN  DEFAULT false (se la scadenza include l'ora specifica o scade a fine giornata)
+completed_at DATETIME NULLABLE
+created_at   DATETIME DEFAULT NOW
+```
+
+#### Tabella `note_folders` (Fase 3)
+```
+id          TEXT     PRIMARY KEY (UUID v4)
+name        TEXT     NOT NULL
+created_at  DATETIME DEFAULT NOW
+```
+
+#### Tabella `notes` (Fase 3)
+```
+id          TEXT     PRIMARY KEY (UUID v4)
+title       TEXT     DEFAULT ''
+content     TEXT     DEFAULT ''   (Delta JSON)
+folder_id   TEXT     NULLABLE    (riferimento a note_folders.id)
+is_pinned   BOOLEAN  DEFAULT false
+created_at  DATETIME DEFAULT NOW
+updated_at  DATETIME DEFAULT NOW
+```
+
+#### Tabella `habits` (Fase 4)
+```
+id         TEXT     PRIMARY KEY (UUID v4)
+name       TEXT     NOT NULL
+category   TEXT     DEFAULT ''   ('Mattina' | 'Pomeriggio' | 'Sera')
+sort_order INTEGER  DEFAULT 0
+created_at DATETIME DEFAULT NOW
+```
+
+#### Tabella `habit_logs` (Fase 4)
+```
+habit_id   TEXT     PRIMARY KEY
+date       DATETIME PRIMARY KEY  (mezzanotte del giorno registrato)
+status     TEXT     NOT NULL     ('done' | 'skip' | 'na')
+```
+
+#### Tabella `calendar_events` (Fase 4)
+```
+id          TEXT     PRIMARY KEY (UUID v4)
+title       TEXT     NOT NULL
+note        TEXT     NULLABLE
+start_date  DATETIME NOT NULL
+end_date    DATETIME NULLABLE
+all_day     BOOLEAN  DEFAULT true
+color_value INTEGER  DEFAULT 0xFF6C63FF
+created_at  DATETIME DEFAULT NOW
+```
+
 ### Migrazione
 
-Il database usa versioning esplicito. Quando si aggiunge una tabella o una colonna:
-
-```dart
-@override
-int get schemaVersion => 3; // incrementare
-
-@override
-MigrationStrategy get migration => MigrationStrategy(
-  onCreate: (m) => m.createAll(),
-  onUpgrade: (m, from, to) async {
-    if (from < 2) await m.createTable(goals);       // da v1 a v2
-    if (from < 3) await m.addColumn(goals, goals.someNewColumn); // da v2 a v3
-  },
-);
-```
+Il database usa versioning esplicito. Quando si aggiunge una tabella o una colonna, le migrazioni vengono descritte all'interno di `MigrationStrategy` in `database.dart`.
+La cronologia delle versioni è la seguente:
+- **v1**: Base (conti e transazioni)
+- **v2**: Aggiunta tabella `goals` (obiettivi di risparmio)
+- **v3**: Aggiunta tabelle `todo_lists` e `todo_items`
+- **v4**: Aggiunta colonna `has_due_time` in `todo_items`
+- **v5**: Aggiunta tabelle `note_folders` e `notes` per il modulo Note
+- **v6**: Aggiunta tabelle `habits`, `habit_logs` e `calendar_events` per il Calendario/Habit tracker
 
 ### Metodi CRUD disponibili
 
-| Metodo | Tipo | Descrizione |
-|--------|------|-------------|
-| `watchAccounts()` | `Stream<List<Account>>` | Conti in ordine di creazione |
-| `upsertAccount(companion)` | `Future<void>` | Insert o update (usa ID) |
-| `deleteAccountWithTransactions(id)` | `Future<void>` | Elimina conto + suoi movimenti in tx |
-| `watchTransactionsByAccount(id)` | `Stream<List<TransactionEntry>>` | Movimenti live, ordine decrescente |
-| `getTransactionsByAccount(id)` | `Future<List<TransactionEntry>>` | One-shot, usato per calcolo saldo |
-| `insertTransaction(companion)` | `Future<void>` | Nuovo movimento |
-| `deleteTransactionById(id)` | `Future<void>` | Rimozione singola |
-| `watchGoals()` | `Stream<List<Goal>>` | Obiettivi live |
-| `insertGoal(companion)` | `Future<void>` | Nuovo obiettivo |
-| `updateGoal(companion)` | `Future<void>` | Aggiorna campi specificati |
-| `deleteGoalById(id)` | `Future<void>` | Rimozione obiettivo |
+I metodi CRUD sono definiti all'interno di `AppDatabase` ed espongono stream e future per ogni entità del sistema (watchAccounts, watchTransactions, watchGoals, watchTodoLists, watchTodoItems, watchFolders, watchNotes, watchHabits, watchHabitLogs, watchCalendarEvents, ecc.).
+
 
 ---
 
@@ -462,6 +512,24 @@ state = state.copyWith(accounts: ...)
         ↓
 ConsumerWidget rebuild → UI aggiornata
 ```
+
+## Modulo Note
+
+### Layout e Funzionalità
+
+- **Cartelle e Note:** Organizzazione gerarchica. A sinistra la lista delle cartelle e delle note non categorizzate; al centro l'elenco delle note filtrate; a destra il pannello dell'editor.
+- **Editor Rich Text:** Basato su `flutter_quill` ^11.5.1. Supporta la formattazione standard del testo (grassetto, corsivo, liste, intestazioni) e blocchi embed personalizzati.
+- **Auto-salvataggio:** Il testo viene salvato automaticamente in locale su database SQLite a 800ms di inattività dall'ultimo carattere digitato, per prevenire perdite di dati.
+- **Funzionalità Pin e Ricerca:** Possibilità di pinnare in alto le note principali e ricercare istantaneamente all'interno dei testi.
+
+### Custom Embeds (Grafici e Tabelle)
+
+Il modulo Note supporta l'inserimento di grafici dinamici (a barre, a torta, a linee) e tabelle interattive direttamente all'interno del flusso del testo.
+- **Implementazione:** I widget custom sono implementati in `chart_embed.dart` e `table_embed.dart`.
+- **Risoluzione dell'offset absolute (`_withOffset`):**
+  - **Strategia primaria:** Ricerca l'offset nel document tree tramite `Node.documentOffset` solo se il nodo è effettivamente attaccato (`embedNode.parent != null`).
+  - **Strategia di fallback (Robust Delta-walk):** Se il nodo è "detached" a causa di rebuild asincroni dell'editor rich-text, percorre l'intero Delta del documento decodificando l'ID del blocco custom. Supporta sia la chiave diretta che la chiave nidificata in `custom` (in formato Map, stringa JSON o `CustomBlockEmbed`).
+- **Focus Safety:** Prima di modificare o eliminare un embed custom, viene rimosso il focus globale della tastiera via `FocusManager.instance.primaryFocus?.unfocus()`. Inoltre, la dialog di configurazione viene aperta tramite `useRootNavigator: true` sopra il subtree del QuillEditor. Questo evita crash del cursore causati da selezioni non allineate nell'albero di render di Quill.
 
 ---
 

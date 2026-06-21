@@ -11,33 +11,42 @@ class NavSidebar extends StatelessWidget {
     final location = GoRouterState.of(context).uri.path;
 
     return Container(
-      width: 68,
-      color: AppColors.navBackground,
+      width: 84,
+      decoration: const BoxDecoration(
+        color: AppColors.navBackground,
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x142D2A26),
+            blurRadius: 20,
+            offset: Offset(4, 0),
+          ),
+        ],
+      ),
       child: Column(
         children: [
-          const SizedBox(height: 20),
-          _Logo(),
-          const SizedBox(height: 32),
+          const SizedBox(height: 18),
+          const _CubbyLogo(),
+          const SizedBox(height: 28),
           _NavItem(
-            icon: Icons.account_balance_wallet_outlined,
+            icon: Icons.account_balance_wallet_rounded,
             label: 'Finanze',
             path: '/finance',
             active: location.startsWith('/finance'),
           ),
           _NavItem(
-            icon: Icons.sticky_note_2_outlined,
+            icon: Icons.sticky_note_2_rounded,
             label: 'Note',
             path: '/notes',
             active: location.startsWith('/notes'),
           ),
           _NavItem(
-            icon: Icons.calendar_month_outlined,
+            icon: Icons.calendar_month_rounded,
             label: 'Calendario',
             path: '/calendar',
             active: location.startsWith('/calendar'),
           ),
           _NavItem(
-            icon: Icons.check_box_outlined,
+            icon: Icons.check_circle_rounded,
             label: 'To-do',
             path: '/todo',
             active: location.startsWith('/todo'),
@@ -48,17 +57,30 @@ class NavSidebar extends StatelessWidget {
   }
 }
 
-class _Logo extends StatelessWidget {
+class _CubbyLogo extends StatelessWidget {
+  const _CubbyLogo();
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 36,
-      height: 36,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
-        color: AppColors.accent,
-        borderRadius: BorderRadius.circular(8),
+        gradient: const LinearGradient(
+          colors: [AppColors.primary, AppColors.secondary],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: const Icon(Icons.grid_view_rounded, color: Colors.white, size: 20),
+      child: const Icon(Icons.check_rounded, color: Colors.white, size: 24),
     );
   }
 }
@@ -83,39 +105,46 @@ class _NavItem extends StatelessWidget {
       preferBelow: false,
       child: GestureDetector(
         onTap: () => context.go(path),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 68,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            border: active
-                ? const Border(
-                    left: BorderSide(color: AppColors.navAccentLine, width: 3))
-                : const Border(
-                    left: BorderSide(color: Colors.transparent, width: 3)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 22,
-                color: active
-                    ? AppColors.navItemSelected
-                    : AppColors.navItem,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: AppTextStyles.navLabel.copyWith(
-                  color: active
-                      ? AppColors.navItemSelected
-                      : AppColors.navItem,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: active
+                  ? AppColors.primary.withValues(alpha: 0.10)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: Icon(
+                    icon,
+                    key: ValueKey(active),
+                    size: 22,
+                    color: active
+                        ? AppColors.navItemSelected
+                        : AppColors.navItem,
+                  ),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: AppTextStyles.navLabel.copyWith(
+                    color: active
+                        ? AppColors.navItemSelected
+                        : AppColors.navItem,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ),
       ),

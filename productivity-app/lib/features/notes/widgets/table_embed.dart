@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/services/logger_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import 'chart_embed.dart' show EmbedActionBtn;
+
 
 const tableEmbedKey = 'note_table';
 const _uuid = Uuid();
@@ -28,8 +30,10 @@ class TableEmbedBuilder extends EmbedBuilder {
       rawData: raw,
       readOnly: embedContext.readOnly,
       controller: embedContext.controller,
+      embedNode: embedContext.node,
     );
   }
+
 }
 
 // ---------------------------------------------------------------------------
@@ -41,12 +45,14 @@ class _TableEmbedWidget extends StatelessWidget {
   final String rawData;
   final bool readOnly;
   final QuillController controller;
-
+  final dynamic embedNode;
+ 
   const _TableEmbedWidget({
     required this.data,
     required this.rawData,
     required this.readOnly,
     required this.controller,
+    required this.embedNode,
   });
 
   @override
@@ -166,12 +172,17 @@ class _TableEmbedWidget extends StatelessWidget {
   }
 
   void _edit(BuildContext context) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    await Future.microtask(() {});
+    if (!context.mounted) return;
+
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (_) => TableConfigDialog(initialData: data),
     );
     if (result == null) return;
     _withOffset((offset) {
+      AppLogger.instance.info('Modifico tabella al offset $offset');
       controller.replaceText(
         offset,
         1,
@@ -183,38 +194,79 @@ class _TableEmbedWidget extends StatelessWidget {
   }
 
   void _delete() {
-    _withOffset(
-        (offset) => controller.replaceText(offset, 1, '', null));
+    FocusManager.instance.primaryFocus?.unfocus();
+    _withOffset((offset) {
+      AppLogger.instance.info('Elimino tabella al offset $offset');
+      controller.replaceText(offset, 1, '', null);
+    });
   }
 
   void _withOffset(void Function(int) callback) {
-    final selfId = (jsonDecode(rawData) as Map<String, dynamic>)['id'];
-    int offset = 0;
-    for (final op in controller.document.toDelta().toList()) {
-      if (op.isInsert && op.data is Map) {
-        final d = op.data as Map;
-        final stored = d[tableEmbedKey];
-        if (stored != null) {
-          try {
-            final storedId =
-                (jsonDecode(stored as String) as Map<String, dynamic>)['id'];
-            if (storedId == selfId) {
-              callback(offset);
-              return;
+    // Strategia primaria: calcola l'offset assoluto percorrendo l'albero dei nodi
+    // solo se il nodo è effettivamente attaccato (il parent non è nullo).
+    if (embedNode != null && embedNode.parent != null) {
+      try {
+        final offset = (embedNode as Node).documentOffset;
+        AppLogger.instance.info('Offset tabella trovato via albero nodi: $offset');
+        callback(offset);
+        return;
+      } catch (e) {
+        AppLogger.instance.warning('Fallita strategia primaria di offset per tabella: $e');
+      }
+    }
+
+    // Fallback robusto: percorre il Delta per trovare l'embed tramite il suo ID.
+    try {
+      final selfId = (jsonDecode(rawData) as Map<String, dynamic>)['id'];
+      AppLogger.instance.info('Ricerca offset tabella nel Delta con ID: $selfId');
+      int offset = 0;
+      for (final op in controller.document.toDelta().toList()) {
+        if (op.isInsert && op.data is Map) {
+          final map = op.data as Map;
+          dynamic stored;
+          
+          if (map.containsKey(tableEmbedKey)) {
+            stored = map[tableEmbedKey];
+          } else if (map.containsKey('custom')) {
+            final customVal = map['custom'];
+            if (customVal is Map) {
+              stored = customVal[tableEmbedKey];
+            } else if (customVal is String) {
+              try {
+                final decoded = jsonDecode(customVal) as Map;
+                stored = decoded[tableEmbedKey];
+              } catch (_) {}
             }
-          } catch (_) {
-            if (stored == rawData) {
-              callback(offset);
-              return;
+          }
+
+          if (stored != null) {
+            try {
+              final storedId =
+                  (jsonDecode(stored as String) as Map<String, dynamic>)['id'];
+              if (storedId == selfId) {
+                AppLogger.instance.info('Offset tabella trovato via Delta (ID matching): $offset');
+                callback(offset);
+                return;
+              }
+            } catch (_) {
+              if (stored == rawData) {
+                AppLogger.instance.info('Offset tabella trovato via Delta (raw matching): $offset');
+                callback(offset);
+                return;
+              }
             }
           }
         }
+        final d = op.data;
+        offset += d is String ? d.length : 1;
       }
-      final d = op.data;
-      offset += d is String ? d.length : 1;
+      AppLogger.instance.warning('Impossibile trovare l\'offset della tabella nel Delta');
+    } catch (e) {
+      AppLogger.instance.error('Errore durante la ricerca fallback nel Delta per tabella: $e');
     }
   }
 }
+
 
 // ---------------------------------------------------------------------------
 // Config dialog

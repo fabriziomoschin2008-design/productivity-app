@@ -77,6 +77,7 @@ lib/
 | google_fonts | ^6.2.1 | font Inter |
 | flutter_quill | ^11.5.1 | editor rich text (Note) |
 | table_calendar | ^3.1.2 | calendario eventi (Calendario) |
+| local_notifier | ^0.1.6 | notifiche Windows/macOS/Linux (no Android) |
 | build_runner | ^2.4.13 | codegen (dev) |
 | drift_dev | ^2.23.0 | codegen Drift (dev) |
 
@@ -93,6 +94,7 @@ lib/
 - [x] Fase 2 — To-do (task, liste, scadenze, ora specifica)
 - [x] Fase 3 — Note (cartelle, editor rich text appflowy_editor, ricerca, pin)
 - [x] Fase 4 — Calendario (habit tracker: viste giornaliera/settimanale/mensile + calendario eventi)
+- [x] Fase 5 — Notifiche (abitudini 20:00, obiettivi scadenza 3gg/1gg, eventi calendario 30min prima, task mattino 8:00)
 
 ## Note importanti
 
@@ -103,6 +105,8 @@ lib/
 - **Schema attuale: versione 6** — v6: habits + habit_logs + calendar_events — v5: note_folders + notes — v1: base, v2: goals, v3: todo_lists+todo_items, v4: hasDueTime su todo_items
 - **`hasDueTime` (TodoItems):** quando false, la scadenza è salvata come 23:59:59 del giorno (scade a mezzanotte); quando true, l'utente ha scelto un'ora specifica e il confronto "scaduto" usa `DateTime.now()` esatto
 - **Architettura moduli:** To-do = task lavorative/scolastiche; Calendario (Fase 4) = habit tracker giornaliero (sessioni, abitudini, routine)
-- **Note editor:** flutter_quill ^11.5.1 — content salvato come Quill Delta JSON (`toDelta().toJson()`). `QuillSimpleToolbar` fissa sopra all'editor. Auto-save 800ms dopo ultima modifica (solo `ChangeSource.local`).
-- **Logger:** `AppLogger.instance` — init in `main()`, scrive su `%LOCALAPPDATA%\ProductivityApp\logs\YYYY-MM-DD.log` e sul terminale VS Code
+- **Notifiche (`local_notifier`):** `NotificationService.init()` in `main()`. Scheduling via `Timer` in memoria (non sopravvivono al riavvio → i listener Drift le ripianificano automaticamente all'avvio). `NotificationScheduler` è hookato nei listener stream di `GoalsNotifier`, `TodoNotifier`, `CalendarNotifier`. Android non supportato da `local_notifier` — richiederà `flutter_local_notifications` in futuro.
+- Note editor: flutter_quill ^11.5.1 — content salvato come Quill Delta JSON (`toDelta().toJson()`). `QuillSimpleToolbar` fissa sopra all'editor. Auto-save 800ms dopo ultima modifica (solo `ChangeSource.local`). Per prevenire crash di caret paint (`RenderEmbedProxy.getOffsetForCaret`), viene invocato l'unfocus globale (`FocusManager.instance.primaryFocus?.unfocus()`) prima di eliminare o modificare embed custom (grafici, tabelle).
+- Offset robusto nei custom embed: Il widget calcola l'offset assoluto (`_withOffset`) via albero dei nodi se `embedNode.parent != null`; in caso di rebuild asincroni, ripiega su un robusto Delta-walk che intercetta i nodi sia a livello root che all'interno della chiave `custom` (formati Mappa, Stringa JSON o `CustomBlockEmbed`).
+- Logger: `AppLogger.instance` — init in `main()`, scrive su `%LOCALAPPDATA%\ProductivityApp\logs\YYYY-MM-DD.log` e sul terminale VS Code
 - I parametri wildcard multipli nei callback usano `_` (non `__`) per evitare il lint `unnecessary_underscores`

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/notifications/notification_scheduler.dart';
 import '../../../core/services/error_handler.dart';
 import '../../../data/local/database.dart';
 import 'calendar_state.dart';
@@ -17,10 +18,12 @@ class CalendarNotifier extends StateNotifier<CalendarState> {
   CalendarNotifier(this._db) : super(CalendarState.initial()) {
     _habitsSub = _db.watchHabits().listen((habits) {
       state = state.copyWith(habits: habits);
+      NotificationScheduler.instance.scheduleHabitReminder(habits);
     });
     _subscribeToLogs();
     _eventsSub = _db.watchCalendarEvents().listen((events) {
       state = state.copyWith(events: events);
+      NotificationScheduler.instance.scheduleCalendarEvents(events);
     });
   }
 

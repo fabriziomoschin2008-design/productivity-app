@@ -56,8 +56,8 @@ abstract final class AppTextStyles {
       );
 
   static TextStyle get navLabel => GoogleFonts.inter(
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
         letterSpacing: 0.2,
       );
 }
