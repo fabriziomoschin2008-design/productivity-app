@@ -8,6 +8,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/local/database.dart';
 import '../providers/notes_providers.dart';
+import 'chart_embed.dart';
+import 'table_embed.dart';
 
 class NoteEditorPanel extends ConsumerWidget {
   const NoteEditorPanel({super.key});
@@ -90,6 +92,34 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
         );
   }
 
+  void _insertEmbed(String key, String jsonData) {
+    final index = _controller.selection.extentOffset;
+    _controller.replaceText(
+      index,
+      0,
+      BlockEmbed.custom(CustomBlockEmbed(key, jsonData)),
+      null,
+    );
+  }
+
+  Future<void> _insertChart() async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (_) => const ChartConfigDialog(),
+    );
+    if (!mounted || result == null) return;
+    _insertEmbed(chartEmbedKey, jsonEncode(result));
+  }
+
+  Future<void> _insertTable() async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (_) => const TableConfigDialog(),
+    );
+    if (!mounted || result == null) return;
+    _insertEmbed(tableEmbedKey, jsonEncode(result));
+  }
+
   @override
   Widget build(BuildContext context) {
     final isPinned = ref.watch(notesProvider.select((s) =>
@@ -145,8 +175,8 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
           config: const QuillSimpleToolbarConfig(
             showFontFamily: false,
             showFontSize: false,
-            showColorButton: false,
-            showBackgroundColorButton: false,
+            showColorButton: true,
+            showBackgroundColorButton: true,
             showClearFormat: false,
             showAlignmentButtons: false,
             showIndent: false,
@@ -155,7 +185,29 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
             showSuperscript: false,
           ),
         ),
-        const Divider(height: 1),
+        // Embed actions row
+        Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: AppColors.divider)),
+          ),
+          child: Row(
+            children: [
+              _EmbedToolbarBtn(
+                icon: Icons.table_chart_outlined,
+                label: 'Tabella',
+                onPressed: _insertTable,
+              ),
+              const SizedBox(width: 4),
+              _EmbedToolbarBtn(
+                icon: Icons.bar_chart_outlined,
+                label: 'Grafico',
+                onPressed: _insertChart,
+              ),
+            ],
+          ),
+        ),
         // Editor: SingleChildScrollView esterno gestisce lo scroll
         // mentre il QuillEditor cresce con il contenuto
         Expanded(
@@ -167,6 +219,10 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
                 padding: const EdgeInsets.fromLTRB(40, 16, 40, 80),
                 scrollable: false,
                 expands: false,
+                embedBuilders: const [
+                  ChartEmbedBuilder(),
+                  TableEmbedBuilder(),
+                ],
                 onLaunchUrl: (url) async {
                   final uri = Uri.tryParse(url);
                   if (uri != null) {
@@ -180,6 +236,37 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
           ),
         ),
       ],
+    );
+  }
+}
+
+// --- Embed toolbar button ---
+
+class _EmbedToolbarBtn extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+  const _EmbedToolbarBtn(
+      {required this.icon, required this.label, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: AppColors.textSecondary),
+            const SizedBox(width: 4),
+            Text(label,
+                style: AppTextStyles.label
+                    .copyWith(color: AppColors.textSecondary)),
+          ],
+        ),
+      ),
     );
   }
 }

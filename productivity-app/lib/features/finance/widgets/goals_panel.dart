@@ -21,6 +21,7 @@ class GoalsPanel extends ConsumerWidget {
         _GoalsPanelHeader(
           onAdd: () => showDialog(
             context: context,
+            useRootNavigator: false,
             builder: (_) => const AddGoalDialog(),
           ),
         ),
@@ -178,8 +179,10 @@ class _GoalCard extends ConsumerWidget {
       case 'update':
         showDialog(
           context: context,
+          useRootNavigator: false,
           builder: (_) => _UpdateProgressDialog(
             goalId: goal.id,
+            goalName: goal.name,
             currentAmount: goal.currentAmount,
           ),
         );
@@ -188,17 +191,18 @@ class _GoalCard extends ConsumerWidget {
       case 'delete':
         showDialog(
           context: context,
-          builder: (_) => AlertDialog(
+          useRootNavigator: false,
+          builder: (dialogCtx) => AlertDialog(
             title: const Text('Elimina obiettivo'),
             content: Text('Eliminare "${goal.name}"?'),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.of(dialogCtx).pop(),
                 child: const Text('Annulla'),
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.of(dialogCtx).pop();
                   notifier.deleteGoal(goal.id);
                 },
                 child: Text('Elimina',
@@ -213,9 +217,13 @@ class _GoalCard extends ConsumerWidget {
 
 class _UpdateProgressDialog extends ConsumerStatefulWidget {
   final String goalId;
+  final String goalName;
   final double currentAmount;
-  const _UpdateProgressDialog(
-      {required this.goalId, required this.currentAmount});
+  const _UpdateProgressDialog({
+    required this.goalId,
+    required this.goalName,
+    required this.currentAmount,
+  });
 
   @override
   ConsumerState<_UpdateProgressDialog> createState() =>
@@ -224,54 +232,73 @@ class _UpdateProgressDialog extends ConsumerStatefulWidget {
 
 class _UpdateProgressDialogState
     extends ConsumerState<_UpdateProgressDialog> {
-  late final TextEditingController _controller;
+  late final TextEditingController _amountCtrl;
+  String? _selectedAccountId;
+  bool _deductFromAccount = false;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(
-      text: widget.currentAmount
-          .toStringAsFixed(2)
-          .replaceAll('.', ','),
-    );
+    _amountCtrl = TextEditingController();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _amountCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
-    final amount =
-        double.tryParse(_controller.text.replaceAll(',', '.'));
-    if (amount == null || amount < 0) return;
+    final delta =
+        double.tryParse(_amountCtrl.text.replaceAll(',', '.'));
+    if (delta == null || delta <= 0) return;
     setState(() => _saving = true);
+
+    final newTotal = widget.currentAmount + delta;
     await ref
         .read(goalsProvider.notifier)
-        .updateProgress(widget.goalId, amount);
+        .updateProgress(widget.goalId, newTotal);
+
+    if (_deductFromAccount && _selectedAccountId != null) {
+      await ref.read(financeProvider.notifier).addTransaction(
+            accountId: _selectedAccountId!,
+            amount: delta,
+            type: 'expense',
+            category: 'Obiettivi',
+            date: DateTime.now(),
+            note: widget.goalName,
+          );
+    }
+
     if (mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    final accounts = ref.watch(financeProvider).accounts;
+
     return Dialog(
       child: SizedBox(
-        width: 340,
+        width: 360,
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Aggiorna importo',
+              Text('Aggiungi importo',
                   style: AppTextStyles.headingCard.copyWith(fontSize: 16)),
+              const SizedBox(height: 4),
+              Text(
+                'Totale attuale: ${formatCurrency(widget.currentAmount)}',
+                style: AppTextStyles.label,
+              ),
               const SizedBox(height: 20),
               TextField(
-                controller: _controller,
+                controller: _amountCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Importo attuale',
+                  labelText: 'Importo da aggiungere',
                   prefixText: '€ ',
                 ),
                 keyboardType:
@@ -279,6 +306,43 @@ class _UpdateProgressDialogState
                 autofocus: true,
                 onSubmitted: (_) => _save(),
               ),
+              const SizedBox(height: 16),
+              // Optional account deduction
+              if (accounts.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _deductFromAccount,
+                      onChanged: (v) => setState(() {
+                        _deductFromAccount = v ?? false;
+                        if (!_deductFromAccount) {
+                          _selectedAccountId = null;
+                        }
+                      }),
+                    ),
+                    const Text('Scala da un conto bancario'),
+                  ],
+                ),
+                if (_deductFromAccount) ...[
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    // ignore: deprecated_member_use
+                    value: _selectedAccountId,
+                    decoration: const InputDecoration(
+                      labelText: 'Conto',
+                      isDense: true,
+                    ),
+                    items: accounts
+                        .map((a) => DropdownMenuItem(
+                              value: a.account.id,
+                              child: Text(a.account.name),
+                            ))
+                        .toList(),
+                    onChanged: (v) =>
+                        setState(() => _selectedAccountId = v),
+                  ),
+                ],
+              ],
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

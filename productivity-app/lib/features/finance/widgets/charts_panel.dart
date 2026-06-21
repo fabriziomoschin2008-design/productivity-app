@@ -22,7 +22,9 @@ class _ChartsPanelState extends State<ChartsPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Container(
+      color: AppColors.surface,
+      child: Column(
       children: [
         _ChartTabs(
           selected: _selectedChart,
@@ -40,6 +42,7 @@ class _ChartsPanelState extends State<ChartsPanel> {
           ),
         ),
       ],
+      ),
     );
   }
 }
@@ -252,66 +255,124 @@ class _BarChartView extends StatelessWidget {
 
     if (maxY == 0) return _noData('Nessun dato per gli ultimi 6 mesi');
 
-    return BarChart(
-      BarChartData(
-        maxY: maxY * 1.25,
-        barGroups: List.generate(data.length, (i) {
-          final d = data[i];
-          return BarChartGroupData(
-            x: i,
-            barRods: [
-              BarChartRodData(
-                  toY: d.income,
-                  color: AppColors.income,
-                  width: 12,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(3))),
-              BarChartRodData(
-                  toY: d.expense,
-                  color: AppColors.expense,
-                  width: 12,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(3))),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              _LegendDot(color: const Color(0xFF27AE60)),
+              const SizedBox(width: 4),
+              Text('Entrate', style: AppTextStyles.label),
+              const SizedBox(width: 16),
+              _LegendDot(color: const Color(0xFFE74C3C)),
+              const SizedBox(width: 4),
+              Text('Spese', style: AppTextStyles.label),
             ],
-            barsSpace: 4,
-          );
-        }),
-        titlesData: FlTitlesData(
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 56,
-              getTitlesWidget: (v, _) => Text(
-                '€${v.toInt()}',
-                style: AppTextStyles.label,
-              ),
-            ),
           ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (v, _) {
-                final d = data[v.toInt()];
-                final dt = DateTime(d.year, d.month);
-                return Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(formatMonthShort(dt),
-                      style: AppTextStyles.label),
+        ),
+        Expanded(
+          child: BarChart(
+            BarChartData(
+              maxY: maxY * 1.25,
+              barGroups: List.generate(data.length, (i) {
+                final d = data[i];
+                return BarChartGroupData(
+                  x: i,
+                  barRods: [
+                    BarChartRodData(
+                      toY: d.income,
+                      color: const Color(0xFF27AE60),
+                      width: 12,
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(3)),
+                    ),
+                    BarChartRodData(
+                      toY: d.expense,
+                      color: const Color(0xFFE74C3C),
+                      width: 12,
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(3)),
+                    ),
+                  ],
+                  barsSpace: 4,
                 );
-              },
+              }),
+              barTouchData: BarTouchData(
+                touchTooltipData: BarTouchTooltipData(
+                  getTooltipColor: (_) => AppColors.surface,
+                  tooltipBorder: const BorderSide(color: AppColors.border),
+                  getTooltipItem: (group, _, rod, rodIndex) {
+                    final label = rodIndex == 0 ? 'Entrate' : 'Spese';
+                    final color = rodIndex == 0
+                        ? const Color(0xFF27AE60)
+                        : const Color(0xFFE74C3C);
+                    return BarTooltipItem(
+                      '$label\n${formatCurrency(rod.toY)}',
+                      AppTextStyles.label.copyWith(
+                          color: color, fontWeight: FontWeight.w600),
+                    );
+                  },
+                ),
+              ),
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 56,
+                    getTitlesWidget: (v, _) => Text(
+                      '€${v.toInt()}',
+                      style: AppTextStyles.label,
+                    ),
+                  ),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (v, _) {
+                      final d = data[v.toInt()];
+                      final dt = DateTime(d.year, d.month);
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(formatMonthShort(dt),
+                            style: AppTextStyles.label),
+                      );
+                    },
+                  ),
+                ),
+                topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false)),
+              ),
+              gridData: FlGridData(
+                drawVerticalLine: false,
+                horizontalInterval: maxY / 4,
+                getDrawingHorizontalLine: (_) => const FlLine(
+                  color: AppColors.divider,
+                  strokeWidth: 1,
+                ),
+              ),
+              borderData: FlBorderData(show: false),
             ),
           ),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
-        gridData: FlGridData(
-          drawVerticalLine: false,
-          horizontalInterval: maxY / 4,
-          getDrawingHorizontalLine: (_) => const FlLine(
-            color: AppColors.divider,
-            strokeWidth: 1,
-          ),
-        ),
-        borderData: FlBorderData(show: false),
-      ),
+      ],
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  const _LegendDot({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
