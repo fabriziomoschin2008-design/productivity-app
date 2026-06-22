@@ -10,6 +10,7 @@ import '../widgets/api_key_dialog.dart';
 import '../widgets/import_dialog.dart';
 import '../widgets/media_card.dart';
 import '../widgets/media_detail_dialog.dart';
+import '../widgets/refresh_metadata_dialog.dart';
 
 class EntertainmentScreen extends ConsumerStatefulWidget {
   const EntertainmentScreen({super.key});
@@ -59,6 +60,17 @@ class _EntertainmentScreenState extends ConsumerState<EntertainmentScreen>
                   icon: const Icon(Icons.settings_rounded,
                       color: AppColors.textSecondary, size: 20),
                   tooltip: 'Impostazioni TMDb',
+                ),
+                const SizedBox(width: 4),
+                // Refresh posters
+                IconButton(
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => const RefreshMetadataDialog(),
+                  ),
+                  icon: const Icon(Icons.refresh_rounded,
+                      color: AppColors.textSecondary, size: 20),
+                  tooltip: 'Aggiorna poster',
                 ),
                 const SizedBox(width: 4),
                 // Import list

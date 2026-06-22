@@ -78,6 +78,46 @@ class MoviesNotifier extends StateNotifier<MoviesState> {
     }
   }
 
+  Future<void> copyWithLanguageToggle(Movy m,
+      {TmdbMovieDetails? enOverride}) async {
+    try {
+      await _db.insertMovie(MoviesCompanion(
+        tmdbId: Value(m.tmdbId),
+        title: Value(enOverride?.title ?? m.title),
+        overview: Value(enOverride?.overview ?? m.overview),
+        posterPath: Value(enOverride?.posterPath ?? m.posterPath),
+        releaseDate: Value(enOverride?.releaseDate ?? m.releaseDate),
+        runtime: Value(enOverride?.runtime ?? m.runtime),
+        voteAverage: Value(enOverride?.voteAverage ?? m.voteAverage),
+        genreNames: Value(
+            enOverride != null ? enOverride.genreNames.join(', ') : m.genreNames),
+        status: Value(m.status),
+        inOriginalLanguage: Value(!m.inOriginalLanguage),
+      ));
+      AppLogger.instance
+          .info('Copia film: ${enOverride?.title ?? m.title} OL=${!m.inOriginalLanguage}');
+    } catch (e, st) {
+      AppErrorHandler.handle(e, st);
+    }
+  }
+
+  Future<void> updateFromTmdb(String id, TmdbMovieDetails d) async {
+    try {
+      await _db.updateMovie(MoviesCompanion(
+        id: Value(id),
+        tmdbId: Value(d.id),
+        posterPath: Value(d.posterPath),
+        overview: Value(d.overview),
+        releaseDate: Value(d.releaseDate),
+        runtime: Value(d.runtime),
+        voteAverage: Value(d.voteAverage),
+        genreNames: Value(d.genreNames.join(', ')),
+      ));
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s, showUi: false);
+    }
+  }
+
   Future<void> delete(String id) async {
     try {
       await _db.deleteMovieById(id);
@@ -163,9 +203,17 @@ class TvNotifier extends StateNotifier<TvState> {
       } else {
         seasons.add(season);
       }
+      final total = entry.totalSeasons;
+      String? autoStatus;
+      if (total != null && total > 0 && seasons.length >= total) {
+        autoStatus = 'watched';
+      } else if (entry.status == 'watched') {
+        autoStatus = 'watching';
+      }
       await _db.updateTvSeries(TvSeriesCompanion(
         id: Value(id),
         watchedSeasons: Value(_encodeSeason(seasons)),
+        status: autoStatus != null ? Value(autoStatus) : const Value.absent(),
       ));
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);
@@ -183,6 +231,48 @@ class TvNotifier extends StateNotifier<TvState> {
   Future<void> updateRating(String id, int? rating) async {
     try {
       await _db.updateTvSeries(TvSeriesCompanion(id: Value(id), userRating: Value(rating)));
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s, showUi: false);
+    }
+  }
+
+  Future<void> copyWithLanguageToggle(TvSery entry,
+      {TmdbTvDetails? enOverride}) async {
+    try {
+      await _db.insertTvSeries(TvSeriesCompanion(
+        tmdbId: Value(entry.tmdbId),
+        title: Value(enOverride?.title ?? entry.title),
+        overview: Value(enOverride?.overview ?? entry.overview),
+        posterPath: Value(enOverride?.posterPath ?? entry.posterPath),
+        firstAirDate: Value(enOverride?.firstAirDate ?? entry.firstAirDate),
+        totalSeasons: Value(enOverride?.numberOfSeasons ?? entry.totalSeasons),
+        voteAverage: Value(enOverride?.voteAverage ?? entry.voteAverage),
+        genreNames: Value(enOverride != null
+            ? enOverride.genreNames.join(', ')
+            : entry.genreNames),
+        status: Value(entry.status),
+        watchedSeasons: Value(entry.watchedSeasons),
+        inOriginalLanguage: Value(!entry.inOriginalLanguage),
+      ));
+      AppLogger.instance.info(
+          'Copia serie TV: ${enOverride?.title ?? entry.title} OL=${!entry.inOriginalLanguage}');
+    } catch (e, st) {
+      AppErrorHandler.handle(e, st);
+    }
+  }
+
+  Future<void> updateFromTmdb(String id, TmdbTvDetails d) async {
+    try {
+      await _db.updateTvSeries(TvSeriesCompanion(
+        id: Value(id),
+        tmdbId: Value(d.id),
+        posterPath: Value(d.posterPath),
+        overview: Value(d.overview),
+        firstAirDate: Value(d.firstAirDate),
+        totalSeasons: Value(d.numberOfSeasons),
+        voteAverage: Value(d.voteAverage),
+        genreNames: Value(d.genreNames.join(', ')),
+      ));
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);
     }

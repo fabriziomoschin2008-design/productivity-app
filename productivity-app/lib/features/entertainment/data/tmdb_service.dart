@@ -31,8 +31,20 @@ class TmdbService {
     return TmdbMovieDetails.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  Future<TmdbMovieDetails?> getMovieDetailsEn(int tmdbId) async {
+    final res = await http.get(_url('/movie/$tmdbId', {'language': 'en-US'}));
+    if (res.statusCode != 200) return null;
+    return TmdbMovieDetails.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
   Future<TmdbTvDetails?> getTvDetails(int tmdbId) async {
     final res = await http.get(_url('/tv/$tmdbId'));
+    if (res.statusCode != 200) return null;
+    return TmdbTvDetails.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
+  Future<TmdbTvDetails?> getTvDetailsEn(int tmdbId) async {
+    final res = await http.get(_url('/tv/$tmdbId', {'language': 'en-US'}));
     if (res.statusCode != 200) return null;
     return TmdbTvDetails.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }

@@ -101,19 +101,28 @@ class _MediaCardState extends State<MediaCard> {
                   if (widget.inOriginalLanguage)
                     Positioned(
                       top: 6,
-                      right: 6,
+                      left: 6,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 5, vertical: 2),
+                            horizontal: 5, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(4),
+                          color: AppColors.accent.withValues(alpha: 0.93),
+                          borderRadius: BorderRadius.circular(5),
                         ),
-                        child: const Text('OL',
-                            style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700)),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.language_rounded,
+                                color: Colors.white, size: 9),
+                            SizedBox(width: 2),
+                            Text('OL',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.3)),
+                          ],
+                        ),
                       ),
                     ),
                 ],

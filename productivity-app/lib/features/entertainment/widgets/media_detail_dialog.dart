@@ -1,8 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/services/app_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/local/database.dart';
+import '../data/tmdb_models.dart';
+import '../data/tmdb_service.dart';
 import '../providers/entertainment_providers.dart';
 import 'media_card.dart';
 
@@ -121,6 +125,40 @@ class _MovieDetailState extends ConsumerState<MovieDetailDialog> {
                                 .updateRating(m.id, val);
                           },
                         ),
+                        const SizedBox(height: 12),
+                        _CopyLanguageButton(
+                          isOl: m.inOriginalLanguage,
+                          alreadyExists: ref.watch(moviesProvider).movies.any(
+                                (x) =>
+                                    x.id != m.id &&
+                                    x.inOriginalLanguage != m.inOriginalLanguage &&
+                                    (m.tmdbId != null
+                                        ? x.tmdbId == m.tmdbId
+                                        : x.title == m.title),
+                              ),
+                          onPressed: () async {
+                            TmdbMovieDetails? enDetails;
+                            if (!m.inOriginalLanguage && m.tmdbId != null) {
+                              final key = AppSettings.tmdbApiKey;
+                              if (key != null && key.isNotEmpty) {
+                                enDetails = await TmdbService(key)
+                                    .getMovieDetailsEn(m.tmdbId!);
+                              }
+                            }
+                            await ref
+                                .read(moviesProvider.notifier)
+                                .copyWithLanguageToggle(m, enOverride: enDetails);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text(
+                                  m.inOriginalLanguage
+                                      ? 'Versione doppiata aggiunta.'
+                                      : 'Versione in lingua originale aggiunta.',
+                                ),
+                              ));
+                            }
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -217,24 +255,29 @@ class TvDetailDialog extends ConsumerStatefulWidget {
 }
 
 class _TvDetailState extends ConsumerState<TvDetailDialog> {
-  late String _status;
   late int? _rating;
 
   @override
   void initState() {
     super.initState();
-    _status = widget.series.status;
     _rating = widget.series.userRating;
   }
 
   @override
   Widget build(BuildContext context) {
     final s = widget.series;
-    final posterUrl = s.posterPath != null
-        ? 'https://image.tmdb.org/t/p/w500${s.posterPath}'
+    final current = ref
+        .watch(tvProvider)
+        .series
+        .firstWhere((t) => t.id == s.id, orElse: () => s);
+    final posterUrl = current.posterPath != null
+        ? 'https://image.tmdb.org/t/p/w500${current.posterPath}'
         : null;
-    final totalS = s.totalSeasons ?? 0;
-    final watched = ref.watch(tvProvider.notifier).watchedSeasonsOf(s.id);
+    final totalS = current.totalSeasons ?? 0;
+    List<int> watched = [];
+    try {
+      watched = (jsonDecode(current.watchedSeasons) as List).cast<int>();
+    } catch (_) {}
 
     return Dialog(
       backgroundColor: AppColors.surface,
@@ -258,8 +301,8 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
                       child: posterUrl != null
                           ? Image.network(posterUrl, fit: BoxFit.cover,
                               errorBuilder: (_, _, _) =>
-                                  _placeholder(s.title))
-                          : _placeholder(s.title),
+                                  _placeholder(current.title))
+                          : _placeholder(current.title),
                     ),
                   ),
                   const SizedBox(width: 20),
@@ -267,28 +310,28 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(s.title,
+                        Text(current.title,
                             style: AppTextStyles.headingCard.copyWith(
                                 fontSize: 20, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 4),
-                        if (s.firstAirDate != null &&
-                            s.firstAirDate!.length >= 4)
-                          Text(s.firstAirDate!.substring(0, 4),
+                        if (current.firstAirDate != null &&
+                            current.firstAirDate!.length >= 4)
+                          Text(current.firstAirDate!.substring(0, 4),
                               style: AppTextStyles.bodySmall),
-                        if (s.genreNames != null &&
-                            s.genreNames!.isNotEmpty) ...[
+                        if (current.genreNames != null &&
+                            current.genreNames!.isNotEmpty) ...[
                           const SizedBox(height: 4),
-                          Text(s.genreNames!,
+                          Text(current.genreNames!,
                               style: AppTextStyles.bodySmall
                                   .copyWith(color: AppColors.textSecondary)),
                         ],
-                        if (s.voteAverage != null) ...[
+                        if (current.voteAverage != null) ...[
                           const SizedBox(height: 8),
                           Row(children: [
                             const Icon(Icons.star_rounded,
                                 color: Colors.amber, size: 16),
                             const SizedBox(width: 4),
-                            Text(s.voteAverage!.toStringAsFixed(1),
+                            Text(current.voteAverage!.toStringAsFixed(1),
                                 style: AppTextStyles.bodyRegular
                                     .copyWith(fontWeight: FontWeight.w600)),
                             Text(' / 10', style: AppTextStyles.bodySmall),
@@ -296,9 +339,8 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
                         ],
                         const SizedBox(height: 12),
                         _StatusDrop(
-                          value: _status,
+                          value: current.status,
                           onChanged: (v) async {
-                            setState(() => _status = v);
                             await ref
                                 .read(tvProvider.notifier)
                                 .updateStatus(s.id, v);
@@ -316,6 +358,43 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
                             await ref
                                 .read(tvProvider.notifier)
                                 .updateRating(s.id, val);
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        _CopyLanguageButton(
+                          isOl: current.inOriginalLanguage,
+                          alreadyExists: ref.watch(tvProvider).series.any(
+                                (x) =>
+                                    x.id != s.id &&
+                                    x.inOriginalLanguage !=
+                                        current.inOriginalLanguage &&
+                                    (current.tmdbId != null
+                                        ? x.tmdbId == current.tmdbId
+                                        : x.title == current.title),
+                              ),
+                          onPressed: () async {
+                            TmdbTvDetails? enDetails;
+                            if (!current.inOriginalLanguage &&
+                                current.tmdbId != null) {
+                              final key = AppSettings.tmdbApiKey;
+                              if (key != null && key.isNotEmpty) {
+                                enDetails = await TmdbService(key)
+                                    .getTvDetailsEn(current.tmdbId!);
+                              }
+                            }
+                            await ref
+                                .read(tvProvider.notifier)
+                                .copyWithLanguageToggle(current,
+                                    enOverride: enDetails);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text(
+                                  current.inOriginalLanguage
+                                      ? 'Versione doppiata aggiunta.'
+                                      : 'Versione in lingua originale aggiunta.',
+                                ),
+                              ));
+                            }
                           },
                         ),
                       ],
@@ -349,11 +428,11 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
                   }),
                 ),
               ],
-              if (s.overview != null && s.overview!.isNotEmpty) ...[
+              if (current.overview != null && current.overview!.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 if (totalS == 0) const Divider(color: AppColors.divider),
                 const SizedBox(height: 8),
-                Text(s.overview!,
+                Text(current.overview!,
                     style: AppTextStyles.bodyRegular
                         .copyWith(color: AppColors.textSecondary, height: 1.5)),
               ],
@@ -428,6 +507,47 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
 }
 
 // ─── Shared ──────────────────────────────────────────────────────────────────
+
+class _CopyLanguageButton extends StatelessWidget {
+  final bool isOl;
+  final bool alreadyExists;
+  final VoidCallback? onPressed;
+
+  const _CopyLanguageButton({
+    required this.isOl,
+    required this.alreadyExists,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (alreadyExists) {
+      return Row(
+        children: [
+          const Icon(Icons.check_circle_outline_rounded,
+              size: 14, color: AppColors.textSecondary),
+          const SizedBox(width: 4),
+          Text(
+            isOl ? 'Versione doppiata già presente' : 'Versione OL già presente',
+            style: AppTextStyles.label.copyWith(color: AppColors.textSecondary),
+          ),
+        ],
+      );
+    }
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.copy_rounded, size: 14),
+      label: Text(isOl ? 'Aggiungi versione doppiata' : 'Aggiungi versione OL'),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.textSecondary,
+        side: const BorderSide(color: AppColors.border),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        textStyle: AppTextStyles.label,
+      ),
+    );
+  }
+}
 
 class _StatusDrop extends StatelessWidget {
   final String value;
