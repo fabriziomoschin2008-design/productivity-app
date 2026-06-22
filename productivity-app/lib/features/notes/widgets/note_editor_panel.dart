@@ -1,15 +1,21 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/local/database.dart';
 import '../providers/notes_providers.dart';
 import 'chart_embed.dart';
+import 'file_embed.dart';
 import 'table_embed.dart';
+
+const _uuid = Uuid();
 
 class NoteEditorPanel extends ConsumerWidget {
   const NoteEditorPanel({super.key});
@@ -120,6 +126,31 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
     _insertEmbed(tableEmbedKey, jsonEncode(result));
   }
 
+  Future<void> _insertFile() async {
+    final result = await FilePicker.platform.pickFiles(allowMultiple: true);
+    if (!mounted || result == null) return;
+    for (final file in result.files) {
+      if (file.path == null) continue;
+      final appData = Platform.environment['LOCALAPPDATA'] ?? '';
+      final destDir = Directory(
+          '$appData\\ProductivityApp\\attachments\\${widget.note.id}');
+      await destDir.create(recursive: true);
+      final ext = file.name.contains('.') ? file.name.split('.').last : '';
+      final fileId = _uuid.v4();
+      final destPath =
+          ext.isEmpty ? '${destDir.path}\\$fileId' : '${destDir.path}\\$fileId.$ext';
+      await File(file.path!).copy(destPath);
+      final embedData = {
+        'id': fileId,
+        'fileName': file.name,
+        'storedPath': destPath,
+        'mimeType': mimeFromName(file.name),
+        'sizeBytes': file.size,
+      };
+      _insertEmbed(fileEmbedKey, jsonEncode(embedData));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isPinned = ref.watch(notesProvider.select((s) =>
@@ -205,6 +236,12 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
                 label: 'Grafico',
                 onPressed: _insertChart,
               ),
+              const SizedBox(width: 4),
+              _EmbedToolbarBtn(
+                icon: Icons.attach_file_rounded,
+                label: 'Allega',
+                onPressed: _insertFile,
+              ),
             ],
           ),
         ),
@@ -222,6 +259,7 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
                 embedBuilders: const [
                   ChartEmbedBuilder(),
                   TableEmbedBuilder(),
+                  FileEmbedBuilder(),
                 ],
                 onLaunchUrl: (url) async {
                   final uri = Uri.tryParse(url);
