@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/debug/debug_panel.dart';
+import '../../core/debug/debug_provider.dart';
 import '../../features/calendar/screens/calendar_screen.dart';
 import '../../features/finance/screens/finance_screen.dart';
 import '../../features/notes/screens/notes_screen.dart';
@@ -38,17 +41,23 @@ final appRouter = GoRouter(
   ],
 );
 
-class _AppShell extends StatelessWidget {
+class _AppShell extends ConsumerWidget {
   final Widget child;
   const _AppShell({required this.child});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final debugMode = ref.watch(debugModeProvider);
     return Scaffold(
-      body: Row(
+      body: Stack(
         children: [
-          const NavSidebar(),
-          Expanded(child: child),
+          Row(
+            children: [
+              const NavSidebar(),
+              Expanded(child: child),
+            ],
+          ),
+          if (debugMode) const DebugPanel(),
         ],
       ),
     );

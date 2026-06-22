@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/debug/debug_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
@@ -63,12 +65,27 @@ class NavSidebar extends StatelessWidget {
   }
 }
 
-class _CubbyLogo extends StatelessWidget {
+class _CubbyLogo extends ConsumerWidget {
   const _CubbyLogo();
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onDoubleTap: () {}, // intercetta doppio tap per non triggerare triple
+      onLongPress: () {
+        final notifier = ref.read(debugModeProvider.notifier);
+        notifier.state = !notifier.state;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              notifier.state ? 'Debug mode attivo' : 'Debug mode disattivo',
+            ),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      child: Container(
       width: 44,
       height: 44,
       decoration: BoxDecoration(
@@ -87,6 +104,7 @@ class _CubbyLogo extends StatelessWidget {
         ],
       ),
       child: const Icon(Icons.check_rounded, color: Colors.white, size: 24),
+      ),
     );
   }
 }

@@ -34,6 +34,8 @@ class TrackerNotifier extends StateNotifier<TrackerState> {
     _midnightTimer = Timer(nextMidnight.difference(now), _runAutoIncrement);
   }
 
+  Future<void> triggerAutoIncrement() => _runAutoIncrement();
+
   Future<void> _runAutoIncrement() async {
     AppLogger.instance.info('Auto-incremento tracker: mezzanotte');
     for (final t in state.trackers.where((t) => t.isDailyAutoIncrement)) {
