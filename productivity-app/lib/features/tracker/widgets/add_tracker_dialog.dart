@@ -100,7 +100,7 @@ class _AddTrackerDialogState extends ConsumerState<AddTrackerDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: SizedBox(
         width: 400,
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(28),
           child: Form(
             key: _formKey,
@@ -203,29 +203,27 @@ class _AddTrackerDialogState extends ConsumerState<AddTrackerDialog> {
                 ),
                 const SizedBox(height: 20),
                 // Auto-increment toggle
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceElevated,
+                SwitchListTile(
+                  dense: true,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  tileColor: AppColors.surfaceElevated,
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+                    side: const BorderSide(color: AppColors.border),
                   ),
-                  child: SwitchListTile(
-                    dense: true,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                    title: Text(
-                      'Incremento automatico giornaliero',
-                      style: AppTextStyles.bodyRegular,
-                    ),
-                    subtitle: Text(
-                      'Aggiunge l\'incremento ogni giorno a mezzanotte',
-                      style:
-                          AppTextStyles.label.copyWith(color: AppColors.textSecondary),
-                    ),
-                    value: _dailyAuto,
-                    activeThumbColor: AppColors.primary,
-                    onChanged: (v) => setState(() => _dailyAuto = v),
+                  title: Text(
+                    'Incremento automatico giornaliero',
+                    style: AppTextStyles.bodyRegular,
                   ),
+                  subtitle: Text(
+                    'Aggiunge l\'incremento ogni giorno a mezzanotte',
+                    style: AppTextStyles.label
+                        .copyWith(color: AppColors.textSecondary),
+                  ),
+                  value: _dailyAuto,
+                  activeThumbColor: AppColors.primary,
+                  onChanged: (v) => setState(() => _dailyAuto = v),
                 ),
                 const SizedBox(height: 28),
                 Row(
