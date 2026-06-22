@@ -59,6 +59,12 @@ class NavSidebar extends StatelessWidget {
             path: '/tracker',
             active: location.startsWith('/tracker'),
           ),
+          _NavItem(
+            icon: Icons.movie_rounded,
+            label: 'Media',
+            path: '/entertainment',
+            active: location.startsWith('/entertainment'),
+          ),
         ],
       ),
     );

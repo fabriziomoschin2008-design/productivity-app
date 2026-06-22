@@ -7,6 +7,7 @@ import '../../features/calendar/screens/calendar_screen.dart';
 import '../../features/finance/screens/finance_screen.dart';
 import '../../features/notes/screens/notes_screen.dart';
 import '../../features/todo/screens/todo_screen.dart';
+import '../../features/entertainment/screens/entertainment_screen.dart';
 import '../../features/tracker/screens/tracker_screen.dart';
 import '../widgets/nav_sidebar.dart';
 
@@ -35,6 +36,10 @@ final appRouter = GoRouter(
         GoRoute(
           path: '/tracker',
           builder: (ctx, state) => const TrackerScreen(),
+        ),
+        GoRoute(
+          path: '/entertainment',
+          builder: (ctx, state) => const EntertainmentScreen(),
         ),
       ],
     ),

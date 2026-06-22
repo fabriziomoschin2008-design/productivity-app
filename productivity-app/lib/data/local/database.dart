@@ -187,13 +187,58 @@ class Trackers extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+class Movies extends Table {
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  IntColumn get tmdbId => integer().named('tmdb_id').nullable()();
+  TextColumn get title => text()();
+  TextColumn get overview => text().nullable()();
+  TextColumn get posterPath => text().named('poster_path').nullable()();
+  TextColumn get releaseDate => text().named('release_date').nullable()();
+  IntColumn get runtime => integer().nullable()();
+  RealColumn get voteAverage => real().named('vote_average').nullable()();
+  TextColumn get genreNames => text().named('genre_names').nullable()();
+  TextColumn get status => text().withDefault(const Constant('watched'))();
+  IntColumn get userRating => integer().named('user_rating').nullable()();
+  BoolColumn get inOriginalLanguage =>
+      boolean().named('in_original_language').withDefault(const Constant(false))();
+  DateTimeColumn get addedAt =>
+      dateTime().named('added_at').withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class TvSeries extends Table {
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  IntColumn get tmdbId => integer().named('tmdb_id').nullable()();
+  TextColumn get title => text()();
+  TextColumn get overview => text().nullable()();
+  TextColumn get posterPath => text().named('poster_path').nullable()();
+  TextColumn get firstAirDate => text().named('first_air_date').nullable()();
+  IntColumn get totalSeasons => integer().named('total_seasons').nullable()();
+  RealColumn get voteAverage => real().named('vote_average').nullable()();
+  TextColumn get genreNames => text().named('genre_names').nullable()();
+  TextColumn get status => text().withDefault(const Constant('watching'))();
+  IntColumn get userRating => integer().named('user_rating').nullable()();
+  // JSON array of ints: [1, 2, 3]
+  TextColumn get watchedSeasons =>
+      text().named('watched_seasons').withDefault(const Constant('[]'))();
+  BoolColumn get inOriginalLanguage =>
+      boolean().named('in_original_language').withDefault(const Constant(false))();
+  DateTimeColumn get addedAt =>
+      dateTime().named('added_at').withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
-    tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems, NoteFolders, Notes, Habits, HabitLogs, CalendarEvents, NoteGoals, Trackers])
+    tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems, NoteFolders, Notes, Habits, HabitLogs, CalendarEvents, NoteGoals, Trackers, Movies, TvSeries])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -218,6 +263,10 @@ class AppDatabase extends _$AppDatabase {
           if (from < 8) await m.createTable(trackers);
           if (from < 9) {
             await m.addColumn(trackers, trackers.isDailyAutoIncrement);
+          }
+          if (from < 10) {
+            await m.createTable(movies);
+            await m.createTable(tvSeries);
           }
         },
       );
@@ -414,6 +463,33 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteNoteGoalById(String id) =>
       (delete(noteGoals)..where((g) => g.id.equals(id))).go();
+
+  // --- Movies ---
+
+  Stream<List<Movy>> watchMovies() =>
+      (select(movies)..orderBy([(m) => OrderingTerm.desc(m.addedAt)])).watch();
+
+  Future<void> insertMovie(MoviesCompanion entry) => into(movies).insert(entry);
+
+  Future<void> updateMovie(MoviesCompanion entry) =>
+      (update(movies)..where((m) => m.id.equals(entry.id.value))).write(entry);
+
+  Future<void> deleteMovieById(String id) =>
+      (delete(movies)..where((m) => m.id.equals(id))).go();
+
+  // --- TV Series ---
+
+  Stream<List<TvSery>> watchTvSeries() =>
+      (select(tvSeries)..orderBy([(s) => OrderingTerm.desc(s.addedAt)])).watch();
+
+  Future<void> insertTvSeries(TvSeriesCompanion entry) =>
+      into(tvSeries).insert(entry);
+
+  Future<void> updateTvSeries(TvSeriesCompanion entry) =>
+      (update(tvSeries)..where((s) => s.id.equals(entry.id.value))).write(entry);
+
+  Future<void> deleteTvSeriesById(String id) =>
+      (delete(tvSeries)..where((s) => s.id.equals(id))).go();
 
   // --- Calendar Events ---
 

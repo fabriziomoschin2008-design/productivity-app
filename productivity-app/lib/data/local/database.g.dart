@@ -5270,6 +5270,1600 @@ class TrackersCompanion extends UpdateCompanion<Tracker> {
   }
 }
 
+class $MoviesTable extends Movies with TableInfo<$MoviesTable, Movy> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MoviesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => _uuid.v4(),
+  );
+  static const VerificationMeta _tmdbIdMeta = const VerificationMeta('tmdbId');
+  @override
+  late final GeneratedColumn<int> tmdbId = GeneratedColumn<int>(
+    'tmdb_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _overviewMeta = const VerificationMeta(
+    'overview',
+  );
+  @override
+  late final GeneratedColumn<String> overview = GeneratedColumn<String>(
+    'overview',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _posterPathMeta = const VerificationMeta(
+    'posterPath',
+  );
+  @override
+  late final GeneratedColumn<String> posterPath = GeneratedColumn<String>(
+    'poster_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _releaseDateMeta = const VerificationMeta(
+    'releaseDate',
+  );
+  @override
+  late final GeneratedColumn<String> releaseDate = GeneratedColumn<String>(
+    'release_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _runtimeMeta = const VerificationMeta(
+    'runtime',
+  );
+  @override
+  late final GeneratedColumn<int> runtime = GeneratedColumn<int>(
+    'runtime',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _voteAverageMeta = const VerificationMeta(
+    'voteAverage',
+  );
+  @override
+  late final GeneratedColumn<double> voteAverage = GeneratedColumn<double>(
+    'vote_average',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _genreNamesMeta = const VerificationMeta(
+    'genreNames',
+  );
+  @override
+  late final GeneratedColumn<String> genreNames = GeneratedColumn<String>(
+    'genre_names',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('watched'),
+  );
+  static const VerificationMeta _userRatingMeta = const VerificationMeta(
+    'userRating',
+  );
+  @override
+  late final GeneratedColumn<int> userRating = GeneratedColumn<int>(
+    'user_rating',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _inOriginalLanguageMeta =
+      const VerificationMeta('inOriginalLanguage');
+  @override
+  late final GeneratedColumn<bool> inOriginalLanguage = GeneratedColumn<bool>(
+    'in_original_language',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("in_original_language" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _addedAtMeta = const VerificationMeta(
+    'addedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> addedAt = GeneratedColumn<DateTime>(
+    'added_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tmdbId,
+    title,
+    overview,
+    posterPath,
+    releaseDate,
+    runtime,
+    voteAverage,
+    genreNames,
+    status,
+    userRating,
+    inOriginalLanguage,
+    addedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'movies';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Movy> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('tmdb_id')) {
+      context.handle(
+        _tmdbIdMeta,
+        tmdbId.isAcceptableOrUnknown(data['tmdb_id']!, _tmdbIdMeta),
+      );
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('overview')) {
+      context.handle(
+        _overviewMeta,
+        overview.isAcceptableOrUnknown(data['overview']!, _overviewMeta),
+      );
+    }
+    if (data.containsKey('poster_path')) {
+      context.handle(
+        _posterPathMeta,
+        posterPath.isAcceptableOrUnknown(data['poster_path']!, _posterPathMeta),
+      );
+    }
+    if (data.containsKey('release_date')) {
+      context.handle(
+        _releaseDateMeta,
+        releaseDate.isAcceptableOrUnknown(
+          data['release_date']!,
+          _releaseDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('runtime')) {
+      context.handle(
+        _runtimeMeta,
+        runtime.isAcceptableOrUnknown(data['runtime']!, _runtimeMeta),
+      );
+    }
+    if (data.containsKey('vote_average')) {
+      context.handle(
+        _voteAverageMeta,
+        voteAverage.isAcceptableOrUnknown(
+          data['vote_average']!,
+          _voteAverageMeta,
+        ),
+      );
+    }
+    if (data.containsKey('genre_names')) {
+      context.handle(
+        _genreNamesMeta,
+        genreNames.isAcceptableOrUnknown(data['genre_names']!, _genreNamesMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('user_rating')) {
+      context.handle(
+        _userRatingMeta,
+        userRating.isAcceptableOrUnknown(data['user_rating']!, _userRatingMeta),
+      );
+    }
+    if (data.containsKey('in_original_language')) {
+      context.handle(
+        _inOriginalLanguageMeta,
+        inOriginalLanguage.isAcceptableOrUnknown(
+          data['in_original_language']!,
+          _inOriginalLanguageMeta,
+        ),
+      );
+    }
+    if (data.containsKey('added_at')) {
+      context.handle(
+        _addedAtMeta,
+        addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Movy map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Movy(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tmdbId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tmdb_id'],
+      ),
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      overview: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}overview'],
+      ),
+      posterPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}poster_path'],
+      ),
+      releaseDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}release_date'],
+      ),
+      runtime: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}runtime'],
+      ),
+      voteAverage: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}vote_average'],
+      ),
+      genreNames: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}genre_names'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      userRating: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}user_rating'],
+      ),
+      inOriginalLanguage: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}in_original_language'],
+      )!,
+      addedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}added_at'],
+      )!,
+    );
+  }
+
+  @override
+  $MoviesTable createAlias(String alias) {
+    return $MoviesTable(attachedDatabase, alias);
+  }
+}
+
+class Movy extends DataClass implements Insertable<Movy> {
+  final String id;
+  final int? tmdbId;
+  final String title;
+  final String? overview;
+  final String? posterPath;
+  final String? releaseDate;
+  final int? runtime;
+  final double? voteAverage;
+  final String? genreNames;
+  final String status;
+  final int? userRating;
+  final bool inOriginalLanguage;
+  final DateTime addedAt;
+  const Movy({
+    required this.id,
+    this.tmdbId,
+    required this.title,
+    this.overview,
+    this.posterPath,
+    this.releaseDate,
+    this.runtime,
+    this.voteAverage,
+    this.genreNames,
+    required this.status,
+    this.userRating,
+    required this.inOriginalLanguage,
+    required this.addedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || tmdbId != null) {
+      map['tmdb_id'] = Variable<int>(tmdbId);
+    }
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || overview != null) {
+      map['overview'] = Variable<String>(overview);
+    }
+    if (!nullToAbsent || posterPath != null) {
+      map['poster_path'] = Variable<String>(posterPath);
+    }
+    if (!nullToAbsent || releaseDate != null) {
+      map['release_date'] = Variable<String>(releaseDate);
+    }
+    if (!nullToAbsent || runtime != null) {
+      map['runtime'] = Variable<int>(runtime);
+    }
+    if (!nullToAbsent || voteAverage != null) {
+      map['vote_average'] = Variable<double>(voteAverage);
+    }
+    if (!nullToAbsent || genreNames != null) {
+      map['genre_names'] = Variable<String>(genreNames);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || userRating != null) {
+      map['user_rating'] = Variable<int>(userRating);
+    }
+    map['in_original_language'] = Variable<bool>(inOriginalLanguage);
+    map['added_at'] = Variable<DateTime>(addedAt);
+    return map;
+  }
+
+  MoviesCompanion toCompanion(bool nullToAbsent) {
+    return MoviesCompanion(
+      id: Value(id),
+      tmdbId: tmdbId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tmdbId),
+      title: Value(title),
+      overview: overview == null && nullToAbsent
+          ? const Value.absent()
+          : Value(overview),
+      posterPath: posterPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(posterPath),
+      releaseDate: releaseDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(releaseDate),
+      runtime: runtime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(runtime),
+      voteAverage: voteAverage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(voteAverage),
+      genreNames: genreNames == null && nullToAbsent
+          ? const Value.absent()
+          : Value(genreNames),
+      status: Value(status),
+      userRating: userRating == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userRating),
+      inOriginalLanguage: Value(inOriginalLanguage),
+      addedAt: Value(addedAt),
+    );
+  }
+
+  factory Movy.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Movy(
+      id: serializer.fromJson<String>(json['id']),
+      tmdbId: serializer.fromJson<int?>(json['tmdbId']),
+      title: serializer.fromJson<String>(json['title']),
+      overview: serializer.fromJson<String?>(json['overview']),
+      posterPath: serializer.fromJson<String?>(json['posterPath']),
+      releaseDate: serializer.fromJson<String?>(json['releaseDate']),
+      runtime: serializer.fromJson<int?>(json['runtime']),
+      voteAverage: serializer.fromJson<double?>(json['voteAverage']),
+      genreNames: serializer.fromJson<String?>(json['genreNames']),
+      status: serializer.fromJson<String>(json['status']),
+      userRating: serializer.fromJson<int?>(json['userRating']),
+      inOriginalLanguage: serializer.fromJson<bool>(json['inOriginalLanguage']),
+      addedAt: serializer.fromJson<DateTime>(json['addedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tmdbId': serializer.toJson<int?>(tmdbId),
+      'title': serializer.toJson<String>(title),
+      'overview': serializer.toJson<String?>(overview),
+      'posterPath': serializer.toJson<String?>(posterPath),
+      'releaseDate': serializer.toJson<String?>(releaseDate),
+      'runtime': serializer.toJson<int?>(runtime),
+      'voteAverage': serializer.toJson<double?>(voteAverage),
+      'genreNames': serializer.toJson<String?>(genreNames),
+      'status': serializer.toJson<String>(status),
+      'userRating': serializer.toJson<int?>(userRating),
+      'inOriginalLanguage': serializer.toJson<bool>(inOriginalLanguage),
+      'addedAt': serializer.toJson<DateTime>(addedAt),
+    };
+  }
+
+  Movy copyWith({
+    String? id,
+    Value<int?> tmdbId = const Value.absent(),
+    String? title,
+    Value<String?> overview = const Value.absent(),
+    Value<String?> posterPath = const Value.absent(),
+    Value<String?> releaseDate = const Value.absent(),
+    Value<int?> runtime = const Value.absent(),
+    Value<double?> voteAverage = const Value.absent(),
+    Value<String?> genreNames = const Value.absent(),
+    String? status,
+    Value<int?> userRating = const Value.absent(),
+    bool? inOriginalLanguage,
+    DateTime? addedAt,
+  }) => Movy(
+    id: id ?? this.id,
+    tmdbId: tmdbId.present ? tmdbId.value : this.tmdbId,
+    title: title ?? this.title,
+    overview: overview.present ? overview.value : this.overview,
+    posterPath: posterPath.present ? posterPath.value : this.posterPath,
+    releaseDate: releaseDate.present ? releaseDate.value : this.releaseDate,
+    runtime: runtime.present ? runtime.value : this.runtime,
+    voteAverage: voteAverage.present ? voteAverage.value : this.voteAverage,
+    genreNames: genreNames.present ? genreNames.value : this.genreNames,
+    status: status ?? this.status,
+    userRating: userRating.present ? userRating.value : this.userRating,
+    inOriginalLanguage: inOriginalLanguage ?? this.inOriginalLanguage,
+    addedAt: addedAt ?? this.addedAt,
+  );
+  Movy copyWithCompanion(MoviesCompanion data) {
+    return Movy(
+      id: data.id.present ? data.id.value : this.id,
+      tmdbId: data.tmdbId.present ? data.tmdbId.value : this.tmdbId,
+      title: data.title.present ? data.title.value : this.title,
+      overview: data.overview.present ? data.overview.value : this.overview,
+      posterPath: data.posterPath.present
+          ? data.posterPath.value
+          : this.posterPath,
+      releaseDate: data.releaseDate.present
+          ? data.releaseDate.value
+          : this.releaseDate,
+      runtime: data.runtime.present ? data.runtime.value : this.runtime,
+      voteAverage: data.voteAverage.present
+          ? data.voteAverage.value
+          : this.voteAverage,
+      genreNames: data.genreNames.present
+          ? data.genreNames.value
+          : this.genreNames,
+      status: data.status.present ? data.status.value : this.status,
+      userRating: data.userRating.present
+          ? data.userRating.value
+          : this.userRating,
+      inOriginalLanguage: data.inOriginalLanguage.present
+          ? data.inOriginalLanguage.value
+          : this.inOriginalLanguage,
+      addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Movy(')
+          ..write('id: $id, ')
+          ..write('tmdbId: $tmdbId, ')
+          ..write('title: $title, ')
+          ..write('overview: $overview, ')
+          ..write('posterPath: $posterPath, ')
+          ..write('releaseDate: $releaseDate, ')
+          ..write('runtime: $runtime, ')
+          ..write('voteAverage: $voteAverage, ')
+          ..write('genreNames: $genreNames, ')
+          ..write('status: $status, ')
+          ..write('userRating: $userRating, ')
+          ..write('inOriginalLanguage: $inOriginalLanguage, ')
+          ..write('addedAt: $addedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tmdbId,
+    title,
+    overview,
+    posterPath,
+    releaseDate,
+    runtime,
+    voteAverage,
+    genreNames,
+    status,
+    userRating,
+    inOriginalLanguage,
+    addedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Movy &&
+          other.id == this.id &&
+          other.tmdbId == this.tmdbId &&
+          other.title == this.title &&
+          other.overview == this.overview &&
+          other.posterPath == this.posterPath &&
+          other.releaseDate == this.releaseDate &&
+          other.runtime == this.runtime &&
+          other.voteAverage == this.voteAverage &&
+          other.genreNames == this.genreNames &&
+          other.status == this.status &&
+          other.userRating == this.userRating &&
+          other.inOriginalLanguage == this.inOriginalLanguage &&
+          other.addedAt == this.addedAt);
+}
+
+class MoviesCompanion extends UpdateCompanion<Movy> {
+  final Value<String> id;
+  final Value<int?> tmdbId;
+  final Value<String> title;
+  final Value<String?> overview;
+  final Value<String?> posterPath;
+  final Value<String?> releaseDate;
+  final Value<int?> runtime;
+  final Value<double?> voteAverage;
+  final Value<String?> genreNames;
+  final Value<String> status;
+  final Value<int?> userRating;
+  final Value<bool> inOriginalLanguage;
+  final Value<DateTime> addedAt;
+  final Value<int> rowid;
+  const MoviesCompanion({
+    this.id = const Value.absent(),
+    this.tmdbId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.overview = const Value.absent(),
+    this.posterPath = const Value.absent(),
+    this.releaseDate = const Value.absent(),
+    this.runtime = const Value.absent(),
+    this.voteAverage = const Value.absent(),
+    this.genreNames = const Value.absent(),
+    this.status = const Value.absent(),
+    this.userRating = const Value.absent(),
+    this.inOriginalLanguage = const Value.absent(),
+    this.addedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MoviesCompanion.insert({
+    this.id = const Value.absent(),
+    this.tmdbId = const Value.absent(),
+    required String title,
+    this.overview = const Value.absent(),
+    this.posterPath = const Value.absent(),
+    this.releaseDate = const Value.absent(),
+    this.runtime = const Value.absent(),
+    this.voteAverage = const Value.absent(),
+    this.genreNames = const Value.absent(),
+    this.status = const Value.absent(),
+    this.userRating = const Value.absent(),
+    this.inOriginalLanguage = const Value.absent(),
+    this.addedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : title = Value(title);
+  static Insertable<Movy> custom({
+    Expression<String>? id,
+    Expression<int>? tmdbId,
+    Expression<String>? title,
+    Expression<String>? overview,
+    Expression<String>? posterPath,
+    Expression<String>? releaseDate,
+    Expression<int>? runtime,
+    Expression<double>? voteAverage,
+    Expression<String>? genreNames,
+    Expression<String>? status,
+    Expression<int>? userRating,
+    Expression<bool>? inOriginalLanguage,
+    Expression<DateTime>? addedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tmdbId != null) 'tmdb_id': tmdbId,
+      if (title != null) 'title': title,
+      if (overview != null) 'overview': overview,
+      if (posterPath != null) 'poster_path': posterPath,
+      if (releaseDate != null) 'release_date': releaseDate,
+      if (runtime != null) 'runtime': runtime,
+      if (voteAverage != null) 'vote_average': voteAverage,
+      if (genreNames != null) 'genre_names': genreNames,
+      if (status != null) 'status': status,
+      if (userRating != null) 'user_rating': userRating,
+      if (inOriginalLanguage != null)
+        'in_original_language': inOriginalLanguage,
+      if (addedAt != null) 'added_at': addedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MoviesCompanion copyWith({
+    Value<String>? id,
+    Value<int?>? tmdbId,
+    Value<String>? title,
+    Value<String?>? overview,
+    Value<String?>? posterPath,
+    Value<String?>? releaseDate,
+    Value<int?>? runtime,
+    Value<double?>? voteAverage,
+    Value<String?>? genreNames,
+    Value<String>? status,
+    Value<int?>? userRating,
+    Value<bool>? inOriginalLanguage,
+    Value<DateTime>? addedAt,
+    Value<int>? rowid,
+  }) {
+    return MoviesCompanion(
+      id: id ?? this.id,
+      tmdbId: tmdbId ?? this.tmdbId,
+      title: title ?? this.title,
+      overview: overview ?? this.overview,
+      posterPath: posterPath ?? this.posterPath,
+      releaseDate: releaseDate ?? this.releaseDate,
+      runtime: runtime ?? this.runtime,
+      voteAverage: voteAverage ?? this.voteAverage,
+      genreNames: genreNames ?? this.genreNames,
+      status: status ?? this.status,
+      userRating: userRating ?? this.userRating,
+      inOriginalLanguage: inOriginalLanguage ?? this.inOriginalLanguage,
+      addedAt: addedAt ?? this.addedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tmdbId.present) {
+      map['tmdb_id'] = Variable<int>(tmdbId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (overview.present) {
+      map['overview'] = Variable<String>(overview.value);
+    }
+    if (posterPath.present) {
+      map['poster_path'] = Variable<String>(posterPath.value);
+    }
+    if (releaseDate.present) {
+      map['release_date'] = Variable<String>(releaseDate.value);
+    }
+    if (runtime.present) {
+      map['runtime'] = Variable<int>(runtime.value);
+    }
+    if (voteAverage.present) {
+      map['vote_average'] = Variable<double>(voteAverage.value);
+    }
+    if (genreNames.present) {
+      map['genre_names'] = Variable<String>(genreNames.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (userRating.present) {
+      map['user_rating'] = Variable<int>(userRating.value);
+    }
+    if (inOriginalLanguage.present) {
+      map['in_original_language'] = Variable<bool>(inOriginalLanguage.value);
+    }
+    if (addedAt.present) {
+      map['added_at'] = Variable<DateTime>(addedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoviesCompanion(')
+          ..write('id: $id, ')
+          ..write('tmdbId: $tmdbId, ')
+          ..write('title: $title, ')
+          ..write('overview: $overview, ')
+          ..write('posterPath: $posterPath, ')
+          ..write('releaseDate: $releaseDate, ')
+          ..write('runtime: $runtime, ')
+          ..write('voteAverage: $voteAverage, ')
+          ..write('genreNames: $genreNames, ')
+          ..write('status: $status, ')
+          ..write('userRating: $userRating, ')
+          ..write('inOriginalLanguage: $inOriginalLanguage, ')
+          ..write('addedAt: $addedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TvSeriesTable extends TvSeries with TableInfo<$TvSeriesTable, TvSery> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TvSeriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => _uuid.v4(),
+  );
+  static const VerificationMeta _tmdbIdMeta = const VerificationMeta('tmdbId');
+  @override
+  late final GeneratedColumn<int> tmdbId = GeneratedColumn<int>(
+    'tmdb_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _overviewMeta = const VerificationMeta(
+    'overview',
+  );
+  @override
+  late final GeneratedColumn<String> overview = GeneratedColumn<String>(
+    'overview',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _posterPathMeta = const VerificationMeta(
+    'posterPath',
+  );
+  @override
+  late final GeneratedColumn<String> posterPath = GeneratedColumn<String>(
+    'poster_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _firstAirDateMeta = const VerificationMeta(
+    'firstAirDate',
+  );
+  @override
+  late final GeneratedColumn<String> firstAirDate = GeneratedColumn<String>(
+    'first_air_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _totalSeasonsMeta = const VerificationMeta(
+    'totalSeasons',
+  );
+  @override
+  late final GeneratedColumn<int> totalSeasons = GeneratedColumn<int>(
+    'total_seasons',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _voteAverageMeta = const VerificationMeta(
+    'voteAverage',
+  );
+  @override
+  late final GeneratedColumn<double> voteAverage = GeneratedColumn<double>(
+    'vote_average',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _genreNamesMeta = const VerificationMeta(
+    'genreNames',
+  );
+  @override
+  late final GeneratedColumn<String> genreNames = GeneratedColumn<String>(
+    'genre_names',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('watching'),
+  );
+  static const VerificationMeta _userRatingMeta = const VerificationMeta(
+    'userRating',
+  );
+  @override
+  late final GeneratedColumn<int> userRating = GeneratedColumn<int>(
+    'user_rating',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _watchedSeasonsMeta = const VerificationMeta(
+    'watchedSeasons',
+  );
+  @override
+  late final GeneratedColumn<String> watchedSeasons = GeneratedColumn<String>(
+    'watched_seasons',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _inOriginalLanguageMeta =
+      const VerificationMeta('inOriginalLanguage');
+  @override
+  late final GeneratedColumn<bool> inOriginalLanguage = GeneratedColumn<bool>(
+    'in_original_language',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("in_original_language" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _addedAtMeta = const VerificationMeta(
+    'addedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> addedAt = GeneratedColumn<DateTime>(
+    'added_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tmdbId,
+    title,
+    overview,
+    posterPath,
+    firstAirDate,
+    totalSeasons,
+    voteAverage,
+    genreNames,
+    status,
+    userRating,
+    watchedSeasons,
+    inOriginalLanguage,
+    addedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tv_series';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TvSery> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('tmdb_id')) {
+      context.handle(
+        _tmdbIdMeta,
+        tmdbId.isAcceptableOrUnknown(data['tmdb_id']!, _tmdbIdMeta),
+      );
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('overview')) {
+      context.handle(
+        _overviewMeta,
+        overview.isAcceptableOrUnknown(data['overview']!, _overviewMeta),
+      );
+    }
+    if (data.containsKey('poster_path')) {
+      context.handle(
+        _posterPathMeta,
+        posterPath.isAcceptableOrUnknown(data['poster_path']!, _posterPathMeta),
+      );
+    }
+    if (data.containsKey('first_air_date')) {
+      context.handle(
+        _firstAirDateMeta,
+        firstAirDate.isAcceptableOrUnknown(
+          data['first_air_date']!,
+          _firstAirDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_seasons')) {
+      context.handle(
+        _totalSeasonsMeta,
+        totalSeasons.isAcceptableOrUnknown(
+          data['total_seasons']!,
+          _totalSeasonsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('vote_average')) {
+      context.handle(
+        _voteAverageMeta,
+        voteAverage.isAcceptableOrUnknown(
+          data['vote_average']!,
+          _voteAverageMeta,
+        ),
+      );
+    }
+    if (data.containsKey('genre_names')) {
+      context.handle(
+        _genreNamesMeta,
+        genreNames.isAcceptableOrUnknown(data['genre_names']!, _genreNamesMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('user_rating')) {
+      context.handle(
+        _userRatingMeta,
+        userRating.isAcceptableOrUnknown(data['user_rating']!, _userRatingMeta),
+      );
+    }
+    if (data.containsKey('watched_seasons')) {
+      context.handle(
+        _watchedSeasonsMeta,
+        watchedSeasons.isAcceptableOrUnknown(
+          data['watched_seasons']!,
+          _watchedSeasonsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('in_original_language')) {
+      context.handle(
+        _inOriginalLanguageMeta,
+        inOriginalLanguage.isAcceptableOrUnknown(
+          data['in_original_language']!,
+          _inOriginalLanguageMeta,
+        ),
+      );
+    }
+    if (data.containsKey('added_at')) {
+      context.handle(
+        _addedAtMeta,
+        addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TvSery map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TvSery(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tmdbId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tmdb_id'],
+      ),
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      overview: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}overview'],
+      ),
+      posterPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}poster_path'],
+      ),
+      firstAirDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}first_air_date'],
+      ),
+      totalSeasons: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_seasons'],
+      ),
+      voteAverage: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}vote_average'],
+      ),
+      genreNames: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}genre_names'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      userRating: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}user_rating'],
+      ),
+      watchedSeasons: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}watched_seasons'],
+      )!,
+      inOriginalLanguage: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}in_original_language'],
+      )!,
+      addedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}added_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TvSeriesTable createAlias(String alias) {
+    return $TvSeriesTable(attachedDatabase, alias);
+  }
+}
+
+class TvSery extends DataClass implements Insertable<TvSery> {
+  final String id;
+  final int? tmdbId;
+  final String title;
+  final String? overview;
+  final String? posterPath;
+  final String? firstAirDate;
+  final int? totalSeasons;
+  final double? voteAverage;
+  final String? genreNames;
+  final String status;
+  final int? userRating;
+  final String watchedSeasons;
+  final bool inOriginalLanguage;
+  final DateTime addedAt;
+  const TvSery({
+    required this.id,
+    this.tmdbId,
+    required this.title,
+    this.overview,
+    this.posterPath,
+    this.firstAirDate,
+    this.totalSeasons,
+    this.voteAverage,
+    this.genreNames,
+    required this.status,
+    this.userRating,
+    required this.watchedSeasons,
+    required this.inOriginalLanguage,
+    required this.addedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || tmdbId != null) {
+      map['tmdb_id'] = Variable<int>(tmdbId);
+    }
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || overview != null) {
+      map['overview'] = Variable<String>(overview);
+    }
+    if (!nullToAbsent || posterPath != null) {
+      map['poster_path'] = Variable<String>(posterPath);
+    }
+    if (!nullToAbsent || firstAirDate != null) {
+      map['first_air_date'] = Variable<String>(firstAirDate);
+    }
+    if (!nullToAbsent || totalSeasons != null) {
+      map['total_seasons'] = Variable<int>(totalSeasons);
+    }
+    if (!nullToAbsent || voteAverage != null) {
+      map['vote_average'] = Variable<double>(voteAverage);
+    }
+    if (!nullToAbsent || genreNames != null) {
+      map['genre_names'] = Variable<String>(genreNames);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || userRating != null) {
+      map['user_rating'] = Variable<int>(userRating);
+    }
+    map['watched_seasons'] = Variable<String>(watchedSeasons);
+    map['in_original_language'] = Variable<bool>(inOriginalLanguage);
+    map['added_at'] = Variable<DateTime>(addedAt);
+    return map;
+  }
+
+  TvSeriesCompanion toCompanion(bool nullToAbsent) {
+    return TvSeriesCompanion(
+      id: Value(id),
+      tmdbId: tmdbId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tmdbId),
+      title: Value(title),
+      overview: overview == null && nullToAbsent
+          ? const Value.absent()
+          : Value(overview),
+      posterPath: posterPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(posterPath),
+      firstAirDate: firstAirDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(firstAirDate),
+      totalSeasons: totalSeasons == null && nullToAbsent
+          ? const Value.absent()
+          : Value(totalSeasons),
+      voteAverage: voteAverage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(voteAverage),
+      genreNames: genreNames == null && nullToAbsent
+          ? const Value.absent()
+          : Value(genreNames),
+      status: Value(status),
+      userRating: userRating == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userRating),
+      watchedSeasons: Value(watchedSeasons),
+      inOriginalLanguage: Value(inOriginalLanguage),
+      addedAt: Value(addedAt),
+    );
+  }
+
+  factory TvSery.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TvSery(
+      id: serializer.fromJson<String>(json['id']),
+      tmdbId: serializer.fromJson<int?>(json['tmdbId']),
+      title: serializer.fromJson<String>(json['title']),
+      overview: serializer.fromJson<String?>(json['overview']),
+      posterPath: serializer.fromJson<String?>(json['posterPath']),
+      firstAirDate: serializer.fromJson<String?>(json['firstAirDate']),
+      totalSeasons: serializer.fromJson<int?>(json['totalSeasons']),
+      voteAverage: serializer.fromJson<double?>(json['voteAverage']),
+      genreNames: serializer.fromJson<String?>(json['genreNames']),
+      status: serializer.fromJson<String>(json['status']),
+      userRating: serializer.fromJson<int?>(json['userRating']),
+      watchedSeasons: serializer.fromJson<String>(json['watchedSeasons']),
+      inOriginalLanguage: serializer.fromJson<bool>(json['inOriginalLanguage']),
+      addedAt: serializer.fromJson<DateTime>(json['addedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tmdbId': serializer.toJson<int?>(tmdbId),
+      'title': serializer.toJson<String>(title),
+      'overview': serializer.toJson<String?>(overview),
+      'posterPath': serializer.toJson<String?>(posterPath),
+      'firstAirDate': serializer.toJson<String?>(firstAirDate),
+      'totalSeasons': serializer.toJson<int?>(totalSeasons),
+      'voteAverage': serializer.toJson<double?>(voteAverage),
+      'genreNames': serializer.toJson<String?>(genreNames),
+      'status': serializer.toJson<String>(status),
+      'userRating': serializer.toJson<int?>(userRating),
+      'watchedSeasons': serializer.toJson<String>(watchedSeasons),
+      'inOriginalLanguage': serializer.toJson<bool>(inOriginalLanguage),
+      'addedAt': serializer.toJson<DateTime>(addedAt),
+    };
+  }
+
+  TvSery copyWith({
+    String? id,
+    Value<int?> tmdbId = const Value.absent(),
+    String? title,
+    Value<String?> overview = const Value.absent(),
+    Value<String?> posterPath = const Value.absent(),
+    Value<String?> firstAirDate = const Value.absent(),
+    Value<int?> totalSeasons = const Value.absent(),
+    Value<double?> voteAverage = const Value.absent(),
+    Value<String?> genreNames = const Value.absent(),
+    String? status,
+    Value<int?> userRating = const Value.absent(),
+    String? watchedSeasons,
+    bool? inOriginalLanguage,
+    DateTime? addedAt,
+  }) => TvSery(
+    id: id ?? this.id,
+    tmdbId: tmdbId.present ? tmdbId.value : this.tmdbId,
+    title: title ?? this.title,
+    overview: overview.present ? overview.value : this.overview,
+    posterPath: posterPath.present ? posterPath.value : this.posterPath,
+    firstAirDate: firstAirDate.present ? firstAirDate.value : this.firstAirDate,
+    totalSeasons: totalSeasons.present ? totalSeasons.value : this.totalSeasons,
+    voteAverage: voteAverage.present ? voteAverage.value : this.voteAverage,
+    genreNames: genreNames.present ? genreNames.value : this.genreNames,
+    status: status ?? this.status,
+    userRating: userRating.present ? userRating.value : this.userRating,
+    watchedSeasons: watchedSeasons ?? this.watchedSeasons,
+    inOriginalLanguage: inOriginalLanguage ?? this.inOriginalLanguage,
+    addedAt: addedAt ?? this.addedAt,
+  );
+  TvSery copyWithCompanion(TvSeriesCompanion data) {
+    return TvSery(
+      id: data.id.present ? data.id.value : this.id,
+      tmdbId: data.tmdbId.present ? data.tmdbId.value : this.tmdbId,
+      title: data.title.present ? data.title.value : this.title,
+      overview: data.overview.present ? data.overview.value : this.overview,
+      posterPath: data.posterPath.present
+          ? data.posterPath.value
+          : this.posterPath,
+      firstAirDate: data.firstAirDate.present
+          ? data.firstAirDate.value
+          : this.firstAirDate,
+      totalSeasons: data.totalSeasons.present
+          ? data.totalSeasons.value
+          : this.totalSeasons,
+      voteAverage: data.voteAverage.present
+          ? data.voteAverage.value
+          : this.voteAverage,
+      genreNames: data.genreNames.present
+          ? data.genreNames.value
+          : this.genreNames,
+      status: data.status.present ? data.status.value : this.status,
+      userRating: data.userRating.present
+          ? data.userRating.value
+          : this.userRating,
+      watchedSeasons: data.watchedSeasons.present
+          ? data.watchedSeasons.value
+          : this.watchedSeasons,
+      inOriginalLanguage: data.inOriginalLanguage.present
+          ? data.inOriginalLanguage.value
+          : this.inOriginalLanguage,
+      addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TvSery(')
+          ..write('id: $id, ')
+          ..write('tmdbId: $tmdbId, ')
+          ..write('title: $title, ')
+          ..write('overview: $overview, ')
+          ..write('posterPath: $posterPath, ')
+          ..write('firstAirDate: $firstAirDate, ')
+          ..write('totalSeasons: $totalSeasons, ')
+          ..write('voteAverage: $voteAverage, ')
+          ..write('genreNames: $genreNames, ')
+          ..write('status: $status, ')
+          ..write('userRating: $userRating, ')
+          ..write('watchedSeasons: $watchedSeasons, ')
+          ..write('inOriginalLanguage: $inOriginalLanguage, ')
+          ..write('addedAt: $addedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tmdbId,
+    title,
+    overview,
+    posterPath,
+    firstAirDate,
+    totalSeasons,
+    voteAverage,
+    genreNames,
+    status,
+    userRating,
+    watchedSeasons,
+    inOriginalLanguage,
+    addedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TvSery &&
+          other.id == this.id &&
+          other.tmdbId == this.tmdbId &&
+          other.title == this.title &&
+          other.overview == this.overview &&
+          other.posterPath == this.posterPath &&
+          other.firstAirDate == this.firstAirDate &&
+          other.totalSeasons == this.totalSeasons &&
+          other.voteAverage == this.voteAverage &&
+          other.genreNames == this.genreNames &&
+          other.status == this.status &&
+          other.userRating == this.userRating &&
+          other.watchedSeasons == this.watchedSeasons &&
+          other.inOriginalLanguage == this.inOriginalLanguage &&
+          other.addedAt == this.addedAt);
+}
+
+class TvSeriesCompanion extends UpdateCompanion<TvSery> {
+  final Value<String> id;
+  final Value<int?> tmdbId;
+  final Value<String> title;
+  final Value<String?> overview;
+  final Value<String?> posterPath;
+  final Value<String?> firstAirDate;
+  final Value<int?> totalSeasons;
+  final Value<double?> voteAverage;
+  final Value<String?> genreNames;
+  final Value<String> status;
+  final Value<int?> userRating;
+  final Value<String> watchedSeasons;
+  final Value<bool> inOriginalLanguage;
+  final Value<DateTime> addedAt;
+  final Value<int> rowid;
+  const TvSeriesCompanion({
+    this.id = const Value.absent(),
+    this.tmdbId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.overview = const Value.absent(),
+    this.posterPath = const Value.absent(),
+    this.firstAirDate = const Value.absent(),
+    this.totalSeasons = const Value.absent(),
+    this.voteAverage = const Value.absent(),
+    this.genreNames = const Value.absent(),
+    this.status = const Value.absent(),
+    this.userRating = const Value.absent(),
+    this.watchedSeasons = const Value.absent(),
+    this.inOriginalLanguage = const Value.absent(),
+    this.addedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TvSeriesCompanion.insert({
+    this.id = const Value.absent(),
+    this.tmdbId = const Value.absent(),
+    required String title,
+    this.overview = const Value.absent(),
+    this.posterPath = const Value.absent(),
+    this.firstAirDate = const Value.absent(),
+    this.totalSeasons = const Value.absent(),
+    this.voteAverage = const Value.absent(),
+    this.genreNames = const Value.absent(),
+    this.status = const Value.absent(),
+    this.userRating = const Value.absent(),
+    this.watchedSeasons = const Value.absent(),
+    this.inOriginalLanguage = const Value.absent(),
+    this.addedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : title = Value(title);
+  static Insertable<TvSery> custom({
+    Expression<String>? id,
+    Expression<int>? tmdbId,
+    Expression<String>? title,
+    Expression<String>? overview,
+    Expression<String>? posterPath,
+    Expression<String>? firstAirDate,
+    Expression<int>? totalSeasons,
+    Expression<double>? voteAverage,
+    Expression<String>? genreNames,
+    Expression<String>? status,
+    Expression<int>? userRating,
+    Expression<String>? watchedSeasons,
+    Expression<bool>? inOriginalLanguage,
+    Expression<DateTime>? addedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tmdbId != null) 'tmdb_id': tmdbId,
+      if (title != null) 'title': title,
+      if (overview != null) 'overview': overview,
+      if (posterPath != null) 'poster_path': posterPath,
+      if (firstAirDate != null) 'first_air_date': firstAirDate,
+      if (totalSeasons != null) 'total_seasons': totalSeasons,
+      if (voteAverage != null) 'vote_average': voteAverage,
+      if (genreNames != null) 'genre_names': genreNames,
+      if (status != null) 'status': status,
+      if (userRating != null) 'user_rating': userRating,
+      if (watchedSeasons != null) 'watched_seasons': watchedSeasons,
+      if (inOriginalLanguage != null)
+        'in_original_language': inOriginalLanguage,
+      if (addedAt != null) 'added_at': addedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TvSeriesCompanion copyWith({
+    Value<String>? id,
+    Value<int?>? tmdbId,
+    Value<String>? title,
+    Value<String?>? overview,
+    Value<String?>? posterPath,
+    Value<String?>? firstAirDate,
+    Value<int?>? totalSeasons,
+    Value<double?>? voteAverage,
+    Value<String?>? genreNames,
+    Value<String>? status,
+    Value<int?>? userRating,
+    Value<String>? watchedSeasons,
+    Value<bool>? inOriginalLanguage,
+    Value<DateTime>? addedAt,
+    Value<int>? rowid,
+  }) {
+    return TvSeriesCompanion(
+      id: id ?? this.id,
+      tmdbId: tmdbId ?? this.tmdbId,
+      title: title ?? this.title,
+      overview: overview ?? this.overview,
+      posterPath: posterPath ?? this.posterPath,
+      firstAirDate: firstAirDate ?? this.firstAirDate,
+      totalSeasons: totalSeasons ?? this.totalSeasons,
+      voteAverage: voteAverage ?? this.voteAverage,
+      genreNames: genreNames ?? this.genreNames,
+      status: status ?? this.status,
+      userRating: userRating ?? this.userRating,
+      watchedSeasons: watchedSeasons ?? this.watchedSeasons,
+      inOriginalLanguage: inOriginalLanguage ?? this.inOriginalLanguage,
+      addedAt: addedAt ?? this.addedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tmdbId.present) {
+      map['tmdb_id'] = Variable<int>(tmdbId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (overview.present) {
+      map['overview'] = Variable<String>(overview.value);
+    }
+    if (posterPath.present) {
+      map['poster_path'] = Variable<String>(posterPath.value);
+    }
+    if (firstAirDate.present) {
+      map['first_air_date'] = Variable<String>(firstAirDate.value);
+    }
+    if (totalSeasons.present) {
+      map['total_seasons'] = Variable<int>(totalSeasons.value);
+    }
+    if (voteAverage.present) {
+      map['vote_average'] = Variable<double>(voteAverage.value);
+    }
+    if (genreNames.present) {
+      map['genre_names'] = Variable<String>(genreNames.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (userRating.present) {
+      map['user_rating'] = Variable<int>(userRating.value);
+    }
+    if (watchedSeasons.present) {
+      map['watched_seasons'] = Variable<String>(watchedSeasons.value);
+    }
+    if (inOriginalLanguage.present) {
+      map['in_original_language'] = Variable<bool>(inOriginalLanguage.value);
+    }
+    if (addedAt.present) {
+      map['added_at'] = Variable<DateTime>(addedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TvSeriesCompanion(')
+          ..write('id: $id, ')
+          ..write('tmdbId: $tmdbId, ')
+          ..write('title: $title, ')
+          ..write('overview: $overview, ')
+          ..write('posterPath: $posterPath, ')
+          ..write('firstAirDate: $firstAirDate, ')
+          ..write('totalSeasons: $totalSeasons, ')
+          ..write('voteAverage: $voteAverage, ')
+          ..write('genreNames: $genreNames, ')
+          ..write('status: $status, ')
+          ..write('userRating: $userRating, ')
+          ..write('watchedSeasons: $watchedSeasons, ')
+          ..write('inOriginalLanguage: $inOriginalLanguage, ')
+          ..write('addedAt: $addedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5286,6 +6880,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CalendarEventsTable calendarEvents = $CalendarEventsTable(this);
   late final $NoteGoalsTable noteGoals = $NoteGoalsTable(this);
   late final $TrackersTable trackers = $TrackersTable(this);
+  late final $MoviesTable movies = $MoviesTable(this);
+  late final $TvSeriesTable tvSeries = $TvSeriesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5303,6 +6899,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     calendarEvents,
     noteGoals,
     trackers,
+    movies,
+    tvSeries,
   ];
 }
 
@@ -8075,6 +9673,745 @@ typedef $$TrackersTableProcessedTableManager =
       Tracker,
       PrefetchHooks Function()
     >;
+typedef $$MoviesTableCreateCompanionBuilder =
+    MoviesCompanion Function({
+      Value<String> id,
+      Value<int?> tmdbId,
+      required String title,
+      Value<String?> overview,
+      Value<String?> posterPath,
+      Value<String?> releaseDate,
+      Value<int?> runtime,
+      Value<double?> voteAverage,
+      Value<String?> genreNames,
+      Value<String> status,
+      Value<int?> userRating,
+      Value<bool> inOriginalLanguage,
+      Value<DateTime> addedAt,
+      Value<int> rowid,
+    });
+typedef $$MoviesTableUpdateCompanionBuilder =
+    MoviesCompanion Function({
+      Value<String> id,
+      Value<int?> tmdbId,
+      Value<String> title,
+      Value<String?> overview,
+      Value<String?> posterPath,
+      Value<String?> releaseDate,
+      Value<int?> runtime,
+      Value<double?> voteAverage,
+      Value<String?> genreNames,
+      Value<String> status,
+      Value<int?> userRating,
+      Value<bool> inOriginalLanguage,
+      Value<DateTime> addedAt,
+      Value<int> rowid,
+    });
+
+class $$MoviesTableFilterComposer
+    extends Composer<_$AppDatabase, $MoviesTable> {
+  $$MoviesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get tmdbId => $composableBuilder(
+    column: $table.tmdbId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get overview => $composableBuilder(
+    column: $table.overview,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get posterPath => $composableBuilder(
+    column: $table.posterPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get releaseDate => $composableBuilder(
+    column: $table.releaseDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get runtime => $composableBuilder(
+    column: $table.runtime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get voteAverage => $composableBuilder(
+    column: $table.voteAverage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get genreNames => $composableBuilder(
+    column: $table.genreNames,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get userRating => $composableBuilder(
+    column: $table.userRating,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get inOriginalLanguage => $composableBuilder(
+    column: $table.inOriginalLanguage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MoviesTableOrderingComposer
+    extends Composer<_$AppDatabase, $MoviesTable> {
+  $$MoviesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get tmdbId => $composableBuilder(
+    column: $table.tmdbId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get overview => $composableBuilder(
+    column: $table.overview,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get posterPath => $composableBuilder(
+    column: $table.posterPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get releaseDate => $composableBuilder(
+    column: $table.releaseDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get runtime => $composableBuilder(
+    column: $table.runtime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get voteAverage => $composableBuilder(
+    column: $table.voteAverage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get genreNames => $composableBuilder(
+    column: $table.genreNames,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get userRating => $composableBuilder(
+    column: $table.userRating,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get inOriginalLanguage => $composableBuilder(
+    column: $table.inOriginalLanguage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MoviesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MoviesTable> {
+  $$MoviesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get tmdbId =>
+      $composableBuilder(column: $table.tmdbId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get overview =>
+      $composableBuilder(column: $table.overview, builder: (column) => column);
+
+  GeneratedColumn<String> get posterPath => $composableBuilder(
+    column: $table.posterPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get releaseDate => $composableBuilder(
+    column: $table.releaseDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get runtime =>
+      $composableBuilder(column: $table.runtime, builder: (column) => column);
+
+  GeneratedColumn<double> get voteAverage => $composableBuilder(
+    column: $table.voteAverage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get genreNames => $composableBuilder(
+    column: $table.genreNames,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get userRating => $composableBuilder(
+    column: $table.userRating,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get inOriginalLanguage => $composableBuilder(
+    column: $table.inOriginalLanguage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get addedAt =>
+      $composableBuilder(column: $table.addedAt, builder: (column) => column);
+}
+
+class $$MoviesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MoviesTable,
+          Movy,
+          $$MoviesTableFilterComposer,
+          $$MoviesTableOrderingComposer,
+          $$MoviesTableAnnotationComposer,
+          $$MoviesTableCreateCompanionBuilder,
+          $$MoviesTableUpdateCompanionBuilder,
+          (Movy, BaseReferences<_$AppDatabase, $MoviesTable, Movy>),
+          Movy,
+          PrefetchHooks Function()
+        > {
+  $$MoviesTableTableManager(_$AppDatabase db, $MoviesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MoviesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MoviesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MoviesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int?> tmdbId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> overview = const Value.absent(),
+                Value<String?> posterPath = const Value.absent(),
+                Value<String?> releaseDate = const Value.absent(),
+                Value<int?> runtime = const Value.absent(),
+                Value<double?> voteAverage = const Value.absent(),
+                Value<String?> genreNames = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> userRating = const Value.absent(),
+                Value<bool> inOriginalLanguage = const Value.absent(),
+                Value<DateTime> addedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MoviesCompanion(
+                id: id,
+                tmdbId: tmdbId,
+                title: title,
+                overview: overview,
+                posterPath: posterPath,
+                releaseDate: releaseDate,
+                runtime: runtime,
+                voteAverage: voteAverage,
+                genreNames: genreNames,
+                status: status,
+                userRating: userRating,
+                inOriginalLanguage: inOriginalLanguage,
+                addedAt: addedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int?> tmdbId = const Value.absent(),
+                required String title,
+                Value<String?> overview = const Value.absent(),
+                Value<String?> posterPath = const Value.absent(),
+                Value<String?> releaseDate = const Value.absent(),
+                Value<int?> runtime = const Value.absent(),
+                Value<double?> voteAverage = const Value.absent(),
+                Value<String?> genreNames = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> userRating = const Value.absent(),
+                Value<bool> inOriginalLanguage = const Value.absent(),
+                Value<DateTime> addedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MoviesCompanion.insert(
+                id: id,
+                tmdbId: tmdbId,
+                title: title,
+                overview: overview,
+                posterPath: posterPath,
+                releaseDate: releaseDate,
+                runtime: runtime,
+                voteAverage: voteAverage,
+                genreNames: genreNames,
+                status: status,
+                userRating: userRating,
+                inOriginalLanguage: inOriginalLanguage,
+                addedAt: addedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MoviesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MoviesTable,
+      Movy,
+      $$MoviesTableFilterComposer,
+      $$MoviesTableOrderingComposer,
+      $$MoviesTableAnnotationComposer,
+      $$MoviesTableCreateCompanionBuilder,
+      $$MoviesTableUpdateCompanionBuilder,
+      (Movy, BaseReferences<_$AppDatabase, $MoviesTable, Movy>),
+      Movy,
+      PrefetchHooks Function()
+    >;
+typedef $$TvSeriesTableCreateCompanionBuilder =
+    TvSeriesCompanion Function({
+      Value<String> id,
+      Value<int?> tmdbId,
+      required String title,
+      Value<String?> overview,
+      Value<String?> posterPath,
+      Value<String?> firstAirDate,
+      Value<int?> totalSeasons,
+      Value<double?> voteAverage,
+      Value<String?> genreNames,
+      Value<String> status,
+      Value<int?> userRating,
+      Value<String> watchedSeasons,
+      Value<bool> inOriginalLanguage,
+      Value<DateTime> addedAt,
+      Value<int> rowid,
+    });
+typedef $$TvSeriesTableUpdateCompanionBuilder =
+    TvSeriesCompanion Function({
+      Value<String> id,
+      Value<int?> tmdbId,
+      Value<String> title,
+      Value<String?> overview,
+      Value<String?> posterPath,
+      Value<String?> firstAirDate,
+      Value<int?> totalSeasons,
+      Value<double?> voteAverage,
+      Value<String?> genreNames,
+      Value<String> status,
+      Value<int?> userRating,
+      Value<String> watchedSeasons,
+      Value<bool> inOriginalLanguage,
+      Value<DateTime> addedAt,
+      Value<int> rowid,
+    });
+
+class $$TvSeriesTableFilterComposer
+    extends Composer<_$AppDatabase, $TvSeriesTable> {
+  $$TvSeriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get tmdbId => $composableBuilder(
+    column: $table.tmdbId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get overview => $composableBuilder(
+    column: $table.overview,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get posterPath => $composableBuilder(
+    column: $table.posterPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get firstAirDate => $composableBuilder(
+    column: $table.firstAirDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalSeasons => $composableBuilder(
+    column: $table.totalSeasons,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get voteAverage => $composableBuilder(
+    column: $table.voteAverage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get genreNames => $composableBuilder(
+    column: $table.genreNames,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get userRating => $composableBuilder(
+    column: $table.userRating,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get watchedSeasons => $composableBuilder(
+    column: $table.watchedSeasons,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get inOriginalLanguage => $composableBuilder(
+    column: $table.inOriginalLanguage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TvSeriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $TvSeriesTable> {
+  $$TvSeriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get tmdbId => $composableBuilder(
+    column: $table.tmdbId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get overview => $composableBuilder(
+    column: $table.overview,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get posterPath => $composableBuilder(
+    column: $table.posterPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get firstAirDate => $composableBuilder(
+    column: $table.firstAirDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalSeasons => $composableBuilder(
+    column: $table.totalSeasons,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get voteAverage => $composableBuilder(
+    column: $table.voteAverage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get genreNames => $composableBuilder(
+    column: $table.genreNames,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get userRating => $composableBuilder(
+    column: $table.userRating,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get watchedSeasons => $composableBuilder(
+    column: $table.watchedSeasons,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get inOriginalLanguage => $composableBuilder(
+    column: $table.inOriginalLanguage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TvSeriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TvSeriesTable> {
+  $$TvSeriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get tmdbId =>
+      $composableBuilder(column: $table.tmdbId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get overview =>
+      $composableBuilder(column: $table.overview, builder: (column) => column);
+
+  GeneratedColumn<String> get posterPath => $composableBuilder(
+    column: $table.posterPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get firstAirDate => $composableBuilder(
+    column: $table.firstAirDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalSeasons => $composableBuilder(
+    column: $table.totalSeasons,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get voteAverage => $composableBuilder(
+    column: $table.voteAverage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get genreNames => $composableBuilder(
+    column: $table.genreNames,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get userRating => $composableBuilder(
+    column: $table.userRating,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get watchedSeasons => $composableBuilder(
+    column: $table.watchedSeasons,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get inOriginalLanguage => $composableBuilder(
+    column: $table.inOriginalLanguage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get addedAt =>
+      $composableBuilder(column: $table.addedAt, builder: (column) => column);
+}
+
+class $$TvSeriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TvSeriesTable,
+          TvSery,
+          $$TvSeriesTableFilterComposer,
+          $$TvSeriesTableOrderingComposer,
+          $$TvSeriesTableAnnotationComposer,
+          $$TvSeriesTableCreateCompanionBuilder,
+          $$TvSeriesTableUpdateCompanionBuilder,
+          (TvSery, BaseReferences<_$AppDatabase, $TvSeriesTable, TvSery>),
+          TvSery,
+          PrefetchHooks Function()
+        > {
+  $$TvSeriesTableTableManager(_$AppDatabase db, $TvSeriesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TvSeriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TvSeriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TvSeriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int?> tmdbId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> overview = const Value.absent(),
+                Value<String?> posterPath = const Value.absent(),
+                Value<String?> firstAirDate = const Value.absent(),
+                Value<int?> totalSeasons = const Value.absent(),
+                Value<double?> voteAverage = const Value.absent(),
+                Value<String?> genreNames = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> userRating = const Value.absent(),
+                Value<String> watchedSeasons = const Value.absent(),
+                Value<bool> inOriginalLanguage = const Value.absent(),
+                Value<DateTime> addedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TvSeriesCompanion(
+                id: id,
+                tmdbId: tmdbId,
+                title: title,
+                overview: overview,
+                posterPath: posterPath,
+                firstAirDate: firstAirDate,
+                totalSeasons: totalSeasons,
+                voteAverage: voteAverage,
+                genreNames: genreNames,
+                status: status,
+                userRating: userRating,
+                watchedSeasons: watchedSeasons,
+                inOriginalLanguage: inOriginalLanguage,
+                addedAt: addedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int?> tmdbId = const Value.absent(),
+                required String title,
+                Value<String?> overview = const Value.absent(),
+                Value<String?> posterPath = const Value.absent(),
+                Value<String?> firstAirDate = const Value.absent(),
+                Value<int?> totalSeasons = const Value.absent(),
+                Value<double?> voteAverage = const Value.absent(),
+                Value<String?> genreNames = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> userRating = const Value.absent(),
+                Value<String> watchedSeasons = const Value.absent(),
+                Value<bool> inOriginalLanguage = const Value.absent(),
+                Value<DateTime> addedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TvSeriesCompanion.insert(
+                id: id,
+                tmdbId: tmdbId,
+                title: title,
+                overview: overview,
+                posterPath: posterPath,
+                firstAirDate: firstAirDate,
+                totalSeasons: totalSeasons,
+                voteAverage: voteAverage,
+                genreNames: genreNames,
+                status: status,
+                userRating: userRating,
+                watchedSeasons: watchedSeasons,
+                inOriginalLanguage: inOriginalLanguage,
+                addedAt: addedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TvSeriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TvSeriesTable,
+      TvSery,
+      $$TvSeriesTableFilterComposer,
+      $$TvSeriesTableOrderingComposer,
+      $$TvSeriesTableAnnotationComposer,
+      $$TvSeriesTableCreateCompanionBuilder,
+      $$TvSeriesTableUpdateCompanionBuilder,
+      (TvSery, BaseReferences<_$AppDatabase, $TvSeriesTable, TvSery>),
+      TvSery,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8103,4 +10440,8 @@ class $AppDatabaseManager {
       $$NoteGoalsTableTableManager(_db, _db.noteGoals);
   $$TrackersTableTableManager get trackers =>
       $$TrackersTableTableManager(_db, _db.trackers);
+  $$MoviesTableTableManager get movies =>
+      $$MoviesTableTableManager(_db, _db.movies);
+  $$TvSeriesTableTableManager get tvSeries =>
+      $$TvSeriesTableTableManager(_db, _db.tvSeries);
 }

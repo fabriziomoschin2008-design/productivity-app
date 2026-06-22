@@ -78,6 +78,7 @@ lib/
 | flutter_quill | ^11.5.1 | editor rich text (Note) |
 | table_calendar | ^3.1.2 | calendario eventi (Calendario) |
 | local_notifier | ^0.1.6 | notifiche Windows/macOS/Linux (no Android) |
+| http | ^1.2.2 | chiamate HTTP per TMDb API |
 | build_runner | ^2.4.13 | codegen (dev) |
 | drift_dev | ^2.23.0 | codegen Drift (dev) |
 
@@ -103,7 +104,8 @@ lib/
 - `Value` di Drift: importare con `import 'package:drift/drift.dart' show Value;` nei file che usano i Companion
 - Il `DropdownButtonFormField` usa `value:` (non `initialValue:`) per mantenere la reattività — suppress con `// ignore: deprecated_member_use`
 - Locale `it_IT` inizializzato in `main()` con `initializeDateFormatting` prima di `runApp`
-- **Schema attuale: versione 9** — v9: isDailyAutoIncrement su trackers — v8: trackers — v7: note_goals — v6: habits + habit_logs + calendar_events — v5: note_folders + notes — v1: base, v2: goals, v3: todo_lists+todo_items, v4: hasDueTime su todo_items
+- **Schema attuale: versione 10** — v10: Movies + TvSeries (intrattenimento) — v9: isDailyAutoIncrement su trackers — v8: trackers — v7: note_goals — v6: habits + habit_logs + calendar_events — v5: note_folders + notes — v1: base, v2: goals, v3: todo_lists+todo_items, v4: hasDueTime su todo_items
+- **Drift pluralizzazione:** la tabella `Movies` genera la data class `Movy` (non `Movie`); `TvSeries` → `TvSery`. I Companion restano `MoviesCompanion`, `TvSeriesCompanion`. I nostri StateNotifier/State usano nomi normali (`MoviesNotifier`, `MoviesState`), solo i tipi Drift vanno con `Movy`/`TvSery`.
 - **`hasDueTime` (TodoItems):** quando false, la scadenza è salvata come 23:59:59 del giorno (scade a mezzanotte); quando true, l'utente ha scelto un'ora specifica e il confronto "scaduto" usa `DateTime.now()` esatto
 - **Architettura moduli:** To-do = task lavorative/scolastiche; Calendario (Fase 4) = habit tracker giornaliero (sessioni, abitudini, routine)
 - **Notifiche (`local_notifier`):** `NotificationService.init()` in `main()`. Scheduling via `Timer` in memoria (non sopravvivono al riavvio → i listener Drift le ripianificano automaticamente all'avvio). `NotificationScheduler` è hookato nei listener stream di `GoalsNotifier`, `TodoNotifier`, `CalendarNotifier`. Android non supportato da `local_notifier` — richiederà `flutter_local_notifications` in futuro.
