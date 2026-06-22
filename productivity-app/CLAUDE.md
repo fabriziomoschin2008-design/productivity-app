@@ -95,6 +95,7 @@ lib/
 - [x] Fase 3 — Note (cartelle, editor rich text appflowy_editor, ricerca, pin)
 - [x] Fase 4 — Calendario (habit tracker: viste giornaliera/settimanale/mensile + calendario eventi)
 - [x] Fase 5 — Notifiche (abitudini 20:00, obiettivi scadenza 3gg/1gg, eventi calendario 30min prima, task mattino 8:00)
+- [x] Fase 6 — Tracker (pannelli personalizzabili con obiettivo, incremento, cicli completati; allegati e link nelle note; obiettivi nelle note)
 
 ## Note importanti
 
@@ -102,7 +103,7 @@ lib/
 - `Value` di Drift: importare con `import 'package:drift/drift.dart' show Value;` nei file che usano i Companion
 - Il `DropdownButtonFormField` usa `value:` (non `initialValue:`) per mantenere la reattività — suppress con `// ignore: deprecated_member_use`
 - Locale `it_IT` inizializzato in `main()` con `initializeDateFormatting` prima di `runApp`
-- **Schema attuale: versione 7** — v7: note_goals — v6: habits + habit_logs + calendar_events — v5: note_folders + notes — v1: base, v2: goals, v3: todo_lists+todo_items, v4: hasDueTime su todo_items
+- **Schema attuale: versione 9** — v9: isDailyAutoIncrement su trackers — v8: trackers — v7: note_goals — v6: habits + habit_logs + calendar_events — v5: note_folders + notes — v1: base, v2: goals, v3: todo_lists+todo_items, v4: hasDueTime su todo_items
 - **`hasDueTime` (TodoItems):** quando false, la scadenza è salvata come 23:59:59 del giorno (scade a mezzanotte); quando true, l'utente ha scelto un'ora specifica e il confronto "scaduto" usa `DateTime.now()` esatto
 - **Architettura moduli:** To-do = task lavorative/scolastiche; Calendario (Fase 4) = habit tracker giornaliero (sessioni, abitudini, routine)
 - **Notifiche (`local_notifier`):** `NotificationService.init()` in `main()`. Scheduling via `Timer` in memoria (non sopravvivono al riavvio → i listener Drift le ripianificano automaticamente all'avvio). `NotificationScheduler` è hookato nei listener stream di `GoalsNotifier`, `TodoNotifier`, `CalendarNotifier`. Android non supportato da `local_notifier` — richiederà `flutter_local_notifications` in futuro.

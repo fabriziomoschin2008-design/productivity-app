@@ -4565,6 +4565,711 @@ class NoteGoalsCompanion extends UpdateCompanion<NoteGoal> {
   }
 }
 
+class $TrackersTable extends Trackers with TableInfo<$TrackersTable, Tracker> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TrackersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => _uuid.v4(),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currentValueMeta = const VerificationMeta(
+    'currentValue',
+  );
+  @override
+  late final GeneratedColumn<double> currentValue = GeneratedColumn<double>(
+    'current_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _targetValueMeta = const VerificationMeta(
+    'targetValue',
+  );
+  @override
+  late final GeneratedColumn<double> targetValue = GeneratedColumn<double>(
+    'target_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stepMeta = const VerificationMeta('step');
+  @override
+  late final GeneratedColumn<double> step = GeneratedColumn<double>(
+    'step',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _completedCyclesMeta = const VerificationMeta(
+    'completedCycles',
+  );
+  @override
+  late final GeneratedColumn<int> completedCycles = GeneratedColumn<int>(
+    'completed_cycles',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _colorValueMeta = const VerificationMeta(
+    'colorValue',
+  );
+  @override
+  late final GeneratedColumn<int> colorValue = GeneratedColumn<int>(
+    'color_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0xFFFF6B45),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDailyAutoIncrementMeta =
+      const VerificationMeta('isDailyAutoIncrement');
+  @override
+  late final GeneratedColumn<bool> isDailyAutoIncrement = GeneratedColumn<bool>(
+    'daily_auto_increment',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("daily_auto_increment" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    currentValue,
+    targetValue,
+    step,
+    unit,
+    completedCycles,
+    colorValue,
+    sortOrder,
+    isDailyAutoIncrement,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'trackers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Tracker> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('current_value')) {
+      context.handle(
+        _currentValueMeta,
+        currentValue.isAcceptableOrUnknown(
+          data['current_value']!,
+          _currentValueMeta,
+        ),
+      );
+    }
+    if (data.containsKey('target_value')) {
+      context.handle(
+        _targetValueMeta,
+        targetValue.isAcceptableOrUnknown(
+          data['target_value']!,
+          _targetValueMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_targetValueMeta);
+    }
+    if (data.containsKey('step')) {
+      context.handle(
+        _stepMeta,
+        step.isAcceptableOrUnknown(data['step']!, _stepMeta),
+      );
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    }
+    if (data.containsKey('completed_cycles')) {
+      context.handle(
+        _completedCyclesMeta,
+        completedCycles.isAcceptableOrUnknown(
+          data['completed_cycles']!,
+          _completedCyclesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('color_value')) {
+      context.handle(
+        _colorValueMeta,
+        colorValue.isAcceptableOrUnknown(data['color_value']!, _colorValueMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('daily_auto_increment')) {
+      context.handle(
+        _isDailyAutoIncrementMeta,
+        isDailyAutoIncrement.isAcceptableOrUnknown(
+          data['daily_auto_increment']!,
+          _isDailyAutoIncrementMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Tracker map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Tracker(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      currentValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}current_value'],
+      )!,
+      targetValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_value'],
+      )!,
+      step: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}step'],
+      )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      ),
+      completedCycles: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}completed_cycles'],
+      )!,
+      colorValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color_value'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      isDailyAutoIncrement: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}daily_auto_increment'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TrackersTable createAlias(String alias) {
+    return $TrackersTable(attachedDatabase, alias);
+  }
+}
+
+class Tracker extends DataClass implements Insertable<Tracker> {
+  final String id;
+  final String name;
+  final double currentValue;
+  final double targetValue;
+  final double step;
+  final String? unit;
+  final int completedCycles;
+  final int colorValue;
+  final int sortOrder;
+  final bool isDailyAutoIncrement;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const Tracker({
+    required this.id,
+    required this.name,
+    required this.currentValue,
+    required this.targetValue,
+    required this.step,
+    this.unit,
+    required this.completedCycles,
+    required this.colorValue,
+    required this.sortOrder,
+    required this.isDailyAutoIncrement,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['current_value'] = Variable<double>(currentValue);
+    map['target_value'] = Variable<double>(targetValue);
+    map['step'] = Variable<double>(step);
+    if (!nullToAbsent || unit != null) {
+      map['unit'] = Variable<String>(unit);
+    }
+    map['completed_cycles'] = Variable<int>(completedCycles);
+    map['color_value'] = Variable<int>(colorValue);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['daily_auto_increment'] = Variable<bool>(isDailyAutoIncrement);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  TrackersCompanion toCompanion(bool nullToAbsent) {
+    return TrackersCompanion(
+      id: Value(id),
+      name: Value(name),
+      currentValue: Value(currentValue),
+      targetValue: Value(targetValue),
+      step: Value(step),
+      unit: unit == null && nullToAbsent ? const Value.absent() : Value(unit),
+      completedCycles: Value(completedCycles),
+      colorValue: Value(colorValue),
+      sortOrder: Value(sortOrder),
+      isDailyAutoIncrement: Value(isDailyAutoIncrement),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory Tracker.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Tracker(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      currentValue: serializer.fromJson<double>(json['currentValue']),
+      targetValue: serializer.fromJson<double>(json['targetValue']),
+      step: serializer.fromJson<double>(json['step']),
+      unit: serializer.fromJson<String?>(json['unit']),
+      completedCycles: serializer.fromJson<int>(json['completedCycles']),
+      colorValue: serializer.fromJson<int>(json['colorValue']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      isDailyAutoIncrement: serializer.fromJson<bool>(
+        json['isDailyAutoIncrement'],
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'currentValue': serializer.toJson<double>(currentValue),
+      'targetValue': serializer.toJson<double>(targetValue),
+      'step': serializer.toJson<double>(step),
+      'unit': serializer.toJson<String?>(unit),
+      'completedCycles': serializer.toJson<int>(completedCycles),
+      'colorValue': serializer.toJson<int>(colorValue),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'isDailyAutoIncrement': serializer.toJson<bool>(isDailyAutoIncrement),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  Tracker copyWith({
+    String? id,
+    String? name,
+    double? currentValue,
+    double? targetValue,
+    double? step,
+    Value<String?> unit = const Value.absent(),
+    int? completedCycles,
+    int? colorValue,
+    int? sortOrder,
+    bool? isDailyAutoIncrement,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => Tracker(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    currentValue: currentValue ?? this.currentValue,
+    targetValue: targetValue ?? this.targetValue,
+    step: step ?? this.step,
+    unit: unit.present ? unit.value : this.unit,
+    completedCycles: completedCycles ?? this.completedCycles,
+    colorValue: colorValue ?? this.colorValue,
+    sortOrder: sortOrder ?? this.sortOrder,
+    isDailyAutoIncrement: isDailyAutoIncrement ?? this.isDailyAutoIncrement,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  Tracker copyWithCompanion(TrackersCompanion data) {
+    return Tracker(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      currentValue: data.currentValue.present
+          ? data.currentValue.value
+          : this.currentValue,
+      targetValue: data.targetValue.present
+          ? data.targetValue.value
+          : this.targetValue,
+      step: data.step.present ? data.step.value : this.step,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      completedCycles: data.completedCycles.present
+          ? data.completedCycles.value
+          : this.completedCycles,
+      colorValue: data.colorValue.present
+          ? data.colorValue.value
+          : this.colorValue,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      isDailyAutoIncrement: data.isDailyAutoIncrement.present
+          ? data.isDailyAutoIncrement.value
+          : this.isDailyAutoIncrement,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Tracker(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('currentValue: $currentValue, ')
+          ..write('targetValue: $targetValue, ')
+          ..write('step: $step, ')
+          ..write('unit: $unit, ')
+          ..write('completedCycles: $completedCycles, ')
+          ..write('colorValue: $colorValue, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('isDailyAutoIncrement: $isDailyAutoIncrement, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    currentValue,
+    targetValue,
+    step,
+    unit,
+    completedCycles,
+    colorValue,
+    sortOrder,
+    isDailyAutoIncrement,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Tracker &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.currentValue == this.currentValue &&
+          other.targetValue == this.targetValue &&
+          other.step == this.step &&
+          other.unit == this.unit &&
+          other.completedCycles == this.completedCycles &&
+          other.colorValue == this.colorValue &&
+          other.sortOrder == this.sortOrder &&
+          other.isDailyAutoIncrement == this.isDailyAutoIncrement &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class TrackersCompanion extends UpdateCompanion<Tracker> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<double> currentValue;
+  final Value<double> targetValue;
+  final Value<double> step;
+  final Value<String?> unit;
+  final Value<int> completedCycles;
+  final Value<int> colorValue;
+  final Value<int> sortOrder;
+  final Value<bool> isDailyAutoIncrement;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const TrackersCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.currentValue = const Value.absent(),
+    this.targetValue = const Value.absent(),
+    this.step = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.completedCycles = const Value.absent(),
+    this.colorValue = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.isDailyAutoIncrement = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TrackersCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.currentValue = const Value.absent(),
+    required double targetValue,
+    this.step = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.completedCycles = const Value.absent(),
+    this.colorValue = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.isDailyAutoIncrement = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : name = Value(name),
+       targetValue = Value(targetValue);
+  static Insertable<Tracker> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<double>? currentValue,
+    Expression<double>? targetValue,
+    Expression<double>? step,
+    Expression<String>? unit,
+    Expression<int>? completedCycles,
+    Expression<int>? colorValue,
+    Expression<int>? sortOrder,
+    Expression<bool>? isDailyAutoIncrement,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (currentValue != null) 'current_value': currentValue,
+      if (targetValue != null) 'target_value': targetValue,
+      if (step != null) 'step': step,
+      if (unit != null) 'unit': unit,
+      if (completedCycles != null) 'completed_cycles': completedCycles,
+      if (colorValue != null) 'color_value': colorValue,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (isDailyAutoIncrement != null)
+        'daily_auto_increment': isDailyAutoIncrement,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TrackersCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<double>? currentValue,
+    Value<double>? targetValue,
+    Value<double>? step,
+    Value<String?>? unit,
+    Value<int>? completedCycles,
+    Value<int>? colorValue,
+    Value<int>? sortOrder,
+    Value<bool>? isDailyAutoIncrement,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return TrackersCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      currentValue: currentValue ?? this.currentValue,
+      targetValue: targetValue ?? this.targetValue,
+      step: step ?? this.step,
+      unit: unit ?? this.unit,
+      completedCycles: completedCycles ?? this.completedCycles,
+      colorValue: colorValue ?? this.colorValue,
+      sortOrder: sortOrder ?? this.sortOrder,
+      isDailyAutoIncrement: isDailyAutoIncrement ?? this.isDailyAutoIncrement,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (currentValue.present) {
+      map['current_value'] = Variable<double>(currentValue.value);
+    }
+    if (targetValue.present) {
+      map['target_value'] = Variable<double>(targetValue.value);
+    }
+    if (step.present) {
+      map['step'] = Variable<double>(step.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (completedCycles.present) {
+      map['completed_cycles'] = Variable<int>(completedCycles.value);
+    }
+    if (colorValue.present) {
+      map['color_value'] = Variable<int>(colorValue.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (isDailyAutoIncrement.present) {
+      map['daily_auto_increment'] = Variable<bool>(isDailyAutoIncrement.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TrackersCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('currentValue: $currentValue, ')
+          ..write('targetValue: $targetValue, ')
+          ..write('step: $step, ')
+          ..write('unit: $unit, ')
+          ..write('completedCycles: $completedCycles, ')
+          ..write('colorValue: $colorValue, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('isDailyAutoIncrement: $isDailyAutoIncrement, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4580,6 +5285,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $HabitLogsTable habitLogs = $HabitLogsTable(this);
   late final $CalendarEventsTable calendarEvents = $CalendarEventsTable(this);
   late final $NoteGoalsTable noteGoals = $NoteGoalsTable(this);
+  late final $TrackersTable trackers = $TrackersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4596,6 +5302,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     habitLogs,
     calendarEvents,
     noteGoals,
+    trackers,
   ];
 }
 
@@ -7031,6 +7738,343 @@ typedef $$NoteGoalsTableProcessedTableManager =
       NoteGoal,
       PrefetchHooks Function()
     >;
+typedef $$TrackersTableCreateCompanionBuilder =
+    TrackersCompanion Function({
+      Value<String> id,
+      required String name,
+      Value<double> currentValue,
+      required double targetValue,
+      Value<double> step,
+      Value<String?> unit,
+      Value<int> completedCycles,
+      Value<int> colorValue,
+      Value<int> sortOrder,
+      Value<bool> isDailyAutoIncrement,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$TrackersTableUpdateCompanionBuilder =
+    TrackersCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<double> currentValue,
+      Value<double> targetValue,
+      Value<double> step,
+      Value<String?> unit,
+      Value<int> completedCycles,
+      Value<int> colorValue,
+      Value<int> sortOrder,
+      Value<bool> isDailyAutoIncrement,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$TrackersTableFilterComposer
+    extends Composer<_$AppDatabase, $TrackersTable> {
+  $$TrackersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get currentValue => $composableBuilder(
+    column: $table.currentValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get targetValue => $composableBuilder(
+    column: $table.targetValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get step => $composableBuilder(
+    column: $table.step,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get completedCycles => $composableBuilder(
+    column: $table.completedCycles,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get colorValue => $composableBuilder(
+    column: $table.colorValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDailyAutoIncrement => $composableBuilder(
+    column: $table.isDailyAutoIncrement,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TrackersTableOrderingComposer
+    extends Composer<_$AppDatabase, $TrackersTable> {
+  $$TrackersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get currentValue => $composableBuilder(
+    column: $table.currentValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get targetValue => $composableBuilder(
+    column: $table.targetValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get step => $composableBuilder(
+    column: $table.step,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get completedCycles => $composableBuilder(
+    column: $table.completedCycles,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get colorValue => $composableBuilder(
+    column: $table.colorValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDailyAutoIncrement => $composableBuilder(
+    column: $table.isDailyAutoIncrement,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TrackersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TrackersTable> {
+  $$TrackersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get currentValue => $composableBuilder(
+    column: $table.currentValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get targetValue => $composableBuilder(
+    column: $table.targetValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get step =>
+      $composableBuilder(column: $table.step, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<int> get completedCycles => $composableBuilder(
+    column: $table.completedCycles,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get colorValue => $composableBuilder(
+    column: $table.colorValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDailyAutoIncrement => $composableBuilder(
+    column: $table.isDailyAutoIncrement,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$TrackersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TrackersTable,
+          Tracker,
+          $$TrackersTableFilterComposer,
+          $$TrackersTableOrderingComposer,
+          $$TrackersTableAnnotationComposer,
+          $$TrackersTableCreateCompanionBuilder,
+          $$TrackersTableUpdateCompanionBuilder,
+          (Tracker, BaseReferences<_$AppDatabase, $TrackersTable, Tracker>),
+          Tracker,
+          PrefetchHooks Function()
+        > {
+  $$TrackersTableTableManager(_$AppDatabase db, $TrackersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TrackersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TrackersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TrackersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<double> currentValue = const Value.absent(),
+                Value<double> targetValue = const Value.absent(),
+                Value<double> step = const Value.absent(),
+                Value<String?> unit = const Value.absent(),
+                Value<int> completedCycles = const Value.absent(),
+                Value<int> colorValue = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> isDailyAutoIncrement = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TrackersCompanion(
+                id: id,
+                name: name,
+                currentValue: currentValue,
+                targetValue: targetValue,
+                step: step,
+                unit: unit,
+                completedCycles: completedCycles,
+                colorValue: colorValue,
+                sortOrder: sortOrder,
+                isDailyAutoIncrement: isDailyAutoIncrement,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String name,
+                Value<double> currentValue = const Value.absent(),
+                required double targetValue,
+                Value<double> step = const Value.absent(),
+                Value<String?> unit = const Value.absent(),
+                Value<int> completedCycles = const Value.absent(),
+                Value<int> colorValue = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> isDailyAutoIncrement = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TrackersCompanion.insert(
+                id: id,
+                name: name,
+                currentValue: currentValue,
+                targetValue: targetValue,
+                step: step,
+                unit: unit,
+                completedCycles: completedCycles,
+                colorValue: colorValue,
+                sortOrder: sortOrder,
+                isDailyAutoIncrement: isDailyAutoIncrement,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TrackersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TrackersTable,
+      Tracker,
+      $$TrackersTableFilterComposer,
+      $$TrackersTableOrderingComposer,
+      $$TrackersTableAnnotationComposer,
+      $$TrackersTableCreateCompanionBuilder,
+      $$TrackersTableUpdateCompanionBuilder,
+      (Tracker, BaseReferences<_$AppDatabase, $TrackersTable, Tracker>),
+      Tracker,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7057,4 +8101,6 @@ class $AppDatabaseManager {
       $$CalendarEventsTableTableManager(_db, _db.calendarEvents);
   $$NoteGoalsTableTableManager get noteGoals =>
       $$NoteGoalsTableTableManager(_db, _db.noteGoals);
+  $$TrackersTableTableManager get trackers =>
+      $$TrackersTableTableManager(_db, _db.trackers);
 }

@@ -4,6 +4,7 @@ import '../../features/calendar/screens/calendar_screen.dart';
 import '../../features/finance/screens/finance_screen.dart';
 import '../../features/notes/screens/notes_screen.dart';
 import '../../features/todo/screens/todo_screen.dart';
+import '../../features/tracker/screens/tracker_screen.dart';
 import '../widgets/nav_sidebar.dart';
 
 final appRouter = GoRouter(
@@ -27,6 +28,10 @@ final appRouter = GoRouter(
         GoRoute(
           path: '/todo',
           builder: (ctx, state) => const TodoScreen(),
+        ),
+        GoRoute(
+          path: '/tracker',
+          builder: (ctx, state) => const TrackerScreen(),
         ),
       ],
     ),

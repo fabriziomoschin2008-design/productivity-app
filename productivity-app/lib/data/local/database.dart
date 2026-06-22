@@ -162,13 +162,38 @@ class NoteGoals extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+class Trackers extends Table {
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get name => text()();
+  RealColumn get currentValue =>
+      real().named('current_value').withDefault(const Constant(0.0))();
+  RealColumn get targetValue => real().named('target_value')();
+  RealColumn get step => real().withDefault(const Constant(1.0))();
+  TextColumn get unit => text().nullable()();
+  IntColumn get completedCycles =>
+      integer().named('completed_cycles').withDefault(const Constant(0))();
+  IntColumn get colorValue =>
+      integer().named('color_value').withDefault(const Constant(0xFFFF6B45))();
+  IntColumn get sortOrder =>
+      integer().named('sort_order').withDefault(const Constant(0))();
+  BoolColumn get isDailyAutoIncrement =>
+      boolean().named('daily_auto_increment').withDefault(const Constant(false))();
+  DateTimeColumn get createdAt =>
+      dateTime().named('created_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
-    tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems, NoteFolders, Notes, Habits, HabitLogs, CalendarEvents, NoteGoals])
+    tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems, NoteFolders, Notes, Habits, HabitLogs, CalendarEvents, NoteGoals, Trackers])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -190,6 +215,10 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(calendarEvents);
           }
           if (from < 7) await m.createTable(noteGoals);
+          if (from < 8) await m.createTable(trackers);
+          if (from < 9) {
+            await m.addColumn(trackers, trackers.isDailyAutoIncrement);
+          }
         },
       );
 
@@ -351,6 +380,24 @@ class AppDatabase extends _$AppDatabase {
             ..where((l) =>
                 l.habitId.equals(habitId) & l.date.equals(date)))
           .go();
+
+  // --- Trackers ---
+
+  Stream<List<Tracker>> watchTrackers() =>
+      (select(trackers)..orderBy([
+        (t) => OrderingTerm.asc(t.sortOrder),
+        (t) => OrderingTerm.asc(t.createdAt),
+      ])).watch();
+
+  Future<void> insertTracker(TrackersCompanion entry) =>
+      into(trackers).insert(entry);
+
+  Future<void> updateTracker(TrackersCompanion entry) =>
+      (update(trackers)..where((t) => t.id.equals(entry.id.value)))
+          .write(entry);
+
+  Future<void> deleteTrackerById(String id) =>
+      (delete(trackers)..where((t) => t.id.equals(id))).go();
 
   // --- Note Goals ---
 

@@ -51,6 +51,12 @@ class NavSidebar extends StatelessWidget {
             path: '/todo',
             active: location.startsWith('/todo'),
           ),
+          _NavItem(
+            icon: Icons.track_changes_rounded,
+            label: 'Tracker',
+            path: '/tracker',
+            active: location.startsWith('/tracker'),
+          ),
         ],
       ),
     );
