@@ -101,9 +101,14 @@ class _NotesListPanelState extends ConsumerState<NotesListPanel> {
                         selected: note.id ==
                             ref.watch(notesProvider
                                 .select((s) => s.selectedNoteId)),
-                        onTap: () => ref
-                            .read(notesProvider.notifier)
-                            .selectNote(note.id),
+                        onTap: () {
+                          ref
+                              .read(notesProvider.notifier)
+                              .selectNote(note.id);
+                          ref
+                              .read(noteGoalsProvider.notifier)
+                              .selectGoal(null);
+                        },
                         onDelete: () => ref
                             .read(notesProvider.notifier)
                             .deleteNote(note.id),

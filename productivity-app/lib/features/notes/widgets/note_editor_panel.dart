@@ -13,6 +13,7 @@ import '../../../data/local/database.dart';
 import '../providers/notes_providers.dart';
 import 'chart_embed.dart';
 import 'file_embed.dart';
+import 'note_link_embed.dart';
 import 'table_embed.dart';
 
 const _uuid = Uuid();
@@ -124,6 +125,24 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
     );
     if (!mounted || result == null) return;
     _insertEmbed(tableEmbedKey, jsonEncode(result));
+  }
+
+  Future<void> _insertNoteLink() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    await Future.microtask(() {});
+    if (!mounted) return;
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      useRootNavigator: false,
+      builder: (_) => const LinkNoteDialog(),
+    );
+    if (!mounted || result == null) return;
+    _insertEmbed(
+        noteLinkEmbedKey,
+        jsonEncode({
+          'id': _uuid.v4(),
+          ...result,
+        }));
   }
 
   Future<void> _insertFile() async {
@@ -242,6 +261,12 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
                 label: 'Allega',
                 onPressed: _insertFile,
               ),
+              const SizedBox(width: 4),
+              _EmbedToolbarBtn(
+                icon: Icons.link,
+                label: 'Collega',
+                onPressed: _insertNoteLink,
+              ),
             ],
           ),
         ),
@@ -260,6 +285,7 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
                   ChartEmbedBuilder(),
                   TableEmbedBuilder(),
                   FileEmbedBuilder(),
+                  NoteLinkEmbedBuilder(),
                 ],
                 onLaunchUrl: (url) async {
                   final uri = Uri.tryParse(url);

@@ -147,13 +147,28 @@ class Notes extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+class NoteGoals extends Table {
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get title => text().withDefault(const Constant(''))();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get deadline => dateTime().nullable()();
+  TextColumn get content => text().withDefault(const Constant('[]'))();
+  DateTimeColumn get createdAt =>
+      dateTime().named('created_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
-    tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems, NoteFolders, Notes, Habits, HabitLogs, CalendarEvents])
+    tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems, NoteFolders, Notes, Habits, HabitLogs, CalendarEvents, NoteGoals])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -174,6 +189,7 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(habitLogs);
             await m.createTable(calendarEvents);
           }
+          if (from < 7) await m.createTable(noteGoals);
         },
       );
 
@@ -335,6 +351,22 @@ class AppDatabase extends _$AppDatabase {
             ..where((l) =>
                 l.habitId.equals(habitId) & l.date.equals(date)))
           .go();
+
+  // --- Note Goals ---
+
+  Stream<List<NoteGoal>> watchNoteGoals() =>
+      (select(noteGoals)..orderBy([(g) => OrderingTerm.asc(g.createdAt)]))
+          .watch();
+
+  Future<void> insertNoteGoal(NoteGoalsCompanion entry) =>
+      into(noteGoals).insert(entry);
+
+  Future<void> updateNoteGoal(NoteGoalsCompanion entry) =>
+      (update(noteGoals)..where((g) => g.id.equals(entry.id.value)))
+          .write(entry);
+
+  Future<void> deleteNoteGoalById(String id) =>
+      (delete(noteGoals)..where((g) => g.id.equals(id))).go();
 
   // --- Calendar Events ---
 
