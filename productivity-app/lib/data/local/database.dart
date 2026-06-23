@@ -232,13 +232,27 @@ class TvSeries extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+class Games extends Table {
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get title => text()();
+  TextColumn get platform => text().nullable()();
+  TextColumn get status => text().withDefault(const Constant('playing'))(); // playing | completed | want_to_play
+  TextColumn get objectives => text().withDefault(const Constant('[]'))(); // JSON [{desc, done}]
+  IntColumn get userRating => integer().named('user_rating').nullable()();
+  DateTimeColumn get addedAt =>
+      dateTime().named('added_at').withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
-    tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems, NoteFolders, Notes, Habits, HabitLogs, CalendarEvents, NoteGoals, Trackers, Movies, TvSeries])
+    tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems, NoteFolders, Notes, Habits, HabitLogs, CalendarEvents, NoteGoals, Trackers, Movies, TvSeries, Games])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -268,6 +282,7 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(movies);
             await m.createTable(tvSeries);
           }
+          if (from < 11) await m.createTable(games);
         },
       );
 
@@ -490,6 +505,19 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteTvSeriesById(String id) =>
       (delete(tvSeries)..where((s) => s.id.equals(id))).go();
+
+  // --- Games ---
+
+  Stream<List<Game>> watchGames() =>
+      (select(games)..orderBy([(g) => OrderingTerm.desc(g.addedAt)])).watch();
+
+  Future<void> insertGame(GamesCompanion entry) => into(games).insert(entry);
+
+  Future<void> updateGame(GamesCompanion entry) =>
+      (update(games)..where((g) => g.id.equals(entry.id.value))).write(entry);
+
+  Future<void> deleteGameById(String id) =>
+      (delete(games)..where((g) => g.id.equals(id))).go();
 
   // --- Calendar Events ---
 

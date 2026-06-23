@@ -6864,6 +6864,456 @@ class TvSeriesCompanion extends UpdateCompanion<TvSery> {
   }
 }
 
+class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GamesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => _uuid.v4(),
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _platformMeta = const VerificationMeta(
+    'platform',
+  );
+  @override
+  late final GeneratedColumn<String> platform = GeneratedColumn<String>(
+    'platform',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('playing'),
+  );
+  static const VerificationMeta _objectivesMeta = const VerificationMeta(
+    'objectives',
+  );
+  @override
+  late final GeneratedColumn<String> objectives = GeneratedColumn<String>(
+    'objectives',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _userRatingMeta = const VerificationMeta(
+    'userRating',
+  );
+  @override
+  late final GeneratedColumn<int> userRating = GeneratedColumn<int>(
+    'user_rating',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _addedAtMeta = const VerificationMeta(
+    'addedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> addedAt = GeneratedColumn<DateTime>(
+    'added_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    title,
+    platform,
+    status,
+    objectives,
+    userRating,
+    addedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'games';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Game> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('platform')) {
+      context.handle(
+        _platformMeta,
+        platform.isAcceptableOrUnknown(data['platform']!, _platformMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('objectives')) {
+      context.handle(
+        _objectivesMeta,
+        objectives.isAcceptableOrUnknown(data['objectives']!, _objectivesMeta),
+      );
+    }
+    if (data.containsKey('user_rating')) {
+      context.handle(
+        _userRatingMeta,
+        userRating.isAcceptableOrUnknown(data['user_rating']!, _userRatingMeta),
+      );
+    }
+    if (data.containsKey('added_at')) {
+      context.handle(
+        _addedAtMeta,
+        addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Game map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Game(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      platform: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}platform'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      objectives: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}objectives'],
+      )!,
+      userRating: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}user_rating'],
+      ),
+      addedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}added_at'],
+      )!,
+    );
+  }
+
+  @override
+  $GamesTable createAlias(String alias) {
+    return $GamesTable(attachedDatabase, alias);
+  }
+}
+
+class Game extends DataClass implements Insertable<Game> {
+  final String id;
+  final String title;
+  final String? platform;
+  final String status;
+  final String objectives;
+  final int? userRating;
+  final DateTime addedAt;
+  const Game({
+    required this.id,
+    required this.title,
+    this.platform,
+    required this.status,
+    required this.objectives,
+    this.userRating,
+    required this.addedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || platform != null) {
+      map['platform'] = Variable<String>(platform);
+    }
+    map['status'] = Variable<String>(status);
+    map['objectives'] = Variable<String>(objectives);
+    if (!nullToAbsent || userRating != null) {
+      map['user_rating'] = Variable<int>(userRating);
+    }
+    map['added_at'] = Variable<DateTime>(addedAt);
+    return map;
+  }
+
+  GamesCompanion toCompanion(bool nullToAbsent) {
+    return GamesCompanion(
+      id: Value(id),
+      title: Value(title),
+      platform: platform == null && nullToAbsent
+          ? const Value.absent()
+          : Value(platform),
+      status: Value(status),
+      objectives: Value(objectives),
+      userRating: userRating == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userRating),
+      addedAt: Value(addedAt),
+    );
+  }
+
+  factory Game.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Game(
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      platform: serializer.fromJson<String?>(json['platform']),
+      status: serializer.fromJson<String>(json['status']),
+      objectives: serializer.fromJson<String>(json['objectives']),
+      userRating: serializer.fromJson<int?>(json['userRating']),
+      addedAt: serializer.fromJson<DateTime>(json['addedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'platform': serializer.toJson<String?>(platform),
+      'status': serializer.toJson<String>(status),
+      'objectives': serializer.toJson<String>(objectives),
+      'userRating': serializer.toJson<int?>(userRating),
+      'addedAt': serializer.toJson<DateTime>(addedAt),
+    };
+  }
+
+  Game copyWith({
+    String? id,
+    String? title,
+    Value<String?> platform = const Value.absent(),
+    String? status,
+    String? objectives,
+    Value<int?> userRating = const Value.absent(),
+    DateTime? addedAt,
+  }) => Game(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    platform: platform.present ? platform.value : this.platform,
+    status: status ?? this.status,
+    objectives: objectives ?? this.objectives,
+    userRating: userRating.present ? userRating.value : this.userRating,
+    addedAt: addedAt ?? this.addedAt,
+  );
+  Game copyWithCompanion(GamesCompanion data) {
+    return Game(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      platform: data.platform.present ? data.platform.value : this.platform,
+      status: data.status.present ? data.status.value : this.status,
+      objectives: data.objectives.present
+          ? data.objectives.value
+          : this.objectives,
+      userRating: data.userRating.present
+          ? data.userRating.value
+          : this.userRating,
+      addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Game(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('platform: $platform, ')
+          ..write('status: $status, ')
+          ..write('objectives: $objectives, ')
+          ..write('userRating: $userRating, ')
+          ..write('addedAt: $addedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, title, platform, status, objectives, userRating, addedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Game &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.platform == this.platform &&
+          other.status == this.status &&
+          other.objectives == this.objectives &&
+          other.userRating == this.userRating &&
+          other.addedAt == this.addedAt);
+}
+
+class GamesCompanion extends UpdateCompanion<Game> {
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String?> platform;
+  final Value<String> status;
+  final Value<String> objectives;
+  final Value<int?> userRating;
+  final Value<DateTime> addedAt;
+  final Value<int> rowid;
+  const GamesCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.platform = const Value.absent(),
+    this.status = const Value.absent(),
+    this.objectives = const Value.absent(),
+    this.userRating = const Value.absent(),
+    this.addedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GamesCompanion.insert({
+    this.id = const Value.absent(),
+    required String title,
+    this.platform = const Value.absent(),
+    this.status = const Value.absent(),
+    this.objectives = const Value.absent(),
+    this.userRating = const Value.absent(),
+    this.addedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : title = Value(title);
+  static Insertable<Game> custom({
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? platform,
+    Expression<String>? status,
+    Expression<String>? objectives,
+    Expression<int>? userRating,
+    Expression<DateTime>? addedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (platform != null) 'platform': platform,
+      if (status != null) 'status': status,
+      if (objectives != null) 'objectives': objectives,
+      if (userRating != null) 'user_rating': userRating,
+      if (addedAt != null) 'added_at': addedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GamesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? title,
+    Value<String?>? platform,
+    Value<String>? status,
+    Value<String>? objectives,
+    Value<int?>? userRating,
+    Value<DateTime>? addedAt,
+    Value<int>? rowid,
+  }) {
+    return GamesCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      platform: platform ?? this.platform,
+      status: status ?? this.status,
+      objectives: objectives ?? this.objectives,
+      userRating: userRating ?? this.userRating,
+      addedAt: addedAt ?? this.addedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (platform.present) {
+      map['platform'] = Variable<String>(platform.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (objectives.present) {
+      map['objectives'] = Variable<String>(objectives.value);
+    }
+    if (userRating.present) {
+      map['user_rating'] = Variable<int>(userRating.value);
+    }
+    if (addedAt.present) {
+      map['added_at'] = Variable<DateTime>(addedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GamesCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('platform: $platform, ')
+          ..write('status: $status, ')
+          ..write('objectives: $objectives, ')
+          ..write('userRating: $userRating, ')
+          ..write('addedAt: $addedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6882,6 +7332,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TrackersTable trackers = $TrackersTable(this);
   late final $MoviesTable movies = $MoviesTable(this);
   late final $TvSeriesTable tvSeries = $TvSeriesTable(this);
+  late final $GamesTable games = $GamesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6901,6 +7352,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     trackers,
     movies,
     tvSeries,
+    games,
   ];
 }
 
@@ -10412,6 +10864,241 @@ typedef $$TvSeriesTableProcessedTableManager =
       TvSery,
       PrefetchHooks Function()
     >;
+typedef $$GamesTableCreateCompanionBuilder =
+    GamesCompanion Function({
+      Value<String> id,
+      required String title,
+      Value<String?> platform,
+      Value<String> status,
+      Value<String> objectives,
+      Value<int?> userRating,
+      Value<DateTime> addedAt,
+      Value<int> rowid,
+    });
+typedef $$GamesTableUpdateCompanionBuilder =
+    GamesCompanion Function({
+      Value<String> id,
+      Value<String> title,
+      Value<String?> platform,
+      Value<String> status,
+      Value<String> objectives,
+      Value<int?> userRating,
+      Value<DateTime> addedAt,
+      Value<int> rowid,
+    });
+
+class $$GamesTableFilterComposer extends Composer<_$AppDatabase, $GamesTable> {
+  $$GamesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get platform => $composableBuilder(
+    column: $table.platform,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get objectives => $composableBuilder(
+    column: $table.objectives,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get userRating => $composableBuilder(
+    column: $table.userRating,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GamesTableOrderingComposer
+    extends Composer<_$AppDatabase, $GamesTable> {
+  $$GamesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get platform => $composableBuilder(
+    column: $table.platform,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get objectives => $composableBuilder(
+    column: $table.objectives,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get userRating => $composableBuilder(
+    column: $table.userRating,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GamesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GamesTable> {
+  $$GamesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get platform =>
+      $composableBuilder(column: $table.platform, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get objectives => $composableBuilder(
+    column: $table.objectives,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get userRating => $composableBuilder(
+    column: $table.userRating,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get addedAt =>
+      $composableBuilder(column: $table.addedAt, builder: (column) => column);
+}
+
+class $$GamesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GamesTable,
+          Game,
+          $$GamesTableFilterComposer,
+          $$GamesTableOrderingComposer,
+          $$GamesTableAnnotationComposer,
+          $$GamesTableCreateCompanionBuilder,
+          $$GamesTableUpdateCompanionBuilder,
+          (Game, BaseReferences<_$AppDatabase, $GamesTable, Game>),
+          Game,
+          PrefetchHooks Function()
+        > {
+  $$GamesTableTableManager(_$AppDatabase db, $GamesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GamesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GamesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GamesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> platform = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> objectives = const Value.absent(),
+                Value<int?> userRating = const Value.absent(),
+                Value<DateTime> addedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GamesCompanion(
+                id: id,
+                title: title,
+                platform: platform,
+                status: status,
+                objectives: objectives,
+                userRating: userRating,
+                addedAt: addedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String title,
+                Value<String?> platform = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> objectives = const Value.absent(),
+                Value<int?> userRating = const Value.absent(),
+                Value<DateTime> addedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GamesCompanion.insert(
+                id: id,
+                title: title,
+                platform: platform,
+                status: status,
+                objectives: objectives,
+                userRating: userRating,
+                addedAt: addedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GamesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GamesTable,
+      Game,
+      $$GamesTableFilterComposer,
+      $$GamesTableOrderingComposer,
+      $$GamesTableAnnotationComposer,
+      $$GamesTableCreateCompanionBuilder,
+      $$GamesTableUpdateCompanionBuilder,
+      (Game, BaseReferences<_$AppDatabase, $GamesTable, Game>),
+      Game,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10444,4 +11131,6 @@ class $AppDatabaseManager {
       $$MoviesTableTableManager(_db, _db.movies);
   $$TvSeriesTableTableManager get tvSeries =>
       $$TvSeriesTableTableManager(_db, _db.tvSeries);
+  $$GamesTableTableManager get games =>
+      $$GamesTableTableManager(_db, _db.games);
 }
