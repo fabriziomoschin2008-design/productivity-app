@@ -12,6 +12,7 @@ class CalendarState {
   final DateTime focusedMonth;
   final HabitView habitView;
   final CalendarTab activeTab;
+  final Map<String, int> streaks;
 
   const CalendarState({
     required this.habits,
@@ -21,6 +22,7 @@ class CalendarState {
     required this.focusedMonth,
     required this.habitView,
     required this.activeTab,
+    this.streaks = const {},
   });
 
   factory CalendarState.initial() {
@@ -33,6 +35,7 @@ class CalendarState {
       focusedMonth: DateTime(now.year, now.month),
       habitView: HabitView.daily,
       activeTab: CalendarTab.habits,
+      streaks: const {},
     );
   }
 
@@ -83,6 +86,8 @@ class CalendarState {
     }).toList();
   }
 
+  int streakForHabit(String habitId) => streaks[habitId] ?? 0;
+
   CalendarState copyWith({
     List<Habit>? habits,
     List<HabitLog>? habitLogs,
@@ -91,6 +96,7 @@ class CalendarState {
     DateTime? focusedMonth,
     HabitView? habitView,
     CalendarTab? activeTab,
+    Map<String, int>? streaks,
   }) {
     return CalendarState(
       habits: habits ?? this.habits,
@@ -100,6 +106,7 @@ class CalendarState {
       focusedMonth: focusedMonth ?? this.focusedMonth,
       habitView: habitView ?? this.habitView,
       activeTab: activeTab ?? this.activeTab,
+      streaks: streaks ?? this.streaks,
     );
   }
 }

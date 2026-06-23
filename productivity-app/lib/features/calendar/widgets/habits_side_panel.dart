@@ -54,6 +54,7 @@ class HabitsSidePanel extends ConsumerWidget {
                           for (final h in byCategory[cat]!)
                             _HabitTile(
                               name: h.name,
+                              streak: state.streakForHabit(h.id),
                               onDelete: () => ref
                                   .read(calendarProvider.notifier)
                                   .deleteHabit(h.id),
@@ -67,6 +68,7 @@ class HabitsSidePanel extends ConsumerWidget {
                           for (final h in byCategory[cat]!)
                             _HabitTile(
                               name: h.name,
+                              streak: state.streakForHabit(h.id),
                               onDelete: () => ref
                                   .read(calendarProvider.notifier)
                                   .deleteHabit(h.id),
@@ -103,8 +105,13 @@ class _CategoryHeader extends StatelessWidget {
 
 class _HabitTile extends StatelessWidget {
   final String name;
+  final int streak;
   final VoidCallback onDelete;
-  const _HabitTile({required this.name, required this.onDelete});
+  const _HabitTile({
+    required this.name,
+    required this.streak,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +119,15 @@ class _HabitTile extends StatelessWidget {
       dense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       leading: const Icon(Icons.repeat, size: 16, color: AppColors.textDisabled),
-      title: Text(name, style: AppTextStyles.bodySmall),
+      title: Row(
+        children: [
+          Expanded(child: Text(name, style: AppTextStyles.bodySmall)),
+          if (streak > 0) ...[
+            const SizedBox(width: 4),
+            _StreakBadge(streak),
+          ],
+        ],
+      ),
       trailing: PopupMenuButton<String>(
         onSelected: (v) {
           if (v == 'delete') {
@@ -150,6 +165,39 @@ class _HabitTile extends StatelessWidget {
         iconColor: AppColors.textDisabled,
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(),
+      ),
+    );
+  }
+}
+
+class _StreakBadge extends StatelessWidget {
+  final int streak;
+  const _StreakBadge(this.streak);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.local_fire_department,
+              size: 11, color: AppColors.primary),
+          const SizedBox(width: 2),
+          Text(
+            '$streak',
+            style: AppTextStyles.label.copyWith(
+              fontSize: 11,
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -19,6 +19,7 @@ class CalendarNotifier extends StateNotifier<CalendarState> {
     _habitsSub = _db.watchHabits().listen((habits) {
       state = state.copyWith(habits: habits);
       NotificationScheduler.instance.scheduleHabitReminder(habits);
+      _refreshStreaks();
     });
     _subscribeToLogs();
     _eventsSub = _db.watchCalendarEvents().listen((events) {
@@ -76,6 +77,7 @@ class CalendarNotifier extends StateNotifier<CalendarState> {
           status: Value(next),
         ));
       }
+      _refreshStreaks();
     } catch (e, s) {
       AppErrorHandler.handle(e, s);
     }
@@ -94,9 +96,49 @@ class CalendarNotifier extends StateNotifier<CalendarState> {
           status: Value(status),
         ));
       }
+      _refreshStreaks();
     } catch (e, s) {
       AppErrorHandler.handle(e, s);
     }
+  }
+
+  Future<void> _refreshStreaks() async {
+    if (state.habits.isEmpty) return;
+    final from = DateTime.now().subtract(const Duration(days: 400));
+    final allLogs = await _db.getRecentHabitLogs(from);
+    final streaks = {
+      for (final h in state.habits) h.id: _computeStreak(h.id, allLogs),
+    };
+    state = state.copyWith(streaks: streaks);
+  }
+
+  static int _computeStreak(String habitId, List<HabitLog> allLogs) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    final doneDays = allLogs
+        .where((l) => l.habitId == habitId && l.status == 'done')
+        .map((l) => DateTime(l.date.year, l.date.month, l.date.day))
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    if (doneDays.isEmpty) return 0;
+
+    final mostRecent = doneDays.first;
+    if (mostRecent.isBefore(yesterday)) return 0;
+
+    int streak = 1;
+    DateTime expected = mostRecent.subtract(const Duration(days: 1));
+    for (int i = 1; i < doneDays.length; i++) {
+      if (doneDays[i] == expected) {
+        streak++;
+        expected = expected.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+    return streak;
   }
 
   Future<void> createHabit(String name, String category) async {

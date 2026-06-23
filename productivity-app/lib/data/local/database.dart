@@ -445,6 +445,12 @@ class AppDatabase extends _$AppDatabase {
                 l.habitId.equals(habitId) & l.date.equals(date)))
           .go();
 
+  Future<List<HabitLog>> getRecentHabitLogs(DateTime from) =>
+      (select(habitLogs)
+            ..where((l) => l.date.isBiggerOrEqualValue(from))
+            ..orderBy([(l) => OrderingTerm.desc(l.date)]))
+          .get();
+
   // --- Trackers ---
 
   Stream<List<Tracker>> watchTrackers() =>
