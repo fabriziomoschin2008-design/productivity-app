@@ -73,6 +73,30 @@ class GamesNotifier extends StateNotifier<GamesState> {
     }
   }
 
+  Future<void> updateObjectives(
+      String id, List<GameObjective> objectives) async {
+    try {
+      final game = state.games.firstWhere((g) => g.id == id);
+      final allDone =
+          objectives.isNotEmpty && objectives.every((o) => o.done);
+      String? autoStatus;
+      if (allDone) {
+        autoStatus = 'completed';
+      } else if (game.status == 'completed' &&
+          objectives.any((o) => !o.done)) {
+        autoStatus = 'playing';
+      }
+      await _db.updateGame(GamesCompanion(
+        id: Value(id),
+        objectives: Value(encodeObjectives(objectives)),
+        status:
+            autoStatus != null ? Value(autoStatus) : const Value.absent(),
+      ));
+    } catch (e, st) {
+      AppErrorHandler.handle(e, st, showUi: false);
+    }
+  }
+
   Future<void> updateStatus(String id, String status) async {
     try {
       await _db.updateGame(GamesCompanion(id: Value(id), status: Value(status)));

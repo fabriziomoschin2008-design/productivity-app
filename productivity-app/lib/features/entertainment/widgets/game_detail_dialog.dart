@@ -20,11 +20,68 @@ class _GameDetailState extends ConsumerState<GameDetailDialog> {
   late int? _rating;
   late String _status;
 
+  bool _editingObjectives = false;
+  final List<TextEditingController> _editCtrls = [];
+  final List<bool> _editDone = [];
+
   @override
   void initState() {
     super.initState();
     _rating = widget.game.userRating;
     _status = widget.game.status;
+  }
+
+  @override
+  void dispose() {
+    _freeEditCtrls();
+    super.dispose();
+  }
+
+  void _freeEditCtrls() {
+    for (final c in _editCtrls) {
+      c.dispose();
+    }
+    _editCtrls.clear();
+    _editDone.clear();
+  }
+
+  void _startEditing(List<GameObjective> objectives) {
+    _freeEditCtrls();
+    for (final o in objectives) {
+      _editCtrls.add(TextEditingController(text: o.desc));
+      _editDone.add(o.done);
+    }
+    setState(() => _editingObjectives = true);
+  }
+
+  void _cancelEditing() {
+    _freeEditCtrls();
+    setState(() => _editingObjectives = false);
+  }
+
+  void _addEditObjective() {
+    setState(() {
+      _editCtrls.add(TextEditingController());
+      _editDone.add(false);
+    });
+  }
+
+  void _removeEditObjective(int i) {
+    setState(() {
+      _editCtrls[i].dispose();
+      _editCtrls.removeAt(i);
+      _editDone.removeAt(i);
+    });
+  }
+
+  Future<void> _saveObjectives(String gameId) async {
+    final objectives = List.generate(
+      _editCtrls.length,
+      (i) => GameObjective(
+          desc: _editCtrls[i].text.trim(), done: _editDone[i]),
+    ).where((o) => o.desc.isNotEmpty).toList();
+    await ref.read(gamesProvider.notifier).updateObjectives(gameId, objectives);
+    _cancelEditing();
   }
 
   @override
@@ -35,8 +92,7 @@ class _GameDetailState extends ConsumerState<GameDetailDialog> {
         .games
         .firstWhere((x) => x.id == g.id, orElse: () => g);
 
-    // Sync local status with provider (auto-updated by toggleObjective)
-    if (_status != current.status) {
+    if (_status != current.status && !_editingObjectives) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) setState(() => _status = current.status);
       });
@@ -56,7 +112,7 @@ class _GameDetailState extends ConsumerState<GameDetailDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Title + status indicator
+              // ── Titolo ────────────────────────────────────────────────
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -79,7 +135,8 @@ class _GameDetailState extends ConsumerState<GameDetailDialog> {
                   ),
                 ],
               ),
-              if (current.platform != null && current.platform!.isNotEmpty) ...[
+              if (current.platform != null &&
+                  current.platform!.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Padding(
                   padding: const EdgeInsets.only(left: 20),
@@ -93,7 +150,9 @@ class _GameDetailState extends ConsumerState<GameDetailDialog> {
                 value: _status,
                 onChanged: (v) async {
                   setState(() => _status = v);
-                  await ref.read(gamesProvider.notifier).updateStatus(g.id, v);
+                  await ref
+                      .read(gamesProvider.notifier)
+                      .updateStatus(g.id, v);
                 },
               ),
               const SizedBox(height: 12),
@@ -104,28 +163,142 @@ class _GameDetailState extends ConsumerState<GameDetailDialog> {
                 onChanged: (r) async {
                   final val = r == 0 ? null : r;
                   setState(() => _rating = val);
-                  await ref.read(gamesProvider.notifier).updateRating(g.id, val);
+                  await ref
+                      .read(gamesProvider.notifier)
+                      .updateRating(g.id, val);
                 },
               ),
-              if (objectives.isNotEmpty) ...[
-                const SizedBox(height: 20),
-                const Divider(color: AppColors.divider),
-                const SizedBox(height: 12),
-                Text('Obiettivi', style: AppTextStyles.label),
-                const SizedBox(height: 8),
-                ...objectives.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final obj = entry.value;
-                  final isNext = !obj.done && i == nextIndex;
-                  return _ObjectiveRow(
-                    desc: obj.desc,
-                    done: obj.done,
-                    isNext: isNext,
-                    onTap: () =>
-                        ref.read(gamesProvider.notifier).toggleObjective(g.id, i),
-                  );
-                }),
+              // ── Obiettivi ─────────────────────────────────────────────
+              const SizedBox(height: 20),
+              const Divider(color: AppColors.divider),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Text('Obiettivi', style: AppTextStyles.label),
+                  const Spacer(),
+                  if (_editingObjectives) ...[
+                    TextButton(
+                      onPressed: _cancelEditing,
+                      style: TextButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 8)),
+                      child: const Text('Annulla'),
+                    ),
+                    const SizedBox(width: 6),
+                    FilledButton.icon(
+                      onPressed: () => _saveObjectives(g.id),
+                      icon: const Icon(Icons.check_rounded, size: 15),
+                      label: const Text('Salva'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.income,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        textStyle: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ] else
+                    IconButton(
+                      onPressed: () => _startEditing(objectives),
+                      icon: const Icon(Icons.edit_rounded, size: 16),
+                      color: AppColors.textSecondary,
+                      tooltip: 'Modifica obiettivi',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // ── Modalità edit ─────────────────────────────────────────
+              if (_editingObjectives) ...[
+                ...List.generate(
+                  _editCtrls.length,
+                  (i) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: _editDone[i],
+                          onChanged: (v) =>
+                              setState(() => _editDone[i] = v ?? false),
+                          activeColor: AppColors.income,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        Expanded(
+                          child: TextField(
+                            controller: _editCtrls[i],
+                            style: AppTextStyles.bodyRegular
+                                .copyWith(fontSize: 13),
+                            decoration: InputDecoration(
+                              hintText: 'Descrizione obiettivo',
+                              isDense: true,
+                              filled: true,
+                              fillColor: AppColors.surfaceElevated,
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                  borderSide: const BorderSide(
+                                      color: AppColors.border)),
+                              enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                  borderSide: const BorderSide(
+                                      color: AppColors.border)),
+                              focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                  borderSide: const BorderSide(
+                                      color: AppColors.primary, width: 1.5)),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 8),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => _removeEditObjective(i),
+                          icon: const Icon(Icons.close_rounded,
+                              size: 16, color: AppColors.expense),
+                          padding: const EdgeInsets.only(left: 6),
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                TextButton.icon(
+                  onPressed: _addEditObjective,
+                  icon: const Icon(Icons.add_rounded, size: 16),
+                  label: const Text('Aggiungi obiettivo'),
+                  style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      padding: EdgeInsets.zero),
+                ),
+              ] else ...[
+                // ── Modalità visualizzazione ───────────────────────────
+                if (objectives.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text('Nessun obiettivo.',
+                        style: AppTextStyles.bodySmall
+                            .copyWith(color: AppColors.textDisabled)),
+                  )
+                else
+                  ...objectives.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final obj = entry.value;
+                    final isNext = !obj.done && i == nextIndex;
+                    return _ObjectiveRow(
+                      desc: obj.desc,
+                      done: obj.done,
+                      isNext: isNext,
+                      onTap: () => ref
+                          .read(gamesProvider.notifier)
+                          .toggleObjective(g.id, i),
+                    );
+                  }),
               ],
+              // ── Footer ────────────────────────────────────────────────
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -136,9 +309,12 @@ class _GameDetailState extends ConsumerState<GameDetailDialog> {
                     label: const Text('Elimina',
                         style: TextStyle(color: AppColors.expense)),
                     onPressed: () async {
-                      final confirm = await _confirmDelete(context, current.title);
+                      final confirm =
+                          await _confirmDelete(context, current.title);
                       if (confirm == true && context.mounted) {
-                        await ref.read(gamesProvider.notifier).delete(g.id);
+                        await ref
+                            .read(gamesProvider.notifier)
+                            .delete(g.id);
                         if (context.mounted) Navigator.of(context).pop();
                       }
                     },
@@ -167,8 +343,8 @@ class _GameDetailState extends ConsumerState<GameDetailDialog> {
         context: ctx,
         builder: (c) => AlertDialog(
           backgroundColor: AppColors.surface,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
           title: const Text('Elimina gioco'),
           content: Text('Vuoi eliminare "$title"?'),
           actions: [
@@ -177,8 +353,8 @@ class _GameDetailState extends ConsumerState<GameDetailDialog> {
                 child: const Text('Annulla')),
             TextButton(
                 onPressed: () => Navigator.of(c).pop(true),
-                style:
-                    TextButton.styleFrom(foregroundColor: AppColors.expense),
+                style: TextButton.styleFrom(
+                    foregroundColor: AppColors.expense),
                 child: const Text('Elimina')),
           ],
         ),
@@ -225,7 +401,8 @@ class _ObjectiveRow extends StatelessWidget {
               child: Text(
                 desc,
                 style: AppTextStyles.bodyRegular.copyWith(
-                  color: done ? AppColors.textSecondary : AppColors.textPrimary,
+                  color:
+                      done ? AppColors.textSecondary : AppColors.textPrimary,
                   decoration: done ? TextDecoration.lineThrough : null,
                   decorationColor: AppColors.textSecondary,
                   fontSize: 13,
