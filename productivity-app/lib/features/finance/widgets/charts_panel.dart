@@ -485,3 +485,28 @@ Widget _noData(String message) {
     ),
   );
 }
+
+/// Renders a single chart type for off-screen export capture.
+class ExportChartWidget extends StatelessWidget {
+  final int chartIndex; // 0 = pie, 1 = bar, 2 = line
+  final List<TransactionEntry> transactions;
+
+  const ExportChartWidget({
+    super.key,
+    required this.chartIndex,
+    required this.transactions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(24),
+      child: switch (chartIndex) {
+        0 => _PieChartView(transactions: transactions),
+        1 => _BarChartView(transactions: transactions),
+        _ => _LineChartView(transactions: transactions),
+      },
+    );
+  }
+}

@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/logger_service.dart';
 import '../../../data/local/database.dart';
 import '../models/account_with_balance.dart';
+import '../services/excel_service.dart';
 import 'finance_state.dart';
 
 class FinanceNotifier extends StateNotifier<FinanceState> {
@@ -143,6 +145,70 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
   Future<void> deleteTransaction(String id) async {
     AppLogger.instance.info('Movimento eliminato [id: $id]');
     await _db.deleteTransactionById(id);
+  }
+
+  Future<({bool success, String? error, List<String>? created, List<String>? updated})> importAccountsFromExcel(File file) async {
+    final existingAccounts = state.accounts.map((a) => a.account).toList();
+
+    final result = await ExcelService.importAccounts(file, existingAccounts);
+
+    if (result.error != null) {
+      return (success: false, error: result.error, created: null, updated: null);
+    }
+
+    try {
+      final created = <String>[];
+
+      for (final newAcc in result.newAccounts) {
+        AppLogger.instance.info('Conto importato: ${newAcc.name} (ID: ${newAcc.id})');
+        await _db.upsertAccount(AccountsCompanion(
+          id: Value(newAcc.id),
+          name: Value(newAcc.name),
+          colorValue: Value(newAcc.colorValue),
+          openingBalance: Value(newAcc.openingBalance),
+        ));
+        created.add(newAcc.id);
+      }
+
+      for (final accId in result.updatedAccountIds) {
+        final updAcc = result.newAccounts.firstWhere(
+          (a) => a.id == accId,
+          orElse: () => result.newAccounts.isNotEmpty ? result.newAccounts.first : Account(id: '', name: '', colorValue: 0, openingBalance: 0, createdAt: DateTime.now()),
+        );
+        if (updAcc.name.isNotEmpty) {
+          AppLogger.instance.info('Conto aggiornato: ${updAcc.name} [ID: $accId]');
+          await editAccount(
+            id: accId,
+            name: updAcc.name,
+            colorValue: updAcc.colorValue,
+            openingBalance: updAcc.openingBalance,
+          );
+        }
+      }
+
+      for (final tx in result.transactions) {
+        AppLogger.instance.info('Movimento importato: ${tx.type} "${tx.category}" €${tx.amount}');
+        await _db.insertTransaction(TransactionEntriesCompanion.insert(
+          id: Value(tx.id),
+          accountId: tx.accountId,
+          amount: tx.amount,
+          type: tx.type,
+          category: tx.category,
+          date: tx.date,
+          note: Value(tx.note),
+        ));
+      }
+
+      return (
+        success: true,
+        error: null,
+        created: created,
+        updated: result.updatedAccountIds,
+      );
+    } catch (e) {
+      AppLogger.instance.error('Errore import Excel: $e');
+      return (success: false, error: 'Errore durante import: $e', created: null, updated: null);
+    }
   }
 
   @override
