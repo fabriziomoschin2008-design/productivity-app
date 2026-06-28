@@ -4,6 +4,7 @@ import 'package:excel/excel.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/services/app_paths.dart';
 import '../../../data/local/database.dart';
 import '../models/account_with_balance.dart';
 
@@ -13,16 +14,12 @@ class ExcelService {
   // ── Directory helpers ──────────────────────────────────────────────────────
 
   static Future<String> _getExportBase() async {
-    final appDataDir = Platform.environment['LOCALAPPDATA'] ?? '';
-    final dir = Directory('$appDataDir\\ProductivityApp\\exports');
-    await dir.create(recursive: true);
+    final dir = await AppPaths.exportsDir();
     return dir.path;
   }
 
   static Future<String> _getTemplateDir() async {
-    final appDataDir = Platform.environment['LOCALAPPDATA'] ?? '';
-    final dir = Directory('$appDataDir\\ProductivityApp\\templates');
-    await dir.create(recursive: true);
+    final dir = await AppPaths.templatesDir();
     return dir.path;
   }
 

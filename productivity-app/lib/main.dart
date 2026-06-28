@@ -4,6 +4,7 @@ import 'package:flutter_quill/flutter_quill.dart' show FlutterQuillLocalizations
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/notifications/notification_service.dart';
+import 'core/services/app_settings.dart';
 import 'core/services/error_handler.dart';
 import 'core/services/logger_service.dart';
 import 'core/theme/app_theme.dart';
@@ -21,7 +22,8 @@ void main() async {
   };
 
   await initializeDateFormatting('it_IT');
-  AppLogger.instance.init();
+  await AppSettings.init();
+  await AppLogger.instance.init();
   AppLogger.instance.info('App avviata');
   await NotificationService.instance.init();
   runApp(const ProviderScope(child: App()));

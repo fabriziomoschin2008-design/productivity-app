@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/services/app_paths.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/local/database.dart';
@@ -146,18 +148,29 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
   }
 
   Future<void> _insertFile() async {
+    if (kIsWeb) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Gli allegati locali non sono ancora disponibili sul Web.',
+          ),
+        ),
+      );
+      return;
+    }
     final result = await FilePicker.platform.pickFiles(allowMultiple: true);
     if (!mounted || result == null) return;
     for (final file in result.files) {
       if (file.path == null) continue;
-      final appData = Platform.environment['LOCALAPPDATA'] ?? '';
-      final destDir = Directory(
-          '$appData\\ProductivityApp\\attachments\\${widget.note.id}');
+      final destDir = await AppPaths.attachmentsDir(widget.note.id);
       await destDir.create(recursive: true);
       final ext = file.name.contains('.') ? file.name.split('.').last : '';
       final fileId = _uuid.v4();
-      final destPath =
-          ext.isEmpty ? '${destDir.path}\\$fileId' : '${destDir.path}\\$fileId.$ext';
+      final sep = Platform.pathSeparator;
+      final destPath = ext.isEmpty
+          ? '${destDir.path}$sep$fileId'
+          : '${destDir.path}$sep$fileId.$ext';
       await File(file.path!).copy(destPath);
       final embedData = {
         'id': fileId,

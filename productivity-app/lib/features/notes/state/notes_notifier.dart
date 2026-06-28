@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/services/app_paths.dart';
 import '../../../core/services/error_handler.dart';
 import '../../../core/services/logger_service.dart';
 import '../../../data/local/database.dart';
@@ -94,9 +94,7 @@ class NotesNotifier extends StateNotifier<NotesState> {
       if (state.selectedNoteId == id) {
         state = state.copyWith(selectedNoteId: null);
       }
-      final appData = Platform.environment['LOCALAPPDATA'] ?? '';
-      final attachDir =
-          Directory('$appData\\ProductivityApp\\attachments\\$id');
+      final attachDir = await AppPaths.attachmentsDir(id);
       if (attachDir.existsSync()) attachDir.deleteSync(recursive: true);
       await _db.deleteNoteById(id);
       AppLogger.instance.info('Nota eliminata: $id');

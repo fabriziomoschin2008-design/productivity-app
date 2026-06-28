@@ -1,5 +1,9 @@
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
+
+import 'app_paths.dart';
+import 'platform_capabilities.dart';
 
 enum LogLevel { info, warning, error }
 
@@ -10,28 +14,19 @@ class AppLogger {
 
   File? _logFile;
 
-  void init() {
+  Future<void> init() async {
     try {
-      final dir = _resolveLogDir();
-      if (!dir.existsSync()) dir.createSync(recursive: true);
+      if (!PlatformCapabilities.supportsLocalFileStorage) {
+        debugPrint('[AppLogger] init su piattaforma senza filesystem locale');
+        return;
+      }
+      final dir = await AppPaths.logsDir();
       final today = _fmtDate(DateTime.now());
       _logFile = File('${dir.path}${Platform.pathSeparator}$today.log');
-      info('Logger inizializzato — ${_logFile!.path}');
+      info('Logger inizializzato - ${_logFile!.path}');
     } catch (e) {
       debugPrint('[AppLogger] init error: $e');
     }
-  }
-
-  Directory _resolveLogDir() {
-    if (Platform.isWindows) {
-      final local = Platform.environment['LOCALAPPDATA'];
-      if (local != null) {
-        return Directory(
-            '$local${Platform.pathSeparator}ProductivityApp${Platform.pathSeparator}logs');
-      }
-    }
-    return Directory(
-        '${Directory.current.path}${Platform.pathSeparator}logs');
   }
 
   void info(String message) => _write(LogLevel.info, message);
@@ -48,7 +43,6 @@ class AppLogger {
     final lvl = level.name.toUpperCase().padRight(7);
     final line = '[$ts] [$lvl] $message';
 
-    // Visibile nel terminale VS Code durante flutter run
     debugPrint(line);
 
     try {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:local_notifier/local_notifier.dart';
+import '../services/platform_capabilities.dart';
 import '../services/logger_service.dart';
 
 class NotificationService {
@@ -15,6 +16,12 @@ class NotificationService {
   final _timers = <int, Timer>{};
 
   Future<void> init() async {
+    if (!PlatformCapabilities.supportsLocalNotifications) {
+      AppLogger.instance.info(
+        'NotificationService non supportato su questa piattaforma',
+      );
+      return;
+    }
     try {
       await localNotifier.setup(appName: 'Cubby');
       _ready = true;
