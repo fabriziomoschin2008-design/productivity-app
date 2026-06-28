@@ -83,13 +83,19 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
 
   Future<void> completeGoal(String id) async {
     AppLogger.instance.info('Obiettivo completato: id=$id');
+    final goal = state.goals.where((g) => g.id == id).firstOrNull;
+    if (goal == null) return;
     await _db.updateGoal(
       GoalsCompanion(
         id: Value(id),
+        currentAmount: Value(goal.targetAmount),
         isCompleted: const Value(true),
         updatedAt: Value(DateTime.now()),
       ),
     );
+    if (!goal.isCompleted) {
+      NotificationScheduler.instance.showGoalCompleted(goal);
+    }
   }
 
   Future<void> deleteGoal(String id) async {

@@ -19,6 +19,7 @@ class _DebugPanelState extends ConsumerState<DebugPanel> {
   bool _dragging = false;
   Offset _dragStart = Offset.zero;
   Offset _posStart = Offset.zero;
+  DateTime _selectedDebugDate = DateTime.now();
 
   // Countdown refresh
   Timer? _ticker;
@@ -65,6 +66,11 @@ class _DebugPanelState extends ConsumerState<DebugPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final selectedDateLabel =
+        '${_selectedDebugDate.day.toString().padLeft(2, '0')}/'
+        '${_selectedDebugDate.month.toString().padLeft(2, '0')}/'
+        '${_selectedDebugDate.year}';
+
     return Positioned(
       left: _position.dx,
       top: _position.dy,
@@ -110,6 +116,20 @@ class _DebugPanelState extends ConsumerState<DebugPanel> {
                           .read(trackerProvider.notifier)
                           .triggerAutoIncrement(),
                     ),
+                    _Row(
+                      icon: Icons.event_rounded,
+                      label: selectedDateLabel,
+                      countdown: 'giorno',
+                      onTap: _pickDebugDate,
+                    ),
+                    _Row(
+                      icon: Icons.fast_forward_rounded,
+                      label: 'Simula fino al giorno',
+                      countdown: '',
+                      onTap: () => ref
+                          .read(trackerProvider.notifier)
+                          .triggerAutoIncrementUntil(_selectedDebugDate),
+                    ),
                   ],
                 ),
                 const Divider(height: 1, color: Color(0xFF3A3530)),
@@ -145,6 +165,18 @@ class _DebugPanelState extends ConsumerState<DebugPanel> {
       ),
     );
   }
+
+  Future<void> _pickDebugDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDebugDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+      locale: const Locale('it'),
+    );
+    if (picked == null) return;
+    setState(() => _selectedDebugDate = picked);
+  }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -159,22 +191,29 @@ class _Header extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Row(
         children: [
-          const Icon(Icons.bug_report_rounded,
-              size: 14, color: Color(0xFF7CFC00)),
+          const Icon(
+            Icons.bug_report_rounded,
+            size: 14,
+            color: Color(0xFF7CFC00),
+          ),
           const SizedBox(width: 6),
-          Text('DEBUG MODE',
-              style: AppTextStyles.label.copyWith(
-                color: const Color(0xFF7CFC00),
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.2,
-              )),
+          Text(
+            'DEBUG MODE',
+            style: AppTextStyles.label.copyWith(
+              color: const Color(0xFF7CFC00),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.2,
+            ),
+          ),
           const Spacer(),
           GestureDetector(
-            onTap: () =>
-                ref.read(debugModeProvider.notifier).state = false,
-            child: const Icon(Icons.close_rounded,
-                size: 15, color: Color(0xFF8C7B6E)),
+            onTap: () => ref.read(debugModeProvider.notifier).state = false,
+            child: const Icon(
+              Icons.close_rounded,
+              size: 15,
+              color: Color(0xFF8C7B6E),
+            ),
           ),
         ],
       ),
@@ -232,28 +271,35 @@ class _Row extends StatelessWidget {
           Icon(icon, size: 13, color: const Color(0xFF8C7B6E)),
           const SizedBox(width: 6),
           Expanded(
-            child: Text(label,
-                style: AppTextStyles.bodySmall.copyWith(
-                    color: const Color(0xFFD4C9C0), fontSize: 11)),
+            child: Text(
+              label,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: const Color(0xFFD4C9C0),
+                fontSize: 11,
+              ),
+            ),
           ),
-          Text(countdown,
-              style: AppTextStyles.amountSmall.copyWith(
-                color: const Color(0xFF5A5550),
-                fontSize: 10,
-              )),
+          Text(
+            countdown,
+            style: AppTextStyles.amountSmall.copyWith(
+              color: const Color(0xFF5A5550),
+              fontSize: 10,
+            ),
+          ),
           const SizedBox(width: 6),
           GestureDetector(
             onTap: onTap,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: const Color(0xFF2E2A26),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: const Color(0xFF4A4540)),
               ),
-              child: const Text('▶',
-                  style: TextStyle(fontSize: 9, color: Color(0xFF7CFC00))),
+              child: const Text(
+                '▶',
+                style: TextStyle(fontSize: 9, color: Color(0xFF7CFC00)),
+              ),
             ),
           ),
         ],

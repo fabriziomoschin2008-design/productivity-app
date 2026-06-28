@@ -188,7 +188,7 @@ class AccountsPanel extends ConsumerWidget {
           try {
             final result = await ref
                 .read(financeProvider.notifier)
-                .importAccountsFromExcel(file);
+                .importAccountsFromExcelBytes(file.bytes);
 
             if (!context.mounted) return;
 

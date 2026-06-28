@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../data/local/database.dart';
 import '../providers/calendar_providers.dart';
 
 final _eventColors = [
@@ -14,37 +16,66 @@ final _eventColors = [
 ];
 
 Future<void> showAddEventDialog(BuildContext context, DateTime initialDate) {
+  return showEventDialog(context, initialDate: initialDate);
+}
+
+Future<void> showEventDialog(
+  BuildContext context, {
+  required DateTime initialDate,
+  CalendarEvent? existingEvent,
+}) {
   return showDialog(
     context: context,
     useRootNavigator: false,
-    builder: (_) => _AddEventDialog(initialDate: initialDate),
+    builder: (_) =>
+        _EventDialog(initialDate: initialDate, existingEvent: existingEvent),
   );
 }
 
-class _AddEventDialog extends ConsumerStatefulWidget {
+class _EventDialog extends ConsumerStatefulWidget {
   final DateTime initialDate;
-  const _AddEventDialog({required this.initialDate});
+  final CalendarEvent? existingEvent;
+
+  const _EventDialog({required this.initialDate, this.existingEvent});
 
   @override
-  ConsumerState<_AddEventDialog> createState() => _AddEventDialogState();
+  ConsumerState<_EventDialog> createState() => _EventDialogState();
 }
 
-class _AddEventDialogState extends ConsumerState<_AddEventDialog> {
-  final _titleController = TextEditingController();
-  final _noteController = TextEditingController();
+class _EventDialogState extends ConsumerState<_EventDialog> {
+  late final TextEditingController _titleController;
+  late final TextEditingController _noteController;
   late DateTime _selectedDate;
-  TimeOfDay _selectedTime = TimeOfDay.now();
-  bool _allDay = true;
-  Color _selectedColor = _eventColors.first;
+  late TimeOfDay _selectedTime;
+  late bool _allDay;
+  late Color _selectedColor;
+
+  bool get _isEditing => widget.existingEvent != null;
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = widget.initialDate;
-    // Round up to next quarter hour as default time
-    final now = TimeOfDay.now();
-    final minutes = ((now.minute ~/ 15) + 1) * 15;
-    _selectedTime = TimeOfDay(hour: now.hour + minutes ~/ 60, minute: minutes % 60);
+    final event = widget.existingEvent;
+    _titleController = TextEditingController(text: event?.title ?? '');
+    _noteController = TextEditingController(text: event?.note ?? '');
+    _selectedDate = event?.startDate ?? widget.initialDate;
+    _allDay = event?.allDay ?? true;
+    _selectedColor = Color(event?.colorValue ?? _eventColors.first.toARGB32());
+
+    if (event != null && !event.allDay) {
+      _selectedTime = TimeOfDay(
+        hour: event.startDate.hour,
+        minute: event.startDate.minute,
+      );
+    } else {
+      final now = TimeOfDay.now();
+      final totalMinutes = now.hour * 60 + now.minute;
+      final roundedMinutes = ((totalMinutes / 15).ceil() * 15) % (24 * 60);
+      _selectedTime = TimeOfDay(
+        hour: roundedMinutes ~/ 60,
+        minute: roundedMinutes % 60,
+      );
+    }
   }
 
   @override
@@ -62,7 +93,17 @@ class _AddEventDialogState extends ConsumerState<_AddEventDialog> {
       lastDate: DateTime(2100),
       locale: const Locale('it'),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null) {
+      setState(() {
+        _selectedDate = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          _selectedDate.hour,
+          _selectedDate.minute,
+        );
+      });
+    }
   }
 
   Future<void> _pickTime() async {
@@ -80,7 +121,7 @@ class _AddEventDialogState extends ConsumerState<_AddEventDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Nuovo evento'),
+      title: Text(_isEditing ? 'Modifica evento' : 'Nuovo evento'),
       content: SizedBox(
         width: 360,
         child: Column(
@@ -106,20 +147,25 @@ class _AddEventDialogState extends ConsumerState<_AddEventDialog> {
               maxLines: 2,
             ),
             const SizedBox(height: 12),
-            // Date row
             InkWell(
               onTap: _pickDate,
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: AppColors.border),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_today,
-                        size: 16, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.calendar_today,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       '${_selectedDate.day.toString().padLeft(2, '0')}/'
@@ -132,7 +178,6 @@ class _AddEventDialogState extends ConsumerState<_AddEventDialog> {
               ),
             ),
             const SizedBox(height: 10),
-            // All-day toggle
             Row(
               children: [
                 Text('Tutto il giorno', style: AppTextStyles.bodySmall),
@@ -144,28 +189,34 @@ class _AddEventDialogState extends ConsumerState<_AddEventDialog> {
                 ),
               ],
             ),
-            // Time picker — visible only when not all-day
             if (!_allDay) ...[
               const SizedBox(height: 4),
               InkWell(
                 onTap: _pickTime,
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     border: Border.all(color: AppColors.primary),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.access_time,
-                          size: 16, color: AppColors.primary),
+                      const Icon(
+                        Icons.access_time,
+                        size: 16,
+                        color: AppColors.primary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         '${_selectedTime.hour.toString().padLeft(2, '0')}:'
                         '${_selectedTime.minute.toString().padLeft(2, '0')}',
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.primary),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
                     ],
                   ),
@@ -178,7 +229,7 @@ class _AddEventDialogState extends ConsumerState<_AddEventDialog> {
             Wrap(
               spacing: 8,
               children: _eventColors.map((c) {
-                final selected = c == _selectedColor;
+                final selected = c.toARGB32() == _selectedColor.toARGB32();
                 return GestureDetector(
                   onTap: () => setState(() => _selectedColor = c),
                   child: Container(
@@ -208,7 +259,7 @@ class _AddEventDialogState extends ConsumerState<_AddEventDialog> {
         ),
         ElevatedButton(
           onPressed: _submit,
-          child: const Text('Aggiungi'),
+          child: Text(_isEditing ? 'Salva' : 'Aggiungi'),
         ),
       ],
     );
@@ -219,7 +270,7 @@ class _AddEventDialogState extends ConsumerState<_AddEventDialog> {
     if (title.isEmpty) return;
 
     final startDate = _allDay
-        ? _selectedDate
+        ? DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)
         : DateTime(
             _selectedDate.year,
             _selectedDate.month,
@@ -228,15 +279,30 @@ class _AddEventDialogState extends ConsumerState<_AddEventDialog> {
             _selectedTime.minute,
           );
 
-    ref.read(calendarProvider.notifier).createEvent(
-          title: title,
-          note: _noteController.text.trim().isEmpty
-              ? null
-              : _noteController.text.trim(),
-          startDate: startDate,
-          allDay: _allDay,
-          colorValue: _selectedColor.toARGB32(),
-        );
+    final note = _noteController.text.trim().isEmpty
+        ? null
+        : _noteController.text.trim();
+
+    final notifier = ref.read(calendarProvider.notifier);
+    if (_isEditing) {
+      notifier.updateEvent(
+        id: widget.existingEvent!.id,
+        title: title,
+        note: note,
+        startDate: startDate,
+        endDate: widget.existingEvent!.endDate,
+        allDay: _allDay,
+        colorValue: _selectedColor.toARGB32(),
+      );
+    } else {
+      notifier.createEvent(
+        title: title,
+        note: note,
+        startDate: startDate,
+        allDay: _allDay,
+        colorValue: _selectedColor.toARGB32(),
+      );
+    }
     Navigator.of(context).pop();
   }
 }

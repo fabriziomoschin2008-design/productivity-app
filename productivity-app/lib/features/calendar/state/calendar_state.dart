@@ -61,10 +61,12 @@ class CalendarState {
 
   double completionRateForDate(DateTime date) {
     if (habits.isEmpty) return 0;
-    final naCount =
-        habits.where((h) => statusForHabit(h.id, date) == 'na').length;
-    final doneCount =
-        habits.where((h) => statusForHabit(h.id, date) == 'done').length;
+    final naCount = habits
+        .where((h) => statusForHabit(h.id, date) == 'na')
+        .length;
+    final doneCount = habits
+        .where((h) => statusForHabit(h.id, date) == 'done')
+        .length;
     final denominator = habits.length - naCount;
     if (denominator <= 0) return 0;
     return doneCount / denominator;
@@ -81,8 +83,14 @@ class CalendarState {
   List<CalendarEvent> eventsForDate(DateTime date) {
     final day = DateTime(date.year, date.month, date.day);
     return events.where((e) {
-      final start = DateTime(e.startDate.year, e.startDate.month, e.startDate.day);
-      return start == day;
+      final start = DateTime(
+        e.startDate.year,
+        e.startDate.month,
+        e.startDate.day,
+      );
+      final endSource = e.endDate ?? e.startDate;
+      final end = DateTime(endSource.year, endSource.month, endSource.day);
+      return !day.isBefore(start) && !day.isAfter(end);
     }).toList();
   }
 

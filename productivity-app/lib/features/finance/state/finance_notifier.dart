@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/logger_service.dart';
@@ -178,9 +179,25 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
     })
   >
   importAccountsFromExcel(File file) async {
+    final bytes = await file.readAsBytes();
+    return importAccountsFromExcelBytes(bytes);
+  }
+
+  Future<
+    ({
+      bool success,
+      String? error,
+      List<String>? created,
+      List<String>? updated,
+    })
+  >
+  importAccountsFromExcelBytes(Uint8List bytes) async {
     final existingAccounts = state.accounts.map((a) => a.account).toList();
 
-    final result = await ExcelService.importAccounts(file, existingAccounts);
+    final result = await ExcelService.importAccountsBytes(
+      bytes,
+      existingAccounts,
+    );
 
     if (result.error != null) {
       return (
@@ -211,10 +228,10 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
       }
 
       for (final accId in result.updatedAccountIds) {
-        final updAcc = result.newAccounts.firstWhere(
+        final updAcc = result.updatedAccounts.firstWhere(
           (a) => a.id == accId,
-          orElse: () => result.newAccounts.isNotEmpty
-              ? result.newAccounts.first
+          orElse: () => result.updatedAccounts.isNotEmpty
+              ? result.updatedAccounts.first
               : Account(
                   id: '',
                   name: '',

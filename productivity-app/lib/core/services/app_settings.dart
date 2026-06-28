@@ -15,7 +15,12 @@ class AppSettings {
 
   static Future<void> setTmdbApiKey(String key) async {
     await init();
-    await _prefs!.setString('tmdb_api_key', key.trim());
+    final trimmed = key.trim();
+    if (trimmed.isEmpty) {
+      await _prefs!.remove('tmdb_api_key');
+      return;
+    }
+    await _prefs!.setString('tmdb_api_key', trimmed);
   }
 
   static Future<void> setString(String key, String value) async {

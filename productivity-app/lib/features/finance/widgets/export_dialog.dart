@@ -13,53 +13,77 @@ class ExportDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final dirPath = _resolvedDirectoryPath();
     final files = _listFiles(dirPath);
+    final visibleFiles = files.take(8).toList();
+    final hiddenCount = files.length - visibleFiles.length;
 
     return Dialog(
       backgroundColor: AppColors.surface,
       child: SizedBox(
         width: 460,
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Export completato', style: AppTextStyles.headingCard),
-              const SizedBox(height: 16),
-              Text('Cartella:', style: AppTextStyles.label),
-              const SizedBox(height: 6),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(6),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 560),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Export completato', style: AppTextStyles.headingCard),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Cartella:', style: AppTextStyles.label),
+                        const SizedBox(height: 6),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: SelectableText(
+                            dirPath,
+                            style: AppTextStyles.bodySmall,
+                          ),
+                        ),
+                        if (visibleFiles.isNotEmpty) ...[
+                          const SizedBox(height: 14),
+                          Text('File generati:', style: AppTextStyles.label),
+                          const SizedBox(height: 6),
+                          ...visibleFiles.map((f) => _FileLine(file: f)),
+                          if (hiddenCount > 0) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              'Altri $hiddenCount file non mostrati per evitare overflow.',
+                              style: AppTextStyles.label,
+                            ),
+                          ],
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
-                child: SelectableText(dirPath, style: AppTextStyles.bodySmall),
-              ),
-              if (files.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                Text('File generati:', style: AppTextStyles.label),
-                const SizedBox(height: 6),
-                ...files.map((f) => _FileLine(file: f)),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Chiudi'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: _openDir,
+                      icon: const Icon(Icons.folder_open, size: 16),
+                      label: const Text('Apri Cartella'),
+                    ),
+                  ],
+                ),
               ],
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Chiudi'),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: _openDir,
-                    icon: const Icon(Icons.folder_open, size: 16),
-                    label: const Text('Apri Cartella'),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),

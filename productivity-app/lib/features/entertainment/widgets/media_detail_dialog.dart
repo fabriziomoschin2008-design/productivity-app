@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element_parameter
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,9 +59,11 @@ class _MovieDetailState extends ConsumerState<MovieDetailDialog> {
                       width: 120,
                       height: 180,
                       child: posterUrl != null
-                          ? Image.network(posterUrl, fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) =>
-                                  _placeholder(m.title))
+                          ? Image.network(
+                              posterUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => _placeholder(m.title),
+                            )
                           : _placeholder(m.title),
                     ),
                   ),
@@ -68,37 +72,55 @@ class _MovieDetailState extends ConsumerState<MovieDetailDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(m.title,
-                            style: AppTextStyles.headingCard.copyWith(
-                                fontSize: 20, fontWeight: FontWeight.w700)),
+                        Text(
+                          m.title,
+                          style: AppTextStyles.headingCard.copyWith(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                         const SizedBox(height: 4),
                         if (m.releaseDate != null && m.releaseDate!.length >= 4)
-                          Text(m.releaseDate!.substring(0, 4),
-                              style: AppTextStyles.bodySmall),
+                          Text(
+                            m.releaseDate!.substring(0, 4),
+                            style: AppTextStyles.bodySmall,
+                          ),
                         if (m.genreNames != null &&
                             m.genreNames!.isNotEmpty) ...[
                           const SizedBox(height: 4),
-                          Text(m.genreNames!,
-                              style: AppTextStyles.bodySmall
-                                  .copyWith(color: AppColors.textSecondary)),
+                          Text(
+                            m.genreNames!,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                         ],
                         if (m.runtime != null) ...[
                           const SizedBox(height: 4),
-                          Text('${m.runtime} min',
-                              style: AppTextStyles.bodySmall),
+                          Text(
+                            '${m.runtime} min',
+                            style: AppTextStyles.bodySmall,
+                          ),
                         ],
                         if (m.voteAverage != null) ...[
                           const SizedBox(height: 8),
-                          Row(children: [
-                            const Icon(Icons.star_rounded,
-                                color: Colors.amber, size: 16),
-                            const SizedBox(width: 4),
-                            Text(m.voteAverage!.toStringAsFixed(1),
-                                style: AppTextStyles.bodyRegular
-                                    .copyWith(fontWeight: FontWeight.w600)),
-                            Text(' / 10',
-                                style: AppTextStyles.bodySmall),
-                          ]),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.star_rounded,
+                                color: Colors.amber,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                m.voteAverage!.toStringAsFixed(1),
+                                style: AppTextStyles.bodyRegular.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(' / 10', style: AppTextStyles.bodySmall),
+                            ],
+                          ),
                         ],
                         const SizedBox(height: 12),
                         // Status dropdown
@@ -112,8 +134,7 @@ class _MovieDetailState extends ConsumerState<MovieDetailDialog> {
                           },
                         ),
                         const SizedBox(height: 12),
-                        Text('La tua valutazione',
-                            style: AppTextStyles.label),
+                        Text('La tua valutazione', style: AppTextStyles.label),
                         const SizedBox(height: 6),
                         StarRating(
                           value: _rating,
@@ -128,34 +149,32 @@ class _MovieDetailState extends ConsumerState<MovieDetailDialog> {
                         const SizedBox(height: 12),
                         _CopyLanguageButton(
                           isOl: m.inOriginalLanguage,
-                          alreadyExists: ref.watch(moviesProvider).movies.any(
-                                (x) =>
-                                    x.id != m.id &&
-                                    x.inOriginalLanguage != m.inOriginalLanguage &&
-                                    (m.tmdbId != null
-                                        ? x.tmdbId == m.tmdbId
-                                        : x.title == m.title),
-                              ),
                           onPressed: () async {
                             TmdbMovieDetails? enDetails;
                             if (!m.inOriginalLanguage && m.tmdbId != null) {
                               final key = AppSettings.tmdbApiKey;
                               if (key != null && key.isNotEmpty) {
-                                enDetails = await TmdbService(key)
-                                    .getMovieDetailsEn(m.tmdbId!);
+                                enDetails = await TmdbService(
+                                  key,
+                                ).getMovieDetailsEn(m.tmdbId!);
                               }
                             }
                             await ref
                                 .read(moviesProvider.notifier)
-                                .copyWithLanguageToggle(m, enOverride: enDetails);
+                                .updateLanguagePreference(
+                                  m,
+                                  overrideDetails: enDetails,
+                                );
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text(
-                                  m.inOriginalLanguage
-                                      ? 'Versione doppiata aggiunta.'
-                                      : 'Versione in lingua originale aggiunta.',
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    m.inOriginalLanguage
+                                        ? 'Versione doppiata aggiornata.'
+                                        : 'Versione in lingua originale aggiornata.',
+                                  ),
                                 ),
-                              ));
+                              );
                             }
                           },
                         ),
@@ -168,25 +187,32 @@ class _MovieDetailState extends ConsumerState<MovieDetailDialog> {
                 const SizedBox(height: 20),
                 const Divider(color: AppColors.divider),
                 const SizedBox(height: 12),
-                Text(m.overview!,
-                    style: AppTextStyles.bodyRegular
-                        .copyWith(color: AppColors.textSecondary, height: 1.5)),
+                Text(
+                  m.overview!,
+                  style: AppTextStyles.bodyRegular.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
               ],
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton.icon(
-                    icon: const Icon(Icons.delete_outline,
-                        color: AppColors.expense, size: 18),
-                    label: const Text('Elimina',
-                        style: TextStyle(color: AppColors.expense)),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: AppColors.expense,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      'Elimina',
+                      style: TextStyle(color: AppColors.expense),
+                    ),
                     onPressed: () async {
                       final confirm = await _confirmDelete(context, m.title);
                       if (confirm == true && context.mounted) {
-                        await ref
-                            .read(moviesProvider.notifier)
-                            .delete(m.id);
+                        await ref.read(moviesProvider.notifier).delete(m.id);
                         if (context.mounted) Navigator.of(context).pop();
                       }
                     },
@@ -197,7 +223,8 @@ class _MovieDetailState extends ConsumerState<MovieDetailDialog> {
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     child: const Text('Chiudi'),
                   ),
@@ -211,34 +238,38 @@ class _MovieDetailState extends ConsumerState<MovieDetailDialog> {
   }
 
   Widget _placeholder(String title) => Container(
-        color: AppColors.surfaceElevated,
-        alignment: Alignment.center,
-        child: Text(
-            title.isNotEmpty ? title[0].toUpperCase() : '?',
-            style: TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary.withValues(alpha: 0.4))),
-      );
+    color: AppColors.surfaceElevated,
+    alignment: Alignment.center,
+    child: Text(
+      title.isNotEmpty ? title[0].toUpperCase() : '?',
+      style: TextStyle(
+        fontSize: 40,
+        fontWeight: FontWeight.w700,
+        color: AppColors.primary.withValues(alpha: 0.4),
+      ),
+    ),
+  );
 
   Future<bool?> _confirmDelete(BuildContext ctx, String title) =>
       showDialog<bool>(
         context: ctx,
         builder: (c) => AlertDialog(
           backgroundColor: AppColors.surface,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: const Text('Elimina film'),
           content: Text('Vuoi eliminare "$title"?'),
           actions: [
             TextButton(
-                onPressed: () => Navigator.of(c).pop(false),
-                child: const Text('Annulla')),
+              onPressed: () => Navigator.of(c).pop(false),
+              child: const Text('Annulla'),
+            ),
             TextButton(
-                onPressed: () => Navigator.of(c).pop(true),
-                style: TextButton.styleFrom(
-                    foregroundColor: AppColors.expense),
-                child: const Text('Elimina')),
+              onPressed: () => Navigator.of(c).pop(true),
+              style: TextButton.styleFrom(foregroundColor: AppColors.expense),
+              child: const Text('Elimina'),
+            ),
           ],
         ),
       );
@@ -299,9 +330,12 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
                       width: 120,
                       height: 180,
                       child: posterUrl != null
-                          ? Image.network(posterUrl, fit: BoxFit.cover,
+                          ? Image.network(
+                              posterUrl,
+                              fit: BoxFit.cover,
                               errorBuilder: (_, _, _) =>
-                                  _placeholder(current.title))
+                                  _placeholder(current.title),
+                            )
                           : _placeholder(current.title),
                     ),
                   ),
@@ -310,32 +344,49 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(current.title,
-                            style: AppTextStyles.headingCard.copyWith(
-                                fontSize: 20, fontWeight: FontWeight.w700)),
+                        Text(
+                          current.title,
+                          style: AppTextStyles.headingCard.copyWith(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                         const SizedBox(height: 4),
                         if (current.firstAirDate != null &&
                             current.firstAirDate!.length >= 4)
-                          Text(current.firstAirDate!.substring(0, 4),
-                              style: AppTextStyles.bodySmall),
+                          Text(
+                            current.firstAirDate!.substring(0, 4),
+                            style: AppTextStyles.bodySmall,
+                          ),
                         if (current.genreNames != null &&
                             current.genreNames!.isNotEmpty) ...[
                           const SizedBox(height: 4),
-                          Text(current.genreNames!,
-                              style: AppTextStyles.bodySmall
-                                  .copyWith(color: AppColors.textSecondary)),
+                          Text(
+                            current.genreNames!,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                         ],
                         if (current.voteAverage != null) ...[
                           const SizedBox(height: 8),
-                          Row(children: [
-                            const Icon(Icons.star_rounded,
-                                color: Colors.amber, size: 16),
-                            const SizedBox(width: 4),
-                            Text(current.voteAverage!.toStringAsFixed(1),
-                                style: AppTextStyles.bodyRegular
-                                    .copyWith(fontWeight: FontWeight.w600)),
-                            Text(' / 10', style: AppTextStyles.bodySmall),
-                          ]),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.star_rounded,
+                                color: Colors.amber,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                current.voteAverage!.toStringAsFixed(1),
+                                style: AppTextStyles.bodyRegular.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(' / 10', style: AppTextStyles.bodySmall),
+                            ],
+                          ),
                         ],
                         const SizedBox(height: 12),
                         _StatusDrop(
@@ -347,8 +398,7 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
                           },
                         ),
                         const SizedBox(height: 12),
-                        Text('La tua valutazione',
-                            style: AppTextStyles.label),
+                        Text('La tua valutazione', style: AppTextStyles.label),
                         const SizedBox(height: 6),
                         StarRating(
                           value: _rating,
@@ -363,37 +413,33 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
                         const SizedBox(height: 12),
                         _CopyLanguageButton(
                           isOl: current.inOriginalLanguage,
-                          alreadyExists: ref.watch(tvProvider).series.any(
-                                (x) =>
-                                    x.id != s.id &&
-                                    x.inOriginalLanguage !=
-                                        current.inOriginalLanguage &&
-                                    (current.tmdbId != null
-                                        ? x.tmdbId == current.tmdbId
-                                        : x.title == current.title),
-                              ),
                           onPressed: () async {
                             TmdbTvDetails? enDetails;
                             if (!current.inOriginalLanguage &&
                                 current.tmdbId != null) {
                               final key = AppSettings.tmdbApiKey;
                               if (key != null && key.isNotEmpty) {
-                                enDetails = await TmdbService(key)
-                                    .getTvDetailsEn(current.tmdbId!);
+                                enDetails = await TmdbService(
+                                  key,
+                                ).getTvDetailsEn(current.tmdbId!);
                               }
                             }
                             await ref
                                 .read(tvProvider.notifier)
-                                .copyWithLanguageToggle(current,
-                                    enOverride: enDetails);
+                                .updateLanguagePreference(
+                                  current,
+                                  overrideDetails: enDetails,
+                                );
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text(
-                                  current.inOriginalLanguage
-                                      ? 'Versione doppiata aggiunta.'
-                                      : 'Versione in lingua originale aggiunta.',
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    current.inOriginalLanguage
+                                        ? 'Versione doppiata aggiornata.'
+                                        : 'Versione in lingua originale aggiornata.',
+                                  ),
                                 ),
-                              ));
+                              );
                             }
                           },
                         ),
@@ -417,13 +463,13 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
                     return FilterChip(
                       label: Text('Stagione $sn'),
                       selected: sel,
-                      onSelected: (_) => ref
-                          .read(tvProvider.notifier)
-                          .toggleSeason(s.id, sn),
+                      onSelected: (_) =>
+                          ref.read(tvProvider.notifier).toggleSeason(s.id, sn),
                       selectedColor: AppColors.primary.withValues(alpha: 0.15),
                       checkmarkColor: AppColors.primary,
                       side: BorderSide(
-                          color: sel ? AppColors.primary : AppColors.border),
+                        color: sel ? AppColors.primary : AppColors.border,
+                      ),
                     );
                   }),
                 ),
@@ -432,19 +478,28 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
                 const SizedBox(height: 16),
                 if (totalS == 0) const Divider(color: AppColors.divider),
                 const SizedBox(height: 8),
-                Text(current.overview!,
-                    style: AppTextStyles.bodyRegular
-                        .copyWith(color: AppColors.textSecondary, height: 1.5)),
+                Text(
+                  current.overview!,
+                  style: AppTextStyles.bodyRegular.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
               ],
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton.icon(
-                    icon: const Icon(Icons.delete_outline,
-                        color: AppColors.expense, size: 18),
-                    label: const Text('Elimina',
-                        style: TextStyle(color: AppColors.expense)),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: AppColors.expense,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      'Elimina',
+                      style: TextStyle(color: AppColors.expense),
+                    ),
                     onPressed: () async {
                       final confirm = await _confirmDelete(context, s.title);
                       if (confirm == true && context.mounted) {
@@ -459,7 +514,8 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     child: const Text('Chiudi'),
                   ),
@@ -473,34 +529,38 @@ class _TvDetailState extends ConsumerState<TvDetailDialog> {
   }
 
   Widget _placeholder(String title) => Container(
-        color: AppColors.surfaceElevated,
-        alignment: Alignment.center,
-        child: Text(
-            title.isNotEmpty ? title[0].toUpperCase() : '?',
-            style: TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary.withValues(alpha: 0.4))),
-      );
+    color: AppColors.surfaceElevated,
+    alignment: Alignment.center,
+    child: Text(
+      title.isNotEmpty ? title[0].toUpperCase() : '?',
+      style: TextStyle(
+        fontSize: 40,
+        fontWeight: FontWeight.w700,
+        color: AppColors.primary.withValues(alpha: 0.4),
+      ),
+    ),
+  );
 
   Future<bool?> _confirmDelete(BuildContext ctx, String title) =>
       showDialog<bool>(
         context: ctx,
         builder: (c) => AlertDialog(
           backgroundColor: AppColors.surface,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: const Text('Elimina serie TV'),
           content: Text('Vuoi eliminare "$title"?'),
           actions: [
             TextButton(
-                onPressed: () => Navigator.of(c).pop(false),
-                child: const Text('Annulla')),
+              onPressed: () => Navigator.of(c).pop(false),
+              child: const Text('Annulla'),
+            ),
             TextButton(
-                onPressed: () => Navigator.of(c).pop(true),
-                style: TextButton.styleFrom(
-                    foregroundColor: AppColors.expense),
-                child: const Text('Elimina')),
+              onPressed: () => Navigator.of(c).pop(true),
+              style: TextButton.styleFrom(foregroundColor: AppColors.expense),
+              child: const Text('Elimina'),
+            ),
           ],
         ),
       );
@@ -515,7 +575,7 @@ class _CopyLanguageButton extends StatelessWidget {
 
   const _CopyLanguageButton({
     required this.isOl,
-    required this.alreadyExists,
+    this.alreadyExists = false,
     this.onPressed,
   });
 
@@ -524,11 +584,16 @@ class _CopyLanguageButton extends StatelessWidget {
     if (alreadyExists) {
       return Row(
         children: [
-          const Icon(Icons.check_circle_outline_rounded,
-              size: 14, color: AppColors.textSecondary),
+          const Icon(
+            Icons.check_circle_outline_rounded,
+            size: 14,
+            color: AppColors.textSecondary,
+          ),
           const SizedBox(width: 4),
           Text(
-            isOl ? 'Versione doppiata già presente' : 'Versione OL già presente',
+            isOl
+                ? 'Versione doppiata già presente'
+                : 'Versione OL già presente',
             style: AppTextStyles.label.copyWith(color: AppColors.textSecondary),
           ),
         ],
@@ -536,8 +601,8 @@ class _CopyLanguageButton extends StatelessWidget {
     }
     return OutlinedButton.icon(
       onPressed: onPressed,
-      icon: const Icon(Icons.copy_rounded, size: 14),
-      label: Text(isOl ? 'Aggiungi versione doppiata' : 'Aggiungi versione OL'),
+      icon: const Icon(Icons.translate_rounded, size: 14),
+      label: Text(isOl ? 'Passa a versione doppiata' : 'Passa a versione OL'),
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.textSecondary,
         side: const BorderSide(color: AppColors.border),
@@ -564,13 +629,14 @@ class _StatusDrop extends StatelessWidget {
         filled: true,
         fillColor: AppColors.surfaceElevated,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.border)),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.border)),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
       items: const [
         DropdownMenuItem(value: 'watched', child: Text('Visto')),

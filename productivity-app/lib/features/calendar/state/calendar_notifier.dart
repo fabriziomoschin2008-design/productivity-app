@@ -53,6 +53,13 @@ class CalendarNotifier extends StateNotifier<CalendarState> {
     _subscribeToLogs();
   }
 
+  void setFocusedMonth(DateTime date) {
+    final month = DateTime(date.year, date.month);
+    if (month == state.focusedMonth) return;
+    state = state.copyWith(focusedMonth: month);
+    _subscribeToLogs();
+  }
+
   void setHabitView(HabitView view) => state = state.copyWith(habitView: view);
 
   void setTab(CalendarTab tab) => state = state.copyWith(activeTab: tab);
@@ -71,11 +78,13 @@ class CalendarNotifier extends StateNotifier<CalendarState> {
       if (next.isEmpty) {
         await _db.clearHabitLog(habitId, day);
       } else {
-        await _db.setHabitLog(HabitLogsCompanion(
-          habitId: Value(habitId),
-          date: Value(day),
-          status: Value(next),
-        ));
+        await _db.setHabitLog(
+          HabitLogsCompanion(
+            habitId: Value(habitId),
+            date: Value(day),
+            status: Value(next),
+          ),
+        );
       }
       _refreshStreaks();
     } catch (e, s) {
@@ -84,17 +93,22 @@ class CalendarNotifier extends StateNotifier<CalendarState> {
   }
 
   Future<void> setHabitStatus(
-      String habitId, DateTime date, String status) async {
+    String habitId,
+    DateTime date,
+    String status,
+  ) async {
     try {
       final day = DateTime(date.year, date.month, date.day);
       if (status.isEmpty) {
         await _db.clearHabitLog(habitId, day);
       } else {
-        await _db.setHabitLog(HabitLogsCompanion(
-          habitId: Value(habitId),
-          date: Value(day),
-          status: Value(status),
-        ));
+        await _db.setHabitLog(
+          HabitLogsCompanion(
+            habitId: Value(habitId),
+            date: Value(day),
+            status: Value(status),
+          ),
+        );
       }
       _refreshStreaks();
     } catch (e, s) {
@@ -117,11 +131,12 @@ class CalendarNotifier extends StateNotifier<CalendarState> {
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
 
-    final doneDays = allLogs
-        .where((l) => l.habitId == habitId && l.status == 'done')
-        .map((l) => DateTime(l.date.year, l.date.month, l.date.day))
-        .toList()
-      ..sort((a, b) => b.compareTo(a));
+    final doneDays =
+        allLogs
+            .where((l) => l.habitId == habitId && l.status == 'done')
+            .map((l) => DateTime(l.date.year, l.date.month, l.date.day))
+            .toList()
+          ..sort((a, b) => b.compareTo(a));
 
     if (doneDays.isEmpty) return 0;
 
@@ -143,11 +158,13 @@ class CalendarNotifier extends StateNotifier<CalendarState> {
 
   Future<void> createHabit(String name, String category) async {
     try {
-      await _db.insertHabit(HabitsCompanion(
-        id: Value(_uuid.v4()),
-        name: Value(name),
-        category: Value(category),
-      ));
+      await _db.insertHabit(
+        HabitsCompanion(
+          id: Value(_uuid.v4()),
+          name: Value(name),
+          category: Value(category),
+        ),
+      );
     } catch (e, s) {
       AppErrorHandler.handle(e, s);
     }
@@ -170,15 +187,44 @@ class CalendarNotifier extends StateNotifier<CalendarState> {
     int colorValue = 0xFF6C63FF,
   }) async {
     try {
-      await _db.insertCalendarEvent(CalendarEventsCompanion(
-        id: Value(_uuid.v4()),
-        title: Value(title),
-        note: Value(note),
-        startDate: Value(startDate),
-        endDate: Value(endDate),
-        allDay: Value(allDay),
-        colorValue: Value(colorValue),
-      ));
+      await _db.insertCalendarEvent(
+        CalendarEventsCompanion(
+          id: Value(_uuid.v4()),
+          title: Value(title),
+          note: Value(note),
+          startDate: Value(startDate),
+          endDate: Value(endDate),
+          allDay: Value(allDay),
+          colorValue: Value(colorValue),
+        ),
+      );
+    } catch (e, s) {
+      AppErrorHandler.handle(e, s);
+    }
+  }
+
+  Future<void> updateEvent({
+    required String id,
+    required String title,
+    String? note,
+    required DateTime startDate,
+    DateTime? endDate,
+    required bool allDay,
+    required int colorValue,
+  }) async {
+    try {
+      await _db.updateCalendarEvent(
+        CalendarEventsCompanion(
+          id: Value(id),
+          title: Value(title),
+          note: Value(note),
+          startDate: Value(startDate),
+          endDate: Value(endDate),
+          allDay: Value(allDay),
+          colorValue: Value(colorValue),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     } catch (e, s) {
       AppErrorHandler.handle(e, s);
     }

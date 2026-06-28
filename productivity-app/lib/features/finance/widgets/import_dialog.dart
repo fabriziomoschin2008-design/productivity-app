@@ -1,23 +1,29 @@
-import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 
-class ImportDialog extends StatefulWidget {
-  final Function(File) onImport;
+class ImportFileData {
+  final String name;
+  final Uint8List bytes;
 
-  const ImportDialog({
-    super.key,
-    required this.onImport,
-  });
+  const ImportFileData({required this.name, required this.bytes});
+}
+
+class ImportDialog extends StatefulWidget {
+  final Future<void> Function(ImportFileData file) onImport;
+
+  const ImportDialog({super.key, required this.onImport});
 
   @override
   State<ImportDialog> createState() => _ImportDialogState();
 }
 
 class _ImportDialogState extends State<ImportDialog> {
-  File? _selectedFile;
+  ImportFileData? _selectedFile;
   bool _isLoading = false;
 
   @override
@@ -68,7 +74,7 @@ class _ImportDialogState extends State<ImportDialog> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              _selectedFile!.path.split('\\').last,
+                              _selectedFile!.name,
                               style: AppTextStyles.bodySmall,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -104,9 +110,7 @@ class _ImportDialogState extends State<ImportDialog> {
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Text('Importa'),
                     ),
@@ -124,28 +128,34 @@ class _ImportDialogState extends State<ImportDialog> {
       type: FileType.custom,
       allowedExtensions: ['xlsx'],
       allowMultiple: false,
+      withData: true,
     );
 
-    if (result != null && result.files.isNotEmpty) {
-      setState(() => _selectedFile = File(result.files.first.path!));
-    }
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    if (file.bytes == null) return;
+
+    setState(
+      () => _selectedFile = ImportFileData(name: file.name, bytes: file.bytes!),
+    );
   }
 
   Future<void> _import() async {
-    if (_selectedFile == null) return;
+    final file = _selectedFile;
+    if (file == null) return;
 
     setState(() => _isLoading = true);
 
     try {
-      widget.onImport(_selectedFile!);
+      await widget.onImport(file);
       if (mounted) {
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Errore: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Errore: $e')));
       }
     } finally {
       if (mounted) {

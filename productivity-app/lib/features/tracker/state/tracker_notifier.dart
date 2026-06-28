@@ -36,6 +36,28 @@ class TrackerNotifier extends StateNotifier<TrackerState> {
 
   Future<void> triggerAutoIncrement() => _runAutoIncrement();
 
+  Future<void> triggerAutoIncrementUntil(DateTime targetDate) async {
+    final today = DateTime.now();
+    final startDay = DateTime(today.year, today.month, today.day);
+    final targetDay = DateTime(
+      targetDate.year,
+      targetDate.month,
+      targetDate.day,
+    );
+
+    final daysToSimulate = targetDay.isAfter(startDay)
+        ? targetDay.difference(startDay).inDays
+        : 1;
+
+    for (var i = 0; i < daysToSimulate; i++) {
+      for (final t in state.trackers.where((t) => t.isDailyAutoIncrement)) {
+        await increment(t.id);
+      }
+    }
+
+    _scheduleMidnightIncrement();
+  }
+
   Future<void> _runAutoIncrement() async {
     AppLogger.instance.info('Auto-incremento tracker: mezzanotte');
     for (final t in state.trackers.where((t) => t.isDailyAutoIncrement)) {
@@ -55,14 +77,16 @@ class TrackerNotifier extends StateNotifier<TrackerState> {
     required bool isDailyAutoIncrement,
   }) async {
     try {
-      await _db.insertTracker(TrackersCompanion(
-        name: Value(name),
-        targetValue: Value(targetValue),
-        step: Value(step),
-        unit: Value(unit),
-        colorValue: Value(colorValue),
-        isDailyAutoIncrement: Value(isDailyAutoIncrement),
-      ));
+      await _db.insertTracker(
+        TrackersCompanion(
+          name: Value(name),
+          targetValue: Value(targetValue),
+          step: Value(step),
+          unit: Value(unit),
+          colorValue: Value(colorValue),
+          isDailyAutoIncrement: Value(isDailyAutoIncrement),
+        ),
+      );
       AppLogger.instance.info('Tracker creato: $name');
     } catch (e, s) {
       AppErrorHandler.handle(e, s);
@@ -79,16 +103,18 @@ class TrackerNotifier extends StateNotifier<TrackerState> {
     required bool isDailyAutoIncrement,
   }) async {
     try {
-      await _db.updateTracker(TrackersCompanion(
-        id: Value(id),
-        name: Value(name),
-        targetValue: Value(targetValue),
-        step: Value(step),
-        unit: Value(unit),
-        colorValue: Value(colorValue),
-        isDailyAutoIncrement: Value(isDailyAutoIncrement),
-        updatedAt: Value(DateTime.now()),
-      ));
+      await _db.updateTracker(
+        TrackersCompanion(
+          id: Value(id),
+          name: Value(name),
+          targetValue: Value(targetValue),
+          step: Value(step),
+          unit: Value(unit),
+          colorValue: Value(colorValue),
+          isDailyAutoIncrement: Value(isDailyAutoIncrement),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);
     }
@@ -103,15 +129,18 @@ class TrackerNotifier extends StateNotifier<TrackerState> {
       if (newValue >= tracker.targetValue) {
         newValue = newValue - tracker.targetValue;
         cycles++;
-        AppLogger.instance
-            .info('Tracker "${tracker.name}" ciclo $cycles completato');
+        AppLogger.instance.info(
+          'Tracker "${tracker.name}" ciclo $cycles completato',
+        );
       }
-      await _db.updateTracker(TrackersCompanion(
-        id: Value(id),
-        currentValue: Value(newValue),
-        completedCycles: Value(cycles),
-        updatedAt: Value(DateTime.now()),
-      ));
+      await _db.updateTracker(
+        TrackersCompanion(
+          id: Value(id),
+          currentValue: Value(newValue),
+          completedCycles: Value(cycles),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);
     }
@@ -121,13 +150,17 @@ class TrackerNotifier extends StateNotifier<TrackerState> {
     try {
       final tracker = state.trackers.where((t) => t.id == id).firstOrNull;
       if (tracker == null) return;
-      final newValue =
-          (tracker.currentValue - tracker.step).clamp(0.0, tracker.targetValue);
-      await _db.updateTracker(TrackersCompanion(
-        id: Value(id),
-        currentValue: Value(newValue),
-        updatedAt: Value(DateTime.now()),
-      ));
+      final newValue = (tracker.currentValue - tracker.step).clamp(
+        0.0,
+        tracker.targetValue,
+      );
+      await _db.updateTracker(
+        TrackersCompanion(
+          id: Value(id),
+          currentValue: Value(newValue),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);
     }

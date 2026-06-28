@@ -407,13 +407,27 @@ class ExcelService {
     ({
       List<Account> newAccounts,
       List<TransactionEntry> transactions,
+      List<Account> updatedAccounts,
       List<String> updatedAccountIds,
       String? error,
     })
   >
   importAccounts(File file, List<Account> existingAccounts) async {
+    final bytes = await file.readAsBytes();
+    return importAccountsBytes(bytes, existingAccounts);
+  }
+
+  static Future<
+    ({
+      List<Account> newAccounts,
+      List<TransactionEntry> transactions,
+      List<Account> updatedAccounts,
+      List<String> updatedAccountIds,
+      String? error,
+    })
+  >
+  importAccountsBytes(Uint8List bytes, List<Account> existingAccounts) async {
     try {
-      final bytes = await file.readAsBytes();
       final excel = Excel.decodeBytes(bytes);
 
       final contiSheet = excel.tables['Conti'];
@@ -423,6 +437,7 @@ class ExcelService {
         return (
           newAccounts: <Account>[],
           transactions: <TransactionEntry>[],
+          updatedAccounts: <Account>[],
           updatedAccountIds: <String>[],
           error: 'File non valido: fogli "Conti" e "Transazioni" non trovati',
         );
@@ -436,6 +451,7 @@ class ExcelService {
         return (
           newAccounts: <Account>[],
           transactions: <TransactionEntry>[],
+          updatedAccounts: <Account>[],
           updatedAccountIds: <String>[],
           error: accError,
         );
@@ -449,6 +465,7 @@ class ExcelService {
         return (
           newAccounts: <Account>[],
           transactions: <TransactionEntry>[],
+          updatedAccounts: <Account>[],
           updatedAccountIds: <String>[],
           error: txError,
         );
@@ -457,6 +474,7 @@ class ExcelService {
       return (
         newAccounts: accountResult.newAccounts,
         transactions: txResult,
+        updatedAccounts: accountResult.updatedAccounts,
         updatedAccountIds: accountResult.updatedIds,
         error: null,
       );
@@ -464,6 +482,7 @@ class ExcelService {
       return (
         newAccounts: <Account>[],
         transactions: <TransactionEntry>[],
+        updatedAccounts: <Account>[],
         updatedAccountIds: <String>[],
         error: 'Errore lettura file: $e',
       );
@@ -474,14 +493,24 @@ class ExcelService {
     ({
       Map<String, String> accountMap,
       List<Account> newAccounts,
+      List<Account> updatedAccounts,
       List<String> updatedIds,
     }),
     String?,
   )
   _parseContiSheet(Sheet sheet, List<Account> existingAccounts) {
     final newAccounts = <Account>[];
+    final updatedAccounts = <Account>[];
     final updatedIds = <String>[];
     final accountMap = <String, String>{};
+    final existingById = {
+      for (final account in existingAccounts) account.id: account,
+    };
+    final existingByNormalizedName = {
+      for (final account in existingAccounts)
+        _normalizeAccountKey(account.name): account,
+    };
+    final seenKeys = <String>{};
     final rows = sheet.rows;
 
     for (int i = 1; i < rows.length; i++) {
@@ -489,8 +518,22 @@ class ExcelService {
       final idCell = _cellStr(row, 0);
       final nameCell = _cellStr(row, 1);
       final balanceCell = _cellStr(row, 2);
+      final normalizedName = _normalizeAccountKey(nameCell);
 
       if (nameCell.isEmpty) continue;
+      if (!seenKeys.add(
+        idCell.isNotEmpty ? 'id:$idCell' : 'name:$normalizedName',
+      )) {
+        return (
+          (
+            accountMap: <String, String>{},
+            newAccounts: <Account>[],
+            updatedAccounts: <Account>[],
+            updatedIds: <String>[],
+          ),
+          'Riga ${i + 1} (Conti): conto duplicato nel file di import',
+        );
+      }
 
       double balance;
       try {
@@ -500,6 +543,7 @@ class ExcelService {
           (
             accountMap: <String, String>{},
             newAccounts: <Account>[],
+            updatedAccounts: <Account>[],
             updatedIds: <String>[],
           ),
           'Riga ${i + 1} (Conti): Saldo Apertura non valido',
@@ -507,23 +551,25 @@ class ExcelService {
       }
 
       final existingAcc = idCell.isNotEmpty
-          ? existingAccounts.firstWhere(
-              (a) => a.id == idCell,
-              orElse: () => Account(
-                id: '',
-                name: '',
-                colorValue: 0,
-                openingBalance: 0,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-                deletedAt: null,
-              ),
-            )
-          : null;
+          ? existingById[idCell]
+          : existingByNormalizedName[normalizedName];
 
-      if (existingAcc != null && existingAcc.name.isNotEmpty) {
+      if (existingAcc != null) {
         updatedIds.add(existingAcc.id);
+        updatedAccounts.add(
+          Account(
+            id: existingAcc.id,
+            userId: existingAcc.userId,
+            name: nameCell,
+            colorValue: existingAcc.colorValue,
+            openingBalance: balance,
+            createdAt: existingAcc.createdAt,
+            updatedAt: DateTime.now(),
+            deletedAt: existingAcc.deletedAt,
+          ),
+        );
         accountMap[nameCell] = existingAcc.id;
+        accountMap[normalizedName] = existingAcc.id;
       } else {
         final newId = _uuid.v4();
         newAccounts.add(
@@ -538,6 +584,7 @@ class ExcelService {
           ),
         );
         accountMap[nameCell] = newId;
+        accountMap[normalizedName] = newId;
       }
     }
 
@@ -545,11 +592,15 @@ class ExcelService {
       (
         accountMap: accountMap,
         newAccounts: newAccounts,
+        updatedAccounts: updatedAccounts,
         updatedIds: updatedIds,
       ),
       null,
     );
   }
+
+  static String _normalizeAccountKey(String value) =>
+      value.trim().toLowerCase();
 
   static (List<TransactionEntry>, String?) _parseTransazioniSheet(
     Sheet sheet,
@@ -608,7 +659,9 @@ class ExcelService {
 
       final accountId = accountIdCell.isNotEmpty
           ? accountIdCell
-          : (accountMap[accountNameCell] ?? accountNameCell);
+          : (accountMap[accountNameCell] ??
+                accountMap[_normalizeAccountKey(accountNameCell)] ??
+                accountNameCell);
 
       transactions.add(
         TransactionEntry(

@@ -21,12 +21,12 @@ class EventsCalendarView extends ConsumerWidget {
           locale: 'it_IT',
           firstDay: DateTime(2020),
           lastDay: DateTime(2100),
-          focusedDay: state.selectedDate,
+          focusedDay: state.focusedMonth,
           selectedDayPredicate: (d) => isSameDay(d, state.selectedDate),
           onDaySelected: (selected, focused) =>
               ref.read(calendarProvider.notifier).selectDate(selected),
           onPageChanged: (focusedDay) =>
-              ref.read(calendarProvider.notifier).selectDate(focusedDay),
+              ref.read(calendarProvider.notifier).setFocusedMonth(focusedDay),
           eventLoader: (day) => state.eventsForDate(day),
           calendarFormat: CalendarFormat.month,
           headerStyle: HeaderStyle(
@@ -45,13 +45,16 @@ class EventsCalendarView extends ConsumerWidget {
               color: AppColors.primary.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            todayTextStyle:
-                AppTextStyles.bodySmall.copyWith(color: AppColors.primary),
+            todayTextStyle: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.primary,
+            ),
             defaultTextStyle: AppTextStyles.bodySmall,
-            weekendTextStyle: AppTextStyles.bodySmall
-                .copyWith(color: AppColors.textSecondary),
-            outsideTextStyle: AppTextStyles.bodySmall
-                .copyWith(color: AppColors.textDisabled),
+            weekendTextStyle: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            outsideTextStyle: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textDisabled,
+            ),
             markerDecoration: const BoxDecoration(
               color: AppColors.accent,
               shape: BoxShape.circle,
@@ -69,7 +72,9 @@ class EventsCalendarView extends ConsumerWidget {
               Text(
                 _formatDate(state.selectedDate),
                 style: AppTextStyles.bodySmall.copyWith(
-                    fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
               const Spacer(),
               SizedBox(
@@ -105,8 +110,18 @@ class EventsCalendarView extends ConsumerWidget {
 
   String _formatDate(DateTime date) {
     const months = [
-      'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
-      'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre',
+      'gennaio',
+      'febbraio',
+      'marzo',
+      'aprile',
+      'maggio',
+      'giugno',
+      'luglio',
+      'agosto',
+      'settembre',
+      'ottobre',
+      'novembre',
+      'dicembre',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -128,9 +143,18 @@ class _EventTile extends ConsumerWidget {
       ),
       title: Text(event.title, style: AppTextStyles.bodySmall),
       subtitle: event.note != null && event.note!.isNotEmpty
-          ? Text(event.note!, style: AppTextStyles.label, maxLines: 1,
-              overflow: TextOverflow.ellipsis)
+          ? Text(
+              event.note!,
+              style: AppTextStyles.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            )
           : null,
+      onTap: () => showEventDialog(
+        context,
+        initialDate: event.startDate,
+        existingEvent: event,
+      ),
       trailing: IconButton(
         icon: const Icon(Icons.delete_outline, size: 16),
         color: AppColors.textDisabled,
@@ -153,12 +177,18 @@ class _NoEvents extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.event_available_outlined,
-              size: 36, color: AppColors.textDisabled),
+          const Icon(
+            Icons.event_available_outlined,
+            size: 36,
+            color: AppColors.textDisabled,
+          ),
           const SizedBox(height: 10),
-          Text('Nessun evento',
-              style: AppTextStyles.bodyRegular
-                  .copyWith(color: AppColors.textSecondary)),
+          Text(
+            'Nessun evento',
+            style: AppTextStyles.bodyRegular.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );
