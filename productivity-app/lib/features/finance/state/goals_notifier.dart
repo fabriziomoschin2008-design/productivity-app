@@ -42,6 +42,7 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
     await _db.updateGoal(GoalsCompanion(
       id: Value(id),
       currentAmount: Value(newAmount),
+      updatedAt: Value(DateTime.now()),
     ));
     if (justCompleted) {
       NotificationScheduler.instance.showGoalCompleted(goal);
@@ -53,6 +54,7 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
     await _db.updateGoal(GoalsCompanion(
       id: Value(id),
       isCompleted: const Value(true),
+      updatedAt: Value(DateTime.now()),
     ));
   }
 

@@ -64,7 +64,13 @@ class MoviesNotifier extends StateNotifier<MoviesState> {
 
   Future<void> updateStatus(String id, String status) async {
     try {
-      await _db.updateMovie(MoviesCompanion(id: Value(id), status: Value(status)));
+      await _db.updateMovie(
+        MoviesCompanion(
+          id: Value(id),
+          status: Value(status),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);
     }
@@ -72,7 +78,13 @@ class MoviesNotifier extends StateNotifier<MoviesState> {
 
   Future<void> updateRating(String id, int? rating) async {
     try {
-      await _db.updateMovie(MoviesCompanion(id: Value(id), userRating: Value(rating)));
+      await _db.updateMovie(
+        MoviesCompanion(
+          id: Value(id),
+          userRating: Value(rating),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);
     }
@@ -112,6 +124,7 @@ class MoviesNotifier extends StateNotifier<MoviesState> {
         runtime: Value(d.runtime),
         voteAverage: Value(d.voteAverage),
         genreNames: Value(d.genreNames.join(', ')),
+        updatedAt: Value(DateTime.now()),
       ));
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);
@@ -214,6 +227,7 @@ class TvNotifier extends StateNotifier<TvState> {
         id: Value(id),
         watchedSeasons: Value(_encodeSeason(seasons)),
         status: autoStatus != null ? Value(autoStatus) : const Value.absent(),
+        updatedAt: Value(DateTime.now()),
       ));
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);
@@ -222,7 +236,13 @@ class TvNotifier extends StateNotifier<TvState> {
 
   Future<void> updateStatus(String id, String status) async {
     try {
-      await _db.updateTvSeries(TvSeriesCompanion(id: Value(id), status: Value(status)));
+      await _db.updateTvSeries(
+        TvSeriesCompanion(
+          id: Value(id),
+          status: Value(status),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);
     }
@@ -230,7 +250,13 @@ class TvNotifier extends StateNotifier<TvState> {
 
   Future<void> updateRating(String id, int? rating) async {
     try {
-      await _db.updateTvSeries(TvSeriesCompanion(id: Value(id), userRating: Value(rating)));
+      await _db.updateTvSeries(
+        TvSeriesCompanion(
+          id: Value(id),
+          userRating: Value(rating),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);
     }
@@ -272,6 +298,7 @@ class TvNotifier extends StateNotifier<TvState> {
         totalSeasons: Value(d.numberOfSeasons),
         voteAverage: Value(d.voteAverage),
         genreNames: Value(d.genreNames.join(', ')),
+        updatedAt: Value(DateTime.now()),
       ));
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);

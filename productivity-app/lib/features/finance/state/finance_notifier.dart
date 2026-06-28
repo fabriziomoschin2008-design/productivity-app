@@ -114,6 +114,7 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
       name: Value(name),
       colorValue: Value(colorValue),
       openingBalance: Value(openingBalance),
+      updatedAt: Value(DateTime.now()),
     ));
   }
 
@@ -166,6 +167,7 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
           name: Value(newAcc.name),
           colorValue: Value(newAcc.colorValue),
           openingBalance: Value(newAcc.openingBalance),
+          updatedAt: Value(DateTime.now()),
         ));
         created.add(newAcc.id);
       }
@@ -173,7 +175,17 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
       for (final accId in result.updatedAccountIds) {
         final updAcc = result.newAccounts.firstWhere(
           (a) => a.id == accId,
-          orElse: () => result.newAccounts.isNotEmpty ? result.newAccounts.first : Account(id: '', name: '', colorValue: 0, openingBalance: 0, createdAt: DateTime.now()),
+          orElse: () => result.newAccounts.isNotEmpty
+              ? result.newAccounts.first
+              : Account(
+                  id: '',
+                  name: '',
+                  colorValue: 0,
+                  openingBalance: 0,
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                  deletedAt: null,
+                ),
         );
         if (updAcc.name.isNotEmpty) {
           AppLogger.instance.info('Conto aggiornato: ${updAcc.name} [ID: $accId]');

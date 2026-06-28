@@ -446,7 +446,14 @@ class ExcelService {
           ? existingAccounts.firstWhere(
               (a) => a.id == idCell,
               orElse: () => Account(
-                  id: '', name: '', colorValue: 0, openingBalance: 0, createdAt: DateTime.now()),
+                id: '',
+                name: '',
+                colorValue: 0,
+                openingBalance: 0,
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+                deletedAt: null,
+              ),
             )
           : null;
 
@@ -461,6 +468,8 @@ class ExcelService {
           colorValue: 4294967295,
           openingBalance: balance,
           createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          deletedAt: null,
         ));
         accountMap[nameCell] = newId;
       }
@@ -531,6 +540,8 @@ class ExcelService {
         date: date,
         note: noteCell.isEmpty ? null : noteCell,
         createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        deletedAt: null,
       ));
     }
 

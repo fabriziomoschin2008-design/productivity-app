@@ -14,6 +14,9 @@ class Accounts extends Table {
       real().named('opening_balance').withDefault(const Constant(0.0))();
   DateTimeColumn get createdAt =>
       dateTime().named('created_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -29,6 +32,9 @@ class TransactionEntries extends Table {
   TextColumn get note => text().nullable()();
   DateTimeColumn get createdAt =>
       dateTime().named('created_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -46,6 +52,9 @@ class Goals extends Table {
       boolean().named('is_completed').withDefault(const Constant(false))();
   DateTimeColumn get createdAt =>
       dateTime().named('created_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -57,6 +66,9 @@ class TodoLists extends Table {
   IntColumn get colorValue => integer().named('color_value')();
   DateTimeColumn get createdAt =>
       dateTime().named('created_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -78,6 +90,9 @@ class TodoItems extends Table {
       dateTime().named('completed_at').nullable()();
   DateTimeColumn get createdAt =>
       dateTime().named('created_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -90,6 +105,9 @@ class Habits extends Table {
   IntColumn get sortOrder => integer().named('sort_order').withDefault(const Constant(0))();
   DateTimeColumn get createdAt =>
       dateTime().named('created_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -99,6 +117,9 @@ class HabitLogs extends Table {
   TextColumn get habitId => text().named('habit_id')();
   DateTimeColumn get date => dateTime()(); // mezzanotte del giorno
   TextColumn get status => text()(); // 'done' | 'skip' | 'na'
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {habitId, date};
@@ -116,6 +137,9 @@ class CalendarEvents extends Table {
       integer().named('color_value').withDefault(const Constant(0xFF6C63FF))();
   DateTimeColumn get createdAt =>
       dateTime().named('created_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -126,6 +150,9 @@ class NoteFolders extends Table {
   TextColumn get name => text()();
   DateTimeColumn get createdAt =>
       dateTime().named('created_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -142,6 +169,7 @@ class Notes extends Table {
       dateTime().named('created_at').withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt =>
       dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -157,6 +185,7 @@ class NoteGoals extends Table {
       dateTime().named('created_at').withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt =>
       dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -182,6 +211,7 @@ class Trackers extends Table {
       dateTime().named('created_at').withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt =>
       dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -203,6 +233,9 @@ class Movies extends Table {
       boolean().named('in_original_language').withDefault(const Constant(false))();
   DateTimeColumn get addedAt =>
       dateTime().named('added_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -227,6 +260,9 @@ class TvSeries extends Table {
       boolean().named('in_original_language').withDefault(const Constant(false))();
   DateTimeColumn get addedAt =>
       dateTime().named('added_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -241,6 +277,9 @@ class Games extends Table {
   IntColumn get userRating => integer().named('user_rating').nullable()();
   DateTimeColumn get addedAt =>
       dateTime().named('added_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().named('updated_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -252,7 +291,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -283,6 +322,35 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(tvSeries);
           }
           if (from < 11) await m.createTable(games);
+          if (from < 12) {
+            await m.addColumn(accounts, accounts.updatedAt);
+            await m.addColumn(accounts, accounts.deletedAt);
+            await m.addColumn(transactionEntries, transactionEntries.updatedAt);
+            await m.addColumn(transactionEntries, transactionEntries.deletedAt);
+            await m.addColumn(goals, goals.updatedAt);
+            await m.addColumn(goals, goals.deletedAt);
+            await m.addColumn(todoLists, todoLists.updatedAt);
+            await m.addColumn(todoLists, todoLists.deletedAt);
+            await m.addColumn(todoItems, todoItems.updatedAt);
+            await m.addColumn(todoItems, todoItems.deletedAt);
+            await m.addColumn(habits, habits.updatedAt);
+            await m.addColumn(habits, habits.deletedAt);
+            await m.addColumn(habitLogs, habitLogs.updatedAt);
+            await m.addColumn(habitLogs, habitLogs.deletedAt);
+            await m.addColumn(calendarEvents, calendarEvents.updatedAt);
+            await m.addColumn(calendarEvents, calendarEvents.deletedAt);
+            await m.addColumn(noteFolders, noteFolders.updatedAt);
+            await m.addColumn(noteFolders, noteFolders.deletedAt);
+            await m.addColumn(notes, notes.deletedAt);
+            await m.addColumn(noteGoals, noteGoals.deletedAt);
+            await m.addColumn(trackers, trackers.deletedAt);
+            await m.addColumn(movies, movies.updatedAt);
+            await m.addColumn(movies, movies.deletedAt);
+            await m.addColumn(tvSeries, tvSeries.updatedAt);
+            await m.addColumn(tvSeries, tvSeries.deletedAt);
+            await m.addColumn(games, games.updatedAt);
+            await m.addColumn(games, games.deletedAt);
+          }
         },
       );
 
@@ -293,7 +361,9 @@ class AppDatabase extends _$AppDatabase {
   // --- Accounts ---
 
   Stream<List<Account>> watchAccounts() =>
-      (select(accounts)..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+      (select(accounts)
+            ..where((t) => t.deletedAt.isNull())
+            ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
           .watch();
 
   Future<void> upsertAccount(AccountsCompanion entry) =>
@@ -313,13 +383,15 @@ class AppDatabase extends _$AppDatabase {
   Stream<List<TransactionEntry>> watchTransactionsByAccount(String accountId) {
     return (select(transactionEntries)
           ..where((t) => t.accountId.equals(accountId))
+          ..where((t) => t.deletedAt.isNull())
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
         .watch();
   }
 
   Future<List<TransactionEntry>> getTransactionsByAccount(String accountId) {
     return (select(transactionEntries)
-          ..where((t) => t.accountId.equals(accountId)))
+          ..where((t) => t.accountId.equals(accountId))
+          ..where((t) => t.deletedAt.isNull()))
         .get();
   }
 
@@ -332,7 +404,10 @@ class AppDatabase extends _$AppDatabase {
   // --- Goals ---
 
   Stream<List<Goal>> watchGoals() =>
-      (select(goals)..orderBy([(g) => OrderingTerm.asc(g.createdAt)])).watch();
+      (select(goals)
+            ..where((g) => g.deletedAt.isNull())
+            ..orderBy([(g) => OrderingTerm.asc(g.createdAt)]))
+          .watch();
 
   Future<void> insertGoal(GoalsCompanion entry) => into(goals).insert(entry);
 
@@ -345,7 +420,9 @@ class AppDatabase extends _$AppDatabase {
   // --- Todo Lists ---
 
   Stream<List<TodoList>> watchTodoLists() =>
-      (select(todoLists)..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+      (select(todoLists)
+            ..where((t) => t.deletedAt.isNull())
+            ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
           .watch();
 
   Future<void> insertTodoList(TodoListsCompanion entry) =>
@@ -361,7 +438,9 @@ class AppDatabase extends _$AppDatabase {
   // --- Todo Items ---
 
   Stream<List<TodoItem>> watchTodoItems() =>
-      (select(todoItems)..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+      (select(todoItems)
+            ..where((t) => t.deletedAt.isNull())
+            ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
           .watch();
 
   Future<void> insertTodoItem(TodoItemsCompanion entry) =>
@@ -377,7 +456,9 @@ class AppDatabase extends _$AppDatabase {
   // --- Note Folders ---
 
   Stream<List<NoteFolder>> watchNoteFolders() =>
-      (select(noteFolders)..orderBy([(f) => OrderingTerm.asc(f.createdAt)]))
+      (select(noteFolders)
+            ..where((f) => f.deletedAt.isNull())
+            ..orderBy([(f) => OrderingTerm.asc(f.createdAt)]))
           .watch();
 
   Future<void> insertNoteFolder(NoteFoldersCompanion entry) =>
@@ -394,7 +475,10 @@ class AppDatabase extends _$AppDatabase {
   // --- Notes ---
 
   Stream<List<Note>> watchNotes() =>
-      (select(notes)..orderBy([(n) => OrderingTerm.desc(n.updatedAt)])).watch();
+      (select(notes)
+            ..where((n) => n.deletedAt.isNull())
+            ..orderBy([(n) => OrderingTerm.desc(n.updatedAt)]))
+          .watch();
 
   Future<void> insertNote(NotesCompanion entry) =>
       into(notes).insert(entry);
@@ -409,10 +493,11 @@ class AppDatabase extends _$AppDatabase {
 
   Stream<List<Habit>> watchHabits() =>
       (select(habits)..orderBy([
+        (h) => OrderingTerm.asc(h.deletedAt),
         (h) => OrderingTerm.asc(h.category),
         (h) => OrderingTerm.asc(h.sortOrder),
         (h) => OrderingTerm.asc(h.createdAt),
-      ])).watch();
+      ])..where((h) => h.deletedAt.isNull())).watch();
 
   Future<void> insertHabit(HabitsCompanion entry) =>
       into(habits).insert(entry);
@@ -433,7 +518,8 @@ class AppDatabase extends _$AppDatabase {
       (select(habitLogs)
             ..where((l) =>
                 l.date.isBiggerOrEqualValue(from) &
-                l.date.isSmallerOrEqualValue(to)))
+                l.date.isSmallerOrEqualValue(to) &
+                l.deletedAt.isNull()))
           .watch();
 
   Future<void> setHabitLog(HabitLogsCompanion entry) =>
@@ -447,7 +533,8 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<HabitLog>> getRecentHabitLogs(DateTime from) =>
       (select(habitLogs)
-            ..where((l) => l.date.isBiggerOrEqualValue(from))
+            ..where((l) =>
+                l.date.isBiggerOrEqualValue(from) & l.deletedAt.isNull())
             ..orderBy([(l) => OrderingTerm.desc(l.date)]))
           .get();
 
@@ -455,9 +542,10 @@ class AppDatabase extends _$AppDatabase {
 
   Stream<List<Tracker>> watchTrackers() =>
       (select(trackers)..orderBy([
+        (t) => OrderingTerm.asc(t.deletedAt),
         (t) => OrderingTerm.asc(t.sortOrder),
         (t) => OrderingTerm.asc(t.createdAt),
-      ])).watch();
+      ])..where((t) => t.deletedAt.isNull())).watch();
 
   Future<void> insertTracker(TrackersCompanion entry) =>
       into(trackers).insert(entry);
@@ -472,7 +560,9 @@ class AppDatabase extends _$AppDatabase {
   // --- Note Goals ---
 
   Stream<List<NoteGoal>> watchNoteGoals() =>
-      (select(noteGoals)..orderBy([(g) => OrderingTerm.asc(g.createdAt)]))
+      (select(noteGoals)
+            ..where((g) => g.deletedAt.isNull())
+            ..orderBy([(g) => OrderingTerm.asc(g.createdAt)]))
           .watch();
 
   Future<void> insertNoteGoal(NoteGoalsCompanion entry) =>
@@ -488,7 +578,10 @@ class AppDatabase extends _$AppDatabase {
   // --- Movies ---
 
   Stream<List<Movy>> watchMovies() =>
-      (select(movies)..orderBy([(m) => OrderingTerm.desc(m.addedAt)])).watch();
+      (select(movies)
+            ..where((m) => m.deletedAt.isNull())
+            ..orderBy([(m) => OrderingTerm.desc(m.addedAt)]))
+          .watch();
 
   Future<void> insertMovie(MoviesCompanion entry) => into(movies).insert(entry);
 
@@ -501,7 +594,10 @@ class AppDatabase extends _$AppDatabase {
   // --- TV Series ---
 
   Stream<List<TvSery>> watchTvSeries() =>
-      (select(tvSeries)..orderBy([(s) => OrderingTerm.desc(s.addedAt)])).watch();
+      (select(tvSeries)
+            ..where((s) => s.deletedAt.isNull())
+            ..orderBy([(s) => OrderingTerm.desc(s.addedAt)]))
+          .watch();
 
   Future<void> insertTvSeries(TvSeriesCompanion entry) =>
       into(tvSeries).insert(entry);
@@ -515,7 +611,10 @@ class AppDatabase extends _$AppDatabase {
   // --- Games ---
 
   Stream<List<Game>> watchGames() =>
-      (select(games)..orderBy([(g) => OrderingTerm.desc(g.addedAt)])).watch();
+      (select(games)
+            ..where((g) => g.deletedAt.isNull())
+            ..orderBy([(g) => OrderingTerm.desc(g.addedAt)]))
+          .watch();
 
   Future<void> insertGame(GamesCompanion entry) => into(games).insert(entry);
 
@@ -529,6 +628,7 @@ class AppDatabase extends _$AppDatabase {
 
   Stream<List<CalendarEvent>> watchCalendarEvents() =>
       (select(calendarEvents)
+            ..where((e) => e.deletedAt.isNull())
             ..orderBy([(e) => OrderingTerm.asc(e.startDate)]))
           .watch();
 

@@ -67,6 +67,7 @@ class GamesNotifier extends StateNotifier<GamesState> {
         id: Value(gameId),
         objectives: Value(encodeObjectives(updated)),
         status: autoStatus != null ? Value(autoStatus) : const Value.absent(),
+        updatedAt: Value(DateTime.now()),
       ));
     } catch (e, st) {
       AppErrorHandler.handle(e, st, showUi: false);
@@ -91,6 +92,7 @@ class GamesNotifier extends StateNotifier<GamesState> {
         objectives: Value(encodeObjectives(objectives)),
         status:
             autoStatus != null ? Value(autoStatus) : const Value.absent(),
+        updatedAt: Value(DateTime.now()),
       ));
     } catch (e, st) {
       AppErrorHandler.handle(e, st, showUi: false);
@@ -99,7 +101,13 @@ class GamesNotifier extends StateNotifier<GamesState> {
 
   Future<void> updateStatus(String id, String status) async {
     try {
-      await _db.updateGame(GamesCompanion(id: Value(id), status: Value(status)));
+      await _db.updateGame(
+        GamesCompanion(
+          id: Value(id),
+          status: Value(status),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     } catch (e, st) {
       AppErrorHandler.handle(e, st, showUi: false);
     }
@@ -107,7 +115,13 @@ class GamesNotifier extends StateNotifier<GamesState> {
 
   Future<void> updateRating(String id, int? rating) async {
     try {
-      await _db.updateGame(GamesCompanion(id: Value(id), userRating: Value(rating)));
+      await _db.updateGame(
+        GamesCompanion(
+          id: Value(id),
+          userRating: Value(rating),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     } catch (e, st) {
       AppErrorHandler.handle(e, st, showUi: false);
     }

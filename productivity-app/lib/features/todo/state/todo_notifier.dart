@@ -89,6 +89,7 @@ class TodoNotifier extends StateNotifier<TodoState> {
         id: Value(item.id),
         isDone: Value(done),
         completedAt: Value(done ? DateTime.now() : null),
+        updatedAt: Value(DateTime.now()),
       ));
     } catch (e, s) {
       AppErrorHandler.handle(e, s, showUi: false);
