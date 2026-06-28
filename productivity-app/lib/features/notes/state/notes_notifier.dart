@@ -48,7 +48,12 @@ class NotesNotifier extends StateNotifier<NotesState> {
       final id = _uuid.v4();
       await _db.insertNote(NotesCompanion(
         id: Value(id),
+        title: const Value(''),
+        content: const Value(''),
         folderId: Value(state.selectedFolderId),
+        isPinned: const Value(false),
+        createdAt: Value(DateTime.now()),
+        updatedAt: Value(DateTime.now()),
       ));
       state = state.copyWith(selectedNoteId: id);
       AppLogger.instance.info('Nota creata: $id');

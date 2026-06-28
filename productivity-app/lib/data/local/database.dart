@@ -3,6 +3,8 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/services/logger_service.dart';
+
 part 'database.g.dart';
 
 const _uuid = Uuid();
@@ -356,33 +358,93 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 11) await m.createTable(games);
           if (from < 12) {
-            await m.addColumn(accounts, accounts.updatedAt);
+            await customStatement(
+              'ALTER TABLE accounts ADD COLUMN updated_at INTEGER',
+            );
             await m.addColumn(accounts, accounts.deletedAt);
-            await m.addColumn(transactionEntries, transactionEntries.updatedAt);
+            await customStatement(
+              'UPDATE accounts SET updated_at = created_at WHERE updated_at IS NULL',
+            );
+            await customStatement(
+              'ALTER TABLE transaction_entries ADD COLUMN updated_at INTEGER',
+            );
             await m.addColumn(transactionEntries, transactionEntries.deletedAt);
-            await m.addColumn(goals, goals.updatedAt);
+            await customStatement(
+              'UPDATE transaction_entries SET updated_at = created_at WHERE updated_at IS NULL',
+            );
+            await customStatement(
+              'ALTER TABLE goals ADD COLUMN updated_at INTEGER',
+            );
             await m.addColumn(goals, goals.deletedAt);
-            await m.addColumn(todoLists, todoLists.updatedAt);
+            await customStatement(
+              'UPDATE goals SET updated_at = created_at WHERE updated_at IS NULL',
+            );
+            await customStatement(
+              'ALTER TABLE todo_lists ADD COLUMN updated_at INTEGER',
+            );
             await m.addColumn(todoLists, todoLists.deletedAt);
-            await m.addColumn(todoItems, todoItems.updatedAt);
+            await customStatement(
+              'UPDATE todo_lists SET updated_at = created_at WHERE updated_at IS NULL',
+            );
+            await customStatement(
+              'ALTER TABLE todo_items ADD COLUMN updated_at INTEGER',
+            );
             await m.addColumn(todoItems, todoItems.deletedAt);
-            await m.addColumn(habits, habits.updatedAt);
+            await customStatement(
+              'UPDATE todo_items SET updated_at = created_at WHERE updated_at IS NULL',
+            );
+            await customStatement(
+              'ALTER TABLE habits ADD COLUMN updated_at INTEGER',
+            );
             await m.addColumn(habits, habits.deletedAt);
-            await m.addColumn(habitLogs, habitLogs.updatedAt);
+            await customStatement(
+              'UPDATE habits SET updated_at = created_at WHERE updated_at IS NULL',
+            );
+            await customStatement(
+              'ALTER TABLE habit_logs ADD COLUMN updated_at INTEGER',
+            );
             await m.addColumn(habitLogs, habitLogs.deletedAt);
-            await m.addColumn(calendarEvents, calendarEvents.updatedAt);
+            await customStatement(
+              "UPDATE habit_logs SET updated_at = CAST(strftime('%s', 'now') AS INTEGER) WHERE updated_at IS NULL",
+            );
+            await customStatement(
+              'ALTER TABLE calendar_events ADD COLUMN updated_at INTEGER',
+            );
             await m.addColumn(calendarEvents, calendarEvents.deletedAt);
-            await m.addColumn(noteFolders, noteFolders.updatedAt);
+            await customStatement(
+              'UPDATE calendar_events SET updated_at = created_at WHERE updated_at IS NULL',
+            );
+            await customStatement(
+              'ALTER TABLE note_folders ADD COLUMN updated_at INTEGER',
+            );
             await m.addColumn(noteFolders, noteFolders.deletedAt);
+            await customStatement(
+              'UPDATE note_folders SET updated_at = created_at WHERE updated_at IS NULL',
+            );
             await m.addColumn(notes, notes.deletedAt);
             await m.addColumn(noteGoals, noteGoals.deletedAt);
             await m.addColumn(trackers, trackers.deletedAt);
-            await m.addColumn(movies, movies.updatedAt);
+            await customStatement(
+              'ALTER TABLE movies ADD COLUMN updated_at INTEGER',
+            );
             await m.addColumn(movies, movies.deletedAt);
-            await m.addColumn(tvSeries, tvSeries.updatedAt);
+            await customStatement(
+              'UPDATE movies SET updated_at = added_at WHERE updated_at IS NULL',
+            );
+            await customStatement(
+              'ALTER TABLE tv_series ADD COLUMN updated_at INTEGER',
+            );
             await m.addColumn(tvSeries, tvSeries.deletedAt);
-            await m.addColumn(games, games.updatedAt);
+            await customStatement(
+              'UPDATE tv_series SET updated_at = added_at WHERE updated_at IS NULL',
+            );
+            await customStatement(
+              'ALTER TABLE games ADD COLUMN updated_at INTEGER',
+            );
             await m.addColumn(games, games.deletedAt);
+            await customStatement(
+              'UPDATE games SET updated_at = added_at WHERE updated_at IS NULL',
+            );
           }
           if (from < 13) {
             await m.createTable(syncQueueEntries);
@@ -408,7 +470,13 @@ class AppDatabase extends _$AppDatabase {
       );
 
   static QueryExecutor _openConnection() {
-    return driftDatabase(name: 'productivity_db');
+    return driftDatabase(
+      name: 'productivity_db',
+      web: DriftWebOptions(
+        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+        driftWorker: Uri.parse('drift_worker.js'),
+      ),
+    );
   }
 
   Future<void> _queueSyncChange(
@@ -611,9 +679,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> upsertAccount(AccountsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      createdAt: entry.createdAt.present ? entry.createdAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(accounts).insertOnConflictUpdate(normalized);
     await _queueSyncChange('accounts', id, 'upsert');
@@ -670,9 +741,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertTransaction(TransactionEntriesCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      createdAt: entry.createdAt.present ? entry.createdAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(transactionEntries).insert(normalized);
     await _queueSyncChange('transaction_entries', id, 'upsert');
@@ -701,9 +775,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertGoal(GoalsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      createdAt: entry.createdAt.present ? entry.createdAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(goals).insert(normalized);
     await _queueSyncChange('goals', id, 'upsert');
@@ -736,9 +813,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertTodoList(TodoListsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      createdAt: entry.createdAt.present ? entry.createdAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(todoLists).insert(normalized);
     await _queueSyncChange('todo_lists', id, 'upsert');
@@ -784,9 +864,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertTodoItem(TodoItemsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      createdAt: entry.createdAt.present ? entry.createdAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(todoItems).insert(normalized);
     await _queueSyncChange('todo_items', id, 'upsert');
@@ -821,9 +904,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertNoteFolder(NoteFoldersCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      createdAt: entry.createdAt.present ? entry.createdAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(noteFolders).insert(normalized);
     await _queueSyncChange('note_folders', id, 'upsert');
@@ -867,11 +953,22 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertNote(NotesCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      createdAt: entry.createdAt.present ? entry.createdAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
-    await into(notes).insert(normalized);
+    try {
+      await into(notes).insert(normalized);
+    } catch (e, s) {
+      AppLogger.instance.error(
+        'Insert note fallito per $id con folderId=${normalized.folderId.present ? normalized.folderId.value : null}',
+        s,
+      );
+      rethrow;
+    }
     await _queueSyncChange('notes', id, 'upsert');
   }
 
@@ -904,9 +1001,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertHabit(HabitsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      createdAt: entry.createdAt.present ? entry.createdAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(habits).insert(normalized);
     await _queueSyncChange('habits', id, 'upsert');
@@ -957,8 +1057,10 @@ class AppDatabase extends _$AppDatabase {
           .watch();
 
   Future<void> setHabitLog(HabitLogsCompanion entry) async {
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(habitLogs).insertOnConflictUpdate(normalized);
     await _queueSyncChange(
@@ -1006,9 +1108,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertTracker(TrackersCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      createdAt: entry.createdAt.present ? entry.createdAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(trackers).insert(normalized);
     await _queueSyncChange('trackers', id, 'upsert');
@@ -1043,9 +1148,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertNoteGoal(NoteGoalsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      createdAt: entry.createdAt.present ? entry.createdAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(noteGoals).insert(normalized);
     await _queueSyncChange('note_goals', id, 'upsert');
@@ -1080,9 +1188,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertMovie(MoviesCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      addedAt: entry.addedAt.present ? entry.addedAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(movies).insert(normalized);
     await _queueSyncChange('movies', id, 'upsert');
@@ -1115,9 +1226,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertTvSeries(TvSeriesCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      addedAt: entry.addedAt.present ? entry.addedAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(tvSeries).insert(normalized);
     await _queueSyncChange('tv_series', id, 'upsert');
@@ -1151,9 +1265,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertGame(GamesCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      addedAt: entry.addedAt.present ? entry.addedAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(games).insert(normalized);
     await _queueSyncChange('games', id, 'upsert');
@@ -1186,9 +1303,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertCalendarEvent(CalendarEventsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+      createdAt: entry.createdAt.present ? entry.createdAt : Value(now),
+      updatedAt: entry.updatedAt.present ? entry.updatedAt : Value(now),
     );
     await into(calendarEvents).insert(normalized);
     await _queueSyncChange('calendar_events', id, 'upsert');
