@@ -285,13 +285,30 @@ class Games extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+class SyncQueueEntries extends Table {
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get entityType => text().named('entity_type')();
+  TextColumn get entityId => text().named('entity_id')();
+  TextColumn get operation => text()(); // 'upsert' | 'delete'
+  DateTimeColumn get createdAt =>
+      dateTime().named('created_at').withDefault(currentDateAndTime)();
+  DateTimeColumn get lastAttemptAt =>
+      dateTime().named('last_attempt_at').nullable()();
+  IntColumn get retryCount =>
+      integer().named('retry_count').withDefault(const Constant(0))();
+  TextColumn get lastError => text().named('last_error').nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
-    tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems, NoteFolders, Notes, Habits, HabitLogs, CalendarEvents, NoteGoals, Trackers, Movies, TvSeries, Games])
+    tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems, NoteFolders, Notes, Habits, HabitLogs, CalendarEvents, NoteGoals, Trackers, Movies, TvSeries, Games, SyncQueueEntries])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -351,12 +368,85 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(games, games.updatedAt);
             await m.addColumn(games, games.deletedAt);
           }
+          if (from < 13) {
+            await m.createTable(syncQueueEntries);
+          }
         },
       );
 
   static QueryExecutor _openConnection() {
     return driftDatabase(name: 'productivity_db');
   }
+
+  Future<void> _queueSyncChange(
+    String entityType,
+    String entityId,
+    String operation,
+  ) async {
+    await (delete(syncQueueEntries)
+          ..where((q) =>
+              q.entityType.equals(entityType) & q.entityId.equals(entityId)))
+        .go();
+    await into(syncQueueEntries).insert(
+      SyncQueueEntriesCompanion.insert(
+        entityType: entityType,
+        entityId: entityId,
+        operation: operation,
+      ),
+    );
+  }
+
+  Future<Account?> getAccountByIdIncludingDeleted(String id) =>
+      (select(accounts)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<TransactionEntry?> getTransactionByIdIncludingDeleted(String id) =>
+      (select(transactionEntries)..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+
+  Future<Goal?> getGoalByIdIncludingDeleted(String id) =>
+      (select(goals)..where((g) => g.id.equals(id))).getSingleOrNull();
+
+  Future<TodoList?> getTodoListByIdIncludingDeleted(String id) =>
+      (select(todoLists)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<TodoItem?> getTodoItemByIdIncludingDeleted(String id) =>
+      (select(todoItems)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<NoteFolder?> getNoteFolderByIdIncludingDeleted(String id) =>
+      (select(noteFolders)..where((f) => f.id.equals(id))).getSingleOrNull();
+
+  Future<Note?> getNoteByIdIncludingDeleted(String id) =>
+      (select(notes)..where((n) => n.id.equals(id))).getSingleOrNull();
+
+  Future<Habit?> getHabitByIdIncludingDeleted(String id) =>
+      (select(habits)..where((h) => h.id.equals(id))).getSingleOrNull();
+
+  Future<HabitLog?> getHabitLogIncludingDeleted(
+    String habitId,
+    DateTime date,
+  ) =>
+      (select(habitLogs)
+            ..where((l) =>
+                l.habitId.equals(habitId) & l.date.equals(date)))
+          .getSingleOrNull();
+
+  Future<CalendarEvent?> getCalendarEventByIdIncludingDeleted(String id) =>
+      (select(calendarEvents)..where((e) => e.id.equals(id))).getSingleOrNull();
+
+  Future<NoteGoal?> getNoteGoalByIdIncludingDeleted(String id) =>
+      (select(noteGoals)..where((g) => g.id.equals(id))).getSingleOrNull();
+
+  Future<Tracker?> getTrackerByIdIncludingDeleted(String id) =>
+      (select(trackers)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<Movy?> getMovieByIdIncludingDeleted(String id) =>
+      (select(movies)..where((m) => m.id.equals(id))).getSingleOrNull();
+
+  Future<TvSery?> getTvSeriesByIdIncludingDeleted(String id) =>
+      (select(tvSeries)..where((s) => s.id.equals(id))).getSingleOrNull();
+
+  Future<Game?> getGameByIdIncludingDeleted(String id) =>
+      (select(games)..where((g) => g.id.equals(id))).getSingleOrNull();
 
   // --- Accounts ---
 
@@ -366,15 +456,42 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
           .watch();
 
-  Future<void> upsertAccount(AccountsCompanion entry) =>
-      into(accounts).insertOnConflictUpdate(entry);
+  Future<void> upsertAccount(AccountsCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(accounts).insertOnConflictUpdate(normalized);
+    await _queueSyncChange('accounts', id, 'upsert');
+  }
 
   Future<void> deleteAccountWithTransactions(String accountId) async {
     await transaction(() async {
-      await (delete(transactionEntries)
-            ..where((t) => t.accountId.equals(accountId)))
-          .go();
-      await (delete(accounts)..where((t) => t.id.equals(accountId))).go();
+      final now = DateTime.now();
+      final txIds = await (select(transactionEntries)
+            ..where((t) =>
+                t.accountId.equals(accountId) & t.deletedAt.isNull()))
+          .map((t) => t.id)
+          .get();
+      await (update(transactionEntries)
+            ..where((t) =>
+                t.accountId.equals(accountId) & t.deletedAt.isNull()))
+          .write(
+        TransactionEntriesCompanion(
+          deletedAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      await (update(accounts)
+            ..where((t) => t.id.equals(accountId) & t.deletedAt.isNull()))
+          .write(
+        AccountsCompanion(
+          deletedAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      for (final txId in txIds) {
+        await _queueSyncChange('transaction_entries', txId, 'delete');
+      }
+      await _queueSyncChange('accounts', accountId, 'delete');
     });
   }
 
@@ -395,11 +512,25 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
-  Future<void> insertTransaction(TransactionEntriesCompanion entry) =>
-      into(transactionEntries).insert(entry);
+  Future<void> insertTransaction(TransactionEntriesCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(transactionEntries).insert(normalized);
+    await _queueSyncChange('transaction_entries', id, 'upsert');
+  }
 
-  Future<void> deleteTransactionById(String id) =>
-      (delete(transactionEntries)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteTransactionById(String id) async {
+    final now = DateTime.now();
+    await (update(transactionEntries)
+          ..where((t) => t.id.equals(id) & t.deletedAt.isNull()))
+        .write(
+      TransactionEntriesCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await _queueSyncChange('transaction_entries', id, 'delete');
+  }
 
   // --- Goals ---
 
@@ -409,13 +540,29 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(g) => OrderingTerm.asc(g.createdAt)]))
           .watch();
 
-  Future<void> insertGoal(GoalsCompanion entry) => into(goals).insert(entry);
+  Future<void> insertGoal(GoalsCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(goals).insert(normalized);
+    await _queueSyncChange('goals', id, 'upsert');
+  }
 
-  Future<void> updateGoal(GoalsCompanion entry) =>
-      (update(goals)..where((g) => g.id.equals(entry.id.value))).write(entry);
+  Future<void> updateGoal(GoalsCompanion entry) async {
+    await (update(goals)..where((g) => g.id.equals(entry.id.value))).write(entry);
+    await _queueSyncChange('goals', entry.id.value, 'upsert');
+  }
 
-  Future<void> deleteGoalById(String id) =>
-      (delete(goals)..where((g) => g.id.equals(id))).go();
+  Future<void> deleteGoalById(String id) async {
+    final now = DateTime.now();
+    await (update(goals)..where((g) => g.id.equals(id) & g.deletedAt.isNull()))
+        .write(
+      GoalsCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await _queueSyncChange('goals', id, 'delete');
+  }
 
   // --- Todo Lists ---
 
@@ -425,13 +572,40 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
           .watch();
 
-  Future<void> insertTodoList(TodoListsCompanion entry) =>
-      into(todoLists).insert(entry);
+  Future<void> insertTodoList(TodoListsCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(todoLists).insert(normalized);
+    await _queueSyncChange('todo_lists', id, 'upsert');
+  }
 
   Future<void> deleteTodoListWithItems(String listId) async {
     await transaction(() async {
-      await (delete(todoItems)..where((t) => t.listId.equals(listId))).go();
-      await (delete(todoLists)..where((t) => t.id.equals(listId))).go();
+      final now = DateTime.now();
+      final itemIds = await (select(todoItems)
+            ..where((t) => t.listId.equals(listId) & t.deletedAt.isNull()))
+          .map((t) => t.id)
+          .get();
+      await (update(todoItems)
+            ..where((t) => t.listId.equals(listId) & t.deletedAt.isNull()))
+          .write(
+        TodoItemsCompanion(
+          deletedAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      await (update(todoLists)
+            ..where((t) => t.id.equals(listId) & t.deletedAt.isNull()))
+          .write(
+        TodoListsCompanion(
+          deletedAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      for (final itemId in itemIds) {
+        await _queueSyncChange('todo_items', itemId, 'delete');
+      }
+      await _queueSyncChange('todo_lists', listId, 'delete');
     });
   }
 
@@ -443,15 +617,31 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
           .watch();
 
-  Future<void> insertTodoItem(TodoItemsCompanion entry) =>
-      into(todoItems).insert(entry);
+  Future<void> insertTodoItem(TodoItemsCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(todoItems).insert(normalized);
+    await _queueSyncChange('todo_items', id, 'upsert');
+  }
 
-  Future<void> updateTodoItem(TodoItemsCompanion entry) =>
-      (update(todoItems)..where((t) => t.id.equals(entry.id.value)))
-          .write(entry);
+  Future<void> updateTodoItem(TodoItemsCompanion entry) async {
+    await (update(todoItems)..where((t) => t.id.equals(entry.id.value)))
+        .write(entry);
+    await _queueSyncChange('todo_items', entry.id.value, 'upsert');
+  }
 
-  Future<void> deleteTodoItemById(String id) =>
-      (delete(todoItems)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteTodoItemById(String id) async {
+    final now = DateTime.now();
+    await (update(todoItems)
+          ..where((t) => t.id.equals(id) & t.deletedAt.isNull()))
+        .write(
+      TodoItemsCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await _queueSyncChange('todo_items', id, 'delete');
+  }
 
   // --- Note Folders ---
 
@@ -461,14 +651,38 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(f) => OrderingTerm.asc(f.createdAt)]))
           .watch();
 
-  Future<void> insertNoteFolder(NoteFoldersCompanion entry) =>
-      into(noteFolders).insert(entry);
+  Future<void> insertNoteFolder(NoteFoldersCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(noteFolders).insert(normalized);
+    await _queueSyncChange('note_folders', id, 'upsert');
+  }
 
   Future<void> deleteNoteFolderById(String folderId) async {
     await transaction(() async {
+      final now = DateTime.now();
+      final noteIds = await (select(notes)
+            ..where((n) =>
+                n.folderId.equals(folderId) & n.deletedAt.isNull()))
+          .map((n) => n.id)
+          .get();
       await (update(notes)..where((n) => n.folderId.equals(folderId)))
-          .write(const NotesCompanion(folderId: Value(null)));
-      await (delete(noteFolders)..where((f) => f.id.equals(folderId))).go();
+          .write(NotesCompanion(
+        folderId: const Value(null),
+        updatedAt: Value(now),
+      ));
+      await (update(noteFolders)
+            ..where((f) => f.id.equals(folderId) & f.deletedAt.isNull()))
+          .write(
+        NoteFoldersCompanion(
+          deletedAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      for (final noteId in noteIds) {
+        await _queueSyncChange('notes', noteId, 'upsert');
+      }
+      await _queueSyncChange('note_folders', folderId, 'delete');
     });
   }
 
@@ -480,14 +694,29 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(n) => OrderingTerm.desc(n.updatedAt)]))
           .watch();
 
-  Future<void> insertNote(NotesCompanion entry) =>
-      into(notes).insert(entry);
+  Future<void> insertNote(NotesCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(notes).insert(normalized);
+    await _queueSyncChange('notes', id, 'upsert');
+  }
 
-  Future<void> updateNote(NotesCompanion entry) =>
-      (update(notes)..where((n) => n.id.equals(entry.id.value))).write(entry);
+  Future<void> updateNote(NotesCompanion entry) async {
+    await (update(notes)..where((n) => n.id.equals(entry.id.value))).write(entry);
+    await _queueSyncChange('notes', entry.id.value, 'upsert');
+  }
 
-  Future<void> deleteNoteById(String id) =>
-      (delete(notes)..where((n) => n.id.equals(id))).go();
+  Future<void> deleteNoteById(String id) async {
+    final now = DateTime.now();
+    await (update(notes)..where((n) => n.id.equals(id) & n.deletedAt.isNull()))
+        .write(
+      NotesCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await _queueSyncChange('notes', id, 'delete');
+  }
 
   // --- Habits ---
 
@@ -499,16 +728,44 @@ class AppDatabase extends _$AppDatabase {
         (h) => OrderingTerm.asc(h.createdAt),
       ])..where((h) => h.deletedAt.isNull())).watch();
 
-  Future<void> insertHabit(HabitsCompanion entry) =>
-      into(habits).insert(entry);
+  Future<void> insertHabit(HabitsCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(habits).insert(normalized);
+    await _queueSyncChange('habits', id, 'upsert');
+  }
 
-  Future<void> updateHabit(HabitsCompanion entry) =>
-      (update(habits)..where((h) => h.id.equals(entry.id.value))).write(entry);
+  Future<void> updateHabit(HabitsCompanion entry) async {
+    await (update(habits)..where((h) => h.id.equals(entry.id.value))).write(entry);
+    await _queueSyncChange('habits', entry.id.value, 'upsert');
+  }
 
   Future<void> deleteHabitById(String id) async {
     await transaction(() async {
-      await (delete(habitLogs)..where((l) => l.habitId.equals(id))).go();
-      await (delete(habits)..where((h) => h.id.equals(id))).go();
+      final now = DateTime.now();
+      final logs = await (select(habitLogs)
+            ..where((l) => l.habitId.equals(id) & l.deletedAt.isNull()))
+          .get();
+      await (update(habitLogs)
+            ..where((l) => l.habitId.equals(id) & l.deletedAt.isNull()))
+          .write(HabitLogsCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ));
+      await (update(habits)
+            ..where((h) => h.id.equals(id) & h.deletedAt.isNull()))
+          .write(HabitsCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ));
+      for (final log in logs) {
+        await _queueSyncChange(
+          'habit_logs',
+          '${log.habitId}|${log.date.toIso8601String()}',
+          'delete',
+        );
+      }
+      await _queueSyncChange('habits', id, 'delete');
     });
   }
 
@@ -522,14 +779,34 @@ class AppDatabase extends _$AppDatabase {
                 l.deletedAt.isNull()))
           .watch();
 
-  Future<void> setHabitLog(HabitLogsCompanion entry) =>
-      into(habitLogs).insertOnConflictUpdate(entry);
+  Future<void> setHabitLog(HabitLogsCompanion entry) async {
+    await into(habitLogs).insertOnConflictUpdate(entry);
+    await _queueSyncChange(
+      'habit_logs',
+      '${entry.habitId.value}|${entry.date.value.toIso8601String()}',
+      'upsert',
+    );
+  }
 
-  Future<void> clearHabitLog(String habitId, DateTime date) =>
-      (delete(habitLogs)
-            ..where((l) =>
-                l.habitId.equals(habitId) & l.date.equals(date)))
-          .go();
+  Future<void> clearHabitLog(String habitId, DateTime date) async {
+    final now = DateTime.now();
+    await (update(habitLogs)
+          ..where((l) =>
+              l.habitId.equals(habitId) &
+              l.date.equals(date) &
+              l.deletedAt.isNull()))
+        .write(
+      HabitLogsCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await _queueSyncChange(
+      'habit_logs',
+      '$habitId|${date.toIso8601String()}',
+      'delete',
+    );
+  }
 
   Future<List<HabitLog>> getRecentHabitLogs(DateTime from) =>
       (select(habitLogs)
@@ -547,15 +824,31 @@ class AppDatabase extends _$AppDatabase {
         (t) => OrderingTerm.asc(t.createdAt),
       ])..where((t) => t.deletedAt.isNull())).watch();
 
-  Future<void> insertTracker(TrackersCompanion entry) =>
-      into(trackers).insert(entry);
+  Future<void> insertTracker(TrackersCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(trackers).insert(normalized);
+    await _queueSyncChange('trackers', id, 'upsert');
+  }
 
-  Future<void> updateTracker(TrackersCompanion entry) =>
-      (update(trackers)..where((t) => t.id.equals(entry.id.value)))
-          .write(entry);
+  Future<void> updateTracker(TrackersCompanion entry) async {
+    await (update(trackers)..where((t) => t.id.equals(entry.id.value)))
+        .write(entry);
+    await _queueSyncChange('trackers', entry.id.value, 'upsert');
+  }
 
-  Future<void> deleteTrackerById(String id) =>
-      (delete(trackers)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteTrackerById(String id) async {
+    final now = DateTime.now();
+    await (update(trackers)
+          ..where((t) => t.id.equals(id) & t.deletedAt.isNull()))
+        .write(
+      TrackersCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await _queueSyncChange('trackers', id, 'delete');
+  }
 
   // --- Note Goals ---
 
@@ -565,15 +858,31 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(g) => OrderingTerm.asc(g.createdAt)]))
           .watch();
 
-  Future<void> insertNoteGoal(NoteGoalsCompanion entry) =>
-      into(noteGoals).insert(entry);
+  Future<void> insertNoteGoal(NoteGoalsCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(noteGoals).insert(normalized);
+    await _queueSyncChange('note_goals', id, 'upsert');
+  }
 
-  Future<void> updateNoteGoal(NoteGoalsCompanion entry) =>
-      (update(noteGoals)..where((g) => g.id.equals(entry.id.value)))
-          .write(entry);
+  Future<void> updateNoteGoal(NoteGoalsCompanion entry) async {
+    await (update(noteGoals)..where((g) => g.id.equals(entry.id.value)))
+        .write(entry);
+    await _queueSyncChange('note_goals', entry.id.value, 'upsert');
+  }
 
-  Future<void> deleteNoteGoalById(String id) =>
-      (delete(noteGoals)..where((g) => g.id.equals(id))).go();
+  Future<void> deleteNoteGoalById(String id) async {
+    final now = DateTime.now();
+    await (update(noteGoals)
+          ..where((g) => g.id.equals(id) & g.deletedAt.isNull()))
+        .write(
+      NoteGoalsCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await _queueSyncChange('note_goals', id, 'delete');
+  }
 
   // --- Movies ---
 
@@ -583,13 +892,29 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(m) => OrderingTerm.desc(m.addedAt)]))
           .watch();
 
-  Future<void> insertMovie(MoviesCompanion entry) => into(movies).insert(entry);
+  Future<void> insertMovie(MoviesCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(movies).insert(normalized);
+    await _queueSyncChange('movies', id, 'upsert');
+  }
 
-  Future<void> updateMovie(MoviesCompanion entry) =>
-      (update(movies)..where((m) => m.id.equals(entry.id.value))).write(entry);
+  Future<void> updateMovie(MoviesCompanion entry) async {
+    await (update(movies)..where((m) => m.id.equals(entry.id.value))).write(entry);
+    await _queueSyncChange('movies', entry.id.value, 'upsert');
+  }
 
-  Future<void> deleteMovieById(String id) =>
-      (delete(movies)..where((m) => m.id.equals(id))).go();
+  Future<void> deleteMovieById(String id) async {
+    final now = DateTime.now();
+    await (update(movies)..where((m) => m.id.equals(id) & m.deletedAt.isNull()))
+        .write(
+      MoviesCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await _queueSyncChange('movies', id, 'delete');
+  }
 
   // --- TV Series ---
 
@@ -599,14 +924,30 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(s) => OrderingTerm.desc(s.addedAt)]))
           .watch();
 
-  Future<void> insertTvSeries(TvSeriesCompanion entry) =>
-      into(tvSeries).insert(entry);
+  Future<void> insertTvSeries(TvSeriesCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(tvSeries).insert(normalized);
+    await _queueSyncChange('tv_series', id, 'upsert');
+  }
 
-  Future<void> updateTvSeries(TvSeriesCompanion entry) =>
-      (update(tvSeries)..where((s) => s.id.equals(entry.id.value))).write(entry);
+  Future<void> updateTvSeries(TvSeriesCompanion entry) async {
+    await (update(tvSeries)..where((s) => s.id.equals(entry.id.value))).write(entry);
+    await _queueSyncChange('tv_series', entry.id.value, 'upsert');
+  }
 
-  Future<void> deleteTvSeriesById(String id) =>
-      (delete(tvSeries)..where((s) => s.id.equals(id))).go();
+  Future<void> deleteTvSeriesById(String id) async {
+    final now = DateTime.now();
+    await (update(tvSeries)
+          ..where((s) => s.id.equals(id) & s.deletedAt.isNull()))
+        .write(
+      TvSeriesCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await _queueSyncChange('tv_series', id, 'delete');
+  }
 
   // --- Games ---
 
@@ -616,13 +957,29 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(g) => OrderingTerm.desc(g.addedAt)]))
           .watch();
 
-  Future<void> insertGame(GamesCompanion entry) => into(games).insert(entry);
+  Future<void> insertGame(GamesCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(games).insert(normalized);
+    await _queueSyncChange('games', id, 'upsert');
+  }
 
-  Future<void> updateGame(GamesCompanion entry) =>
-      (update(games)..where((g) => g.id.equals(entry.id.value))).write(entry);
+  Future<void> updateGame(GamesCompanion entry) async {
+    await (update(games)..where((g) => g.id.equals(entry.id.value))).write(entry);
+    await _queueSyncChange('games', entry.id.value, 'upsert');
+  }
 
-  Future<void> deleteGameById(String id) =>
-      (delete(games)..where((g) => g.id.equals(id))).go();
+  Future<void> deleteGameById(String id) async {
+    final now = DateTime.now();
+    await (update(games)..where((g) => g.id.equals(id) & g.deletedAt.isNull()))
+        .write(
+      GamesCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await _queueSyncChange('games', id, 'delete');
+  }
 
   // --- Calendar Events ---
 
@@ -632,13 +989,62 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(e) => OrderingTerm.asc(e.startDate)]))
           .watch();
 
-  Future<void> insertCalendarEvent(CalendarEventsCompanion entry) =>
-      into(calendarEvents).insert(entry);
+  Future<void> insertCalendarEvent(CalendarEventsCompanion entry) async {
+    final id = entry.id.present ? entry.id.value : _uuid.v4();
+    final normalized = entry.copyWith(id: Value(id));
+    await into(calendarEvents).insert(normalized);
+    await _queueSyncChange('calendar_events', id, 'upsert');
+  }
 
-  Future<void> updateCalendarEvent(CalendarEventsCompanion entry) =>
-      (update(calendarEvents)..where((e) => e.id.equals(entry.id.value)))
-          .write(entry);
+  Future<void> updateCalendarEvent(CalendarEventsCompanion entry) async {
+    await (update(calendarEvents)..where((e) => e.id.equals(entry.id.value)))
+        .write(entry);
+    await _queueSyncChange('calendar_events', entry.id.value, 'upsert');
+  }
 
-  Future<void> deleteCalendarEventById(String id) =>
-      (delete(calendarEvents)..where((e) => e.id.equals(id))).go();
+  Future<void> deleteCalendarEventById(String id) async {
+    final now = DateTime.now();
+    await (update(calendarEvents)
+          ..where((e) => e.id.equals(id) & e.deletedAt.isNull()))
+        .write(
+      CalendarEventsCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await _queueSyncChange('calendar_events', id, 'delete');
+  }
+
+  Stream<List<SyncQueueEntry>> watchPendingSyncQueue() =>
+      (select(syncQueueEntries)
+            ..orderBy([(q) => OrderingTerm.asc(q.createdAt)]))
+          .watch();
+
+  Future<List<SyncQueueEntry>> getPendingSyncQueue() =>
+      (select(syncQueueEntries)
+            ..orderBy([(q) => OrderingTerm.asc(q.createdAt)]))
+          .get();
+
+  Future<void> markSyncEntryFailed(
+    String id,
+    String errorMessage,
+  ) =>
+      (update(syncQueueEntries)..where((q) => q.id.equals(id))).write(
+        SyncQueueEntriesCompanion(
+          lastAttemptAt: Value(DateTime.now()),
+          retryCount: const Value.absent(),
+          lastError: Value(errorMessage),
+        ),
+      );
+
+  Future<void> incrementSyncRetry(String id, int currentRetryCount) =>
+      (update(syncQueueEntries)..where((q) => q.id.equals(id))).write(
+        SyncQueueEntriesCompanion(
+          lastAttemptAt: Value(DateTime.now()),
+          retryCount: Value(currentRetryCount + 1),
+        ),
+      );
+
+  Future<void> completeSyncEntry(String id) =>
+      (delete(syncQueueEntries)..where((q) => q.id.equals(id))).go();
 }
