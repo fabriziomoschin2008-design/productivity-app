@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 part 'database.g.dart';
@@ -8,6 +9,7 @@ const _uuid = Uuid();
 
 class Accounts extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get name => text()();
   IntColumn get colorValue => integer().named('color_value')();
   RealColumn get openingBalance =>
@@ -24,6 +26,7 @@ class Accounts extends Table {
 
 class TransactionEntries extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get accountId => text().named('account_id')();
   RealColumn get amount => real()();
   TextColumn get type => text()(); // 'income' | 'expense'
@@ -42,6 +45,7 @@ class TransactionEntries extends Table {
 
 class Goals extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get name => text()();
   RealColumn get targetAmount => real().named('target_amount')();
   RealColumn get currentAmount =>
@@ -62,6 +66,7 @@ class Goals extends Table {
 
 class TodoLists extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get name => text()();
   IntColumn get colorValue => integer().named('color_value')();
   DateTimeColumn get createdAt =>
@@ -76,6 +81,7 @@ class TodoLists extends Table {
 
 class TodoItems extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get listId => text().named('list_id').nullable()();
   TextColumn get title => text()();
   TextColumn get note => text().nullable()();
@@ -100,6 +106,7 @@ class TodoItems extends Table {
 
 class Habits extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get name => text()();
   TextColumn get category => text().withDefault(const Constant(''))(); // 'Mattina'|'Pomeriggio'|'Sera'
   IntColumn get sortOrder => integer().named('sort_order').withDefault(const Constant(0))();
@@ -115,6 +122,7 @@ class Habits extends Table {
 
 class HabitLogs extends Table {
   TextColumn get habitId => text().named('habit_id')();
+  TextColumn get userId => text().named('user_id').nullable()();
   DateTimeColumn get date => dateTime()(); // mezzanotte del giorno
   TextColumn get status => text()(); // 'done' | 'skip' | 'na'
   DateTimeColumn get updatedAt =>
@@ -127,6 +135,7 @@ class HabitLogs extends Table {
 
 class CalendarEvents extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get title => text()();
   TextColumn get note => text().nullable()();
   DateTimeColumn get startDate => dateTime().named('start_date')();
@@ -147,6 +156,7 @@ class CalendarEvents extends Table {
 
 class NoteFolders extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get name => text()();
   DateTimeColumn get createdAt =>
       dateTime().named('created_at').withDefault(currentDateAndTime)();
@@ -160,6 +170,7 @@ class NoteFolders extends Table {
 
 class Notes extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get title => text().withDefault(const Constant(''))();
   TextColumn get content => text().withDefault(const Constant(''))();
   TextColumn get folderId => text().named('folder_id').nullable()();
@@ -177,6 +188,7 @@ class Notes extends Table {
 
 class NoteGoals extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get title => text().withDefault(const Constant(''))();
   TextColumn get description => text().nullable()();
   DateTimeColumn get deadline => dateTime().nullable()();
@@ -193,6 +205,7 @@ class NoteGoals extends Table {
 
 class Trackers extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get name => text()();
   RealColumn get currentValue =>
       real().named('current_value').withDefault(const Constant(0.0))();
@@ -219,6 +232,7 @@ class Trackers extends Table {
 
 class Movies extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   IntColumn get tmdbId => integer().named('tmdb_id').nullable()();
   TextColumn get title => text()();
   TextColumn get overview => text().nullable()();
@@ -243,6 +257,7 @@ class Movies extends Table {
 
 class TvSeries extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   IntColumn get tmdbId => integer().named('tmdb_id').nullable()();
   TextColumn get title => text()();
   TextColumn get overview => text().nullable()();
@@ -270,6 +285,7 @@ class TvSeries extends Table {
 
 class Games extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get title => text()();
   TextColumn get platform => text().nullable()();
   TextColumn get status => text().withDefault(const Constant('playing'))(); // playing | completed | want_to_play
@@ -308,7 +324,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -371,6 +387,23 @@ class AppDatabase extends _$AppDatabase {
           if (from < 13) {
             await m.createTable(syncQueueEntries);
           }
+          if (from < 14) {
+            await m.addColumn(accounts, accounts.userId);
+            await m.addColumn(transactionEntries, transactionEntries.userId);
+            await m.addColumn(goals, goals.userId);
+            await m.addColumn(todoLists, todoLists.userId);
+            await m.addColumn(todoItems, todoItems.userId);
+            await m.addColumn(habits, habits.userId);
+            await m.addColumn(habitLogs, habitLogs.userId);
+            await m.addColumn(calendarEvents, calendarEvents.userId);
+            await m.addColumn(noteFolders, noteFolders.userId);
+            await m.addColumn(notes, notes.userId);
+            await m.addColumn(noteGoals, noteGoals.userId);
+            await m.addColumn(trackers, trackers.userId);
+            await m.addColumn(movies, movies.userId);
+            await m.addColumn(tvSeries, tvSeries.userId);
+            await m.addColumn(games, games.userId);
+          }
         },
       );
 
@@ -394,6 +427,58 @@ class AppDatabase extends _$AppDatabase {
         operation: operation,
       ),
     );
+  }
+
+  String? _currentUserId() => Supabase.instance.client.auth.currentUser?.id;
+
+  Future<void> assignUserIdToUnownedRows(String userId) async {
+    await transaction(() async {
+      await (update(accounts)..where((t) => t.userId.isNull())).write(
+        AccountsCompanion(userId: Value(userId)),
+      );
+      await (update(transactionEntries)..where((t) => t.userId.isNull())).write(
+        TransactionEntriesCompanion(userId: Value(userId)),
+      );
+      await (update(goals)..where((t) => t.userId.isNull())).write(
+        GoalsCompanion(userId: Value(userId)),
+      );
+      await (update(todoLists)..where((t) => t.userId.isNull())).write(
+        TodoListsCompanion(userId: Value(userId)),
+      );
+      await (update(todoItems)..where((t) => t.userId.isNull())).write(
+        TodoItemsCompanion(userId: Value(userId)),
+      );
+      await (update(habits)..where((t) => t.userId.isNull())).write(
+        HabitsCompanion(userId: Value(userId)),
+      );
+      await (update(habitLogs)..where((t) => t.userId.isNull())).write(
+        HabitLogsCompanion(userId: Value(userId)),
+      );
+      await (update(calendarEvents)..where((t) => t.userId.isNull())).write(
+        CalendarEventsCompanion(userId: Value(userId)),
+      );
+      await (update(noteFolders)..where((t) => t.userId.isNull())).write(
+        NoteFoldersCompanion(userId: Value(userId)),
+      );
+      await (update(notes)..where((t) => t.userId.isNull())).write(
+        NotesCompanion(userId: Value(userId)),
+      );
+      await (update(noteGoals)..where((t) => t.userId.isNull())).write(
+        NoteGoalsCompanion(userId: Value(userId)),
+      );
+      await (update(trackers)..where((t) => t.userId.isNull())).write(
+        TrackersCompanion(userId: Value(userId)),
+      );
+      await (update(movies)..where((t) => t.userId.isNull())).write(
+        MoviesCompanion(userId: Value(userId)),
+      );
+      await (update(tvSeries)..where((t) => t.userId.isNull())).write(
+        TvSeriesCompanion(userId: Value(userId)),
+      );
+      await (update(games)..where((t) => t.userId.isNull())).write(
+        GamesCompanion(userId: Value(userId)),
+      );
+    });
   }
 
   Future<Account?> getAccountByIdIncludingDeleted(String id) =>
@@ -448,6 +533,74 @@ class AppDatabase extends _$AppDatabase {
   Future<Game?> getGameByIdIncludingDeleted(String id) =>
       (select(games)..where((g) => g.id.equals(id))).getSingleOrNull();
 
+  Future<void> applyRemoteSnapshot({
+    List<Account> accountsRows = const [],
+    List<TransactionEntry> transactionRows = const [],
+    List<Goal> goalsRows = const [],
+    List<TodoList> todoListRows = const [],
+    List<TodoItem> todoItemRows = const [],
+    List<NoteFolder> noteFolderRows = const [],
+    List<Note> noteRows = const [],
+    List<Habit> habitRows = const [],
+    List<HabitLog> habitLogRows = const [],
+    List<CalendarEvent> calendarEventRows = const [],
+    List<NoteGoal> noteGoalRows = const [],
+    List<Tracker> trackerRows = const [],
+    List<Movy> movieRows = const [],
+    List<TvSery> tvSeriesRows = const [],
+    List<Game> gameRows = const [],
+  }) async {
+    await transaction(() async {
+      await batch((b) {
+        if (accountsRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(accounts, accountsRows);
+        }
+        if (transactionRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(transactionEntries, transactionRows);
+        }
+        if (goalsRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(goals, goalsRows);
+        }
+        if (todoListRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(todoLists, todoListRows);
+        }
+        if (todoItemRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(todoItems, todoItemRows);
+        }
+        if (noteFolderRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(noteFolders, noteFolderRows);
+        }
+        if (noteRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(notes, noteRows);
+        }
+        if (habitRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(habits, habitRows);
+        }
+        if (habitLogRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(habitLogs, habitLogRows);
+        }
+        if (calendarEventRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(calendarEvents, calendarEventRows);
+        }
+        if (noteGoalRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(noteGoals, noteGoalRows);
+        }
+        if (trackerRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(trackers, trackerRows);
+        }
+        if (movieRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(movies, movieRows);
+        }
+        if (tvSeriesRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(tvSeries, tvSeriesRows);
+        }
+        if (gameRows.isNotEmpty) {
+          b.insertAllOnConflictUpdate(games, gameRows);
+        }
+      });
+    });
+  }
+
   // --- Accounts ---
 
   Stream<List<Account>> watchAccounts() =>
@@ -458,7 +611,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> upsertAccount(AccountsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(accounts).insertOnConflictUpdate(normalized);
     await _queueSyncChange('accounts', id, 'upsert');
   }
@@ -514,7 +670,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertTransaction(TransactionEntriesCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(transactionEntries).insert(normalized);
     await _queueSyncChange('transaction_entries', id, 'upsert');
   }
@@ -542,7 +701,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertGoal(GoalsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(goals).insert(normalized);
     await _queueSyncChange('goals', id, 'upsert');
   }
@@ -574,7 +736,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertTodoList(TodoListsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(todoLists).insert(normalized);
     await _queueSyncChange('todo_lists', id, 'upsert');
   }
@@ -619,7 +784,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertTodoItem(TodoItemsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(todoItems).insert(normalized);
     await _queueSyncChange('todo_items', id, 'upsert');
   }
@@ -653,7 +821,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertNoteFolder(NoteFoldersCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(noteFolders).insert(normalized);
     await _queueSyncChange('note_folders', id, 'upsert');
   }
@@ -696,7 +867,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertNote(NotesCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(notes).insert(normalized);
     await _queueSyncChange('notes', id, 'upsert');
   }
@@ -730,7 +904,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertHabit(HabitsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(habits).insert(normalized);
     await _queueSyncChange('habits', id, 'upsert');
   }
@@ -780,10 +957,13 @@ class AppDatabase extends _$AppDatabase {
           .watch();
 
   Future<void> setHabitLog(HabitLogsCompanion entry) async {
-    await into(habitLogs).insertOnConflictUpdate(entry);
+    final normalized = entry.copyWith(
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
+    await into(habitLogs).insertOnConflictUpdate(normalized);
     await _queueSyncChange(
       'habit_logs',
-      '${entry.habitId.value}|${entry.date.value.toIso8601String()}',
+      '${normalized.habitId.value}|${normalized.date.value.toIso8601String()}',
       'upsert',
     );
   }
@@ -826,7 +1006,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertTracker(TrackersCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(trackers).insert(normalized);
     await _queueSyncChange('trackers', id, 'upsert');
   }
@@ -860,7 +1043,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertNoteGoal(NoteGoalsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(noteGoals).insert(normalized);
     await _queueSyncChange('note_goals', id, 'upsert');
   }
@@ -894,7 +1080,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertMovie(MoviesCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(movies).insert(normalized);
     await _queueSyncChange('movies', id, 'upsert');
   }
@@ -926,7 +1115,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertTvSeries(TvSeriesCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(tvSeries).insert(normalized);
     await _queueSyncChange('tv_series', id, 'upsert');
   }
@@ -959,7 +1151,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertGame(GamesCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(games).insert(normalized);
     await _queueSyncChange('games', id, 'upsert');
   }
@@ -991,7 +1186,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertCalendarEvent(CalendarEventsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
-    final normalized = entry.copyWith(id: Value(id));
+    final normalized = entry.copyWith(
+      id: Value(id),
+      userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
+    );
     await into(calendarEvents).insert(normalized);
     await _queueSyncChange('calendar_events', id, 'upsert');
   }
