@@ -33,12 +33,15 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
         selectedId = withBalances.first.account.id;
       } else if (selectedId != null &&
           !withBalances.any((a) => a.account.id == selectedId)) {
-        selectedId =
-            withBalances.isNotEmpty ? withBalances.first.account.id : null;
+        selectedId = withBalances.isNotEmpty
+            ? withBalances.first.account.id
+            : null;
       }
 
       state = state.copyWith(
-          accounts: withBalances, selectedAccountId: selectedId);
+        accounts: withBalances,
+        selectedAccountId: selectedId,
+      );
 
       if (selectedId != null) {
         _subscribeToTransactions(selectedId);
@@ -51,27 +54,34 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
 
   void _subscribeToTransactions(String accountId) {
     _transactionsSub?.cancel();
-    _transactionsSub =
-        _db.watchTransactionsByAccount(accountId).listen((txList) async {
+    _transactionsSub = _db.watchTransactionsByAccount(accountId).listen((
+      txList,
+    ) async {
       state = state.copyWith(transactions: txList);
       await _refreshBalances();
     });
   }
 
   Future<List<AccountWithBalance>> _computeBalances(
-      List<Account> accountList) async {
-    return Future.wait(accountList.map((a) async {
-      final txList = await _db.getTransactionsByAccount(a.id);
-      return AccountWithBalance(
-          account: a, balance: _balance(a.openingBalance, txList));
-    }));
+    List<Account> accountList,
+  ) async {
+    return Future.wait(
+      accountList.map((a) async {
+        final txList = await _db.getTransactionsByAccount(a.id);
+        return AccountWithBalance(
+          account: a,
+          balance: _balance(a.openingBalance, txList),
+        );
+      }),
+    );
   }
 
   Future<void> _refreshBalances() async {
     final count = state.accounts.length;
     if (count == 0) return;
-    final updated =
-        await _computeBalances(state.accounts.map((a) => a.account).toList());
+    final updated = await _computeBalances(
+      state.accounts.map((a) => a.account).toList(),
+    );
     // If accounts were added or removed while we were computing, discard this
     // stale result — _subscribeToAccounts will have already set the correct state.
     if (state.accounts.length != count) return;
@@ -80,7 +90,9 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
 
   double _balance(double opening, List<TransactionEntry> txList) {
     return txList.fold(
-        opening, (sum, t) => t.type == 'income' ? sum + t.amount : sum - t.amount);
+      opening,
+      (sum, t) => t.type == 'income' ? sum + t.amount : sum - t.amount,
+    );
   }
 
   void selectAccount(String accountId) {
@@ -93,13 +105,16 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
     required int colorValue,
     double openingBalance = 0,
   }) async {
-    AppLogger.instance
-        .info('Conto aggiunto: $name (saldo iniziale: €$openingBalance)');
-    await _db.upsertAccount(AccountsCompanion.insert(
-      name: name,
-      colorValue: colorValue,
-      openingBalance: Value(openingBalance),
-    ));
+    AppLogger.instance.info(
+      'Conto aggiunto: $name (saldo iniziale: €$openingBalance)',
+    );
+    await _db.upsertAccount(
+      AccountsCompanion.insert(
+        name: name,
+        colorValue: colorValue,
+        openingBalance: Value(openingBalance),
+      ),
+    );
   }
 
   Future<void> editAccount({
@@ -109,13 +124,15 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
     required double openingBalance,
   }) async {
     AppLogger.instance.info('Conto modificato: $name [id: $id]');
-    await _db.upsertAccount(AccountsCompanion(
-      id: Value(id),
-      name: Value(name),
-      colorValue: Value(colorValue),
-      openingBalance: Value(openingBalance),
-      updatedAt: Value(DateTime.now()),
-    ));
+    await _db.upsertAccount(
+      AccountsCompanion(
+        id: Value(id),
+        name: Value(name),
+        colorValue: Value(colorValue),
+        openingBalance: Value(openingBalance),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   Future<void> deleteAccount(String accountId) async {
@@ -132,15 +149,19 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
     String? note,
   }) async {
     AppLogger.instance.info(
-        'Movimento aggiunto: $type "$category" €$amount [conto: $accountId]');
-    await _db.insertTransaction(TransactionEntriesCompanion.insert(
-      accountId: accountId,
-      amount: amount,
-      type: type,
-      category: category,
-      date: date,
-      note: Value(note),
-    ));
+      'Movimento aggiunto: $type "$category" €$amount [conto: $accountId]',
+    );
+    await _db.insertTransaction(
+      TransactionEntriesCompanion.insert(
+        accountId: accountId,
+        amount: amount,
+        type: type,
+        category: category,
+        date: date,
+        note: Value(note),
+      ),
+    );
+    await _refreshBalances();
   }
 
   Future<void> deleteTransaction(String id) async {
@@ -148,27 +169,44 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
     await _db.deleteTransactionById(id);
   }
 
-  Future<({bool success, String? error, List<String>? created, List<String>? updated})> importAccountsFromExcel(File file) async {
+  Future<
+    ({
+      bool success,
+      String? error,
+      List<String>? created,
+      List<String>? updated,
+    })
+  >
+  importAccountsFromExcel(File file) async {
     final existingAccounts = state.accounts.map((a) => a.account).toList();
 
     final result = await ExcelService.importAccounts(file, existingAccounts);
 
     if (result.error != null) {
-      return (success: false, error: result.error, created: null, updated: null);
+      return (
+        success: false,
+        error: result.error,
+        created: null,
+        updated: null,
+      );
     }
 
     try {
       final created = <String>[];
 
       for (final newAcc in result.newAccounts) {
-        AppLogger.instance.info('Conto importato: ${newAcc.name} (ID: ${newAcc.id})');
-        await _db.upsertAccount(AccountsCompanion(
-          id: Value(newAcc.id),
-          name: Value(newAcc.name),
-          colorValue: Value(newAcc.colorValue),
-          openingBalance: Value(newAcc.openingBalance),
-          updatedAt: Value(DateTime.now()),
-        ));
+        AppLogger.instance.info(
+          'Conto importato: ${newAcc.name} (ID: ${newAcc.id})',
+        );
+        await _db.upsertAccount(
+          AccountsCompanion(
+            id: Value(newAcc.id),
+            name: Value(newAcc.name),
+            colorValue: Value(newAcc.colorValue),
+            openingBalance: Value(newAcc.openingBalance),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
         created.add(newAcc.id);
       }
 
@@ -188,7 +226,9 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
                 ),
         );
         if (updAcc.name.isNotEmpty) {
-          AppLogger.instance.info('Conto aggiornato: ${updAcc.name} [ID: $accId]');
+          AppLogger.instance.info(
+            'Conto aggiornato: ${updAcc.name} [ID: $accId]',
+          );
           await editAccount(
             id: accId,
             name: updAcc.name,
@@ -199,16 +239,20 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
       }
 
       for (final tx in result.transactions) {
-        AppLogger.instance.info('Movimento importato: ${tx.type} "${tx.category}" €${tx.amount}');
-        await _db.insertTransaction(TransactionEntriesCompanion.insert(
-          id: Value(tx.id),
-          accountId: tx.accountId,
-          amount: tx.amount,
-          type: tx.type,
-          category: tx.category,
-          date: tx.date,
-          note: Value(tx.note),
-        ));
+        AppLogger.instance.info(
+          'Movimento importato: ${tx.type} "${tx.category}" €${tx.amount}',
+        );
+        await _db.insertTransaction(
+          TransactionEntriesCompanion.insert(
+            id: Value(tx.id),
+            accountId: tx.accountId,
+            amount: tx.amount,
+            type: tx.type,
+            category: tx.category,
+            date: tx.date,
+            note: Value(tx.note),
+          ),
+        );
       }
 
       return (
@@ -219,7 +263,12 @@ class FinanceNotifier extends StateNotifier<FinanceState> {
       );
     } catch (e) {
       AppLogger.instance.error('Errore import Excel: $e');
-      return (success: false, error: 'Errore durante import: $e', created: null, updated: null);
+      return (
+        success: false,
+        error: 'Errore durante import: $e',
+        created: null,
+        updated: null,
+      );
     }
   }
 

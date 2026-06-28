@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'dart:typed_data';
+import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -26,17 +26,17 @@ class ExcelService {
   // ── Style helpers ──────────────────────────────────────────────────────────
 
   static CellStyle _header() => CellStyle(
-        bold: true,
-        backgroundColorHex: ExcelColor.fromHexString('#1E3A5F'),
-        fontColorHex: ExcelColor.white,
-        horizontalAlign: HorizontalAlign.Left,
-      );
+    bold: true,
+    backgroundColorHex: ExcelColor.fromHexString('#1E3A5F'),
+    fontColorHex: ExcelColor.white,
+    horizontalAlign: HorizontalAlign.Left,
+  );
 
   static CellStyle _subHeader() => CellStyle(
-        bold: true,
-        backgroundColorHex: ExcelColor.fromHexString('#2D5F8A'),
-        fontColorHex: ExcelColor.white,
-      );
+    bold: true,
+    backgroundColorHex: ExcelColor.fromHexString('#2D5F8A'),
+    fontColorHex: ExcelColor.white,
+  );
 
   static CellStyle _altRow() =>
       CellStyle(backgroundColorHex: ExcelColor.fromHexString('#F0F4F8'));
@@ -48,19 +48,25 @@ class ExcelService {
       CellStyle(fontColorHex: ExcelColor.fromHexString('#C0392B'));
 
   static CellStyle _incomeAlt() => CellStyle(
-        fontColorHex: ExcelColor.fromHexString('#1A7A45'),
-        backgroundColorHex: ExcelColor.fromHexString('#F0F4F8'),
-      );
+    fontColorHex: ExcelColor.fromHexString('#1A7A45'),
+    backgroundColorHex: ExcelColor.fromHexString('#F0F4F8'),
+  );
 
   static CellStyle _expenseAlt() => CellStyle(
-        fontColorHex: ExcelColor.fromHexString('#C0392B'),
-        backgroundColorHex: ExcelColor.fromHexString('#F0F4F8'),
-      );
+    fontColorHex: ExcelColor.fromHexString('#C0392B'),
+    backgroundColorHex: ExcelColor.fromHexString('#F0F4F8'),
+  );
 
-  static void _set(Sheet sheet, int col, int row, String value,
-      {CellStyle? style}) {
+  static void _set(
+    Sheet sheet,
+    int col,
+    int row,
+    String value, {
+    CellStyle? style,
+  }) {
     final cell = sheet.cell(
-        CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row));
+      CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row),
+    );
     cell.value = TextCellValue(value);
     if (style != null) cell.cellStyle = style;
   }
@@ -77,8 +83,7 @@ class ExcelService {
     List<Uint8List>? chartImages,
     List<String>? chartTitles,
   }) async {
-    final timestamp =
-        DateFormat('yyyy-MM-dd_HHmmss').format(DateTime.now());
+    final timestamp = DateFormat('yyyy-MM-dd_HHmmss').format(DateTime.now());
     final base = await _getExportBase();
     final exportDir = Directory('$base\\Export_$timestamp');
     await exportDir.create(recursive: true);
@@ -92,8 +97,9 @@ class ExcelService {
 
     final bytes = excel.save();
     if (bytes != null) {
-      await File('${exportDir.path}\\Conti_$timestamp.xlsx')
-          .writeAsBytes(bytes);
+      await File(
+        '${exportDir.path}\\Conti_$timestamp.xlsx',
+      ).writeAsBytes(bytes);
     }
 
     // ── Chart PNG files ──
@@ -102,16 +108,16 @@ class ExcelService {
         final title = (chartTitles != null && i < chartTitles.length)
             ? chartTitles[i]
             : 'Grafico_$i';
-        await File('${exportDir.path}\\$title.png')
-            .writeAsBytes(chartImages[i]);
+        await File(
+          '${exportDir.path}\\$title.png',
+        ).writeAsBytes(chartImages[i]);
       }
     }
 
     return exportDir.path;
   }
 
-  static void _buildContiSheet(
-      Sheet sheet, List<AccountWithBalance> accounts) {
+  static void _buildContiSheet(Sheet sheet, List<AccountWithBalance> accounts) {
     sheet.setColumnWidth(0, 38);
     sheet.setColumnWidth(1, 26);
     sheet.setColumnWidth(2, 18);
@@ -147,7 +153,12 @@ class ExcelService {
     sheet.setColumnWidth(5, 32);
 
     const headers = [
-      'Conto', 'Data', 'Tipo', 'Importo (€)', 'Categoria', 'Note'
+      'Conto',
+      'Data',
+      'Tipo',
+      'Importo (€)',
+      'Categoria',
+      'Note',
     ];
     for (int c = 0; c < headers.length; c++) {
       _set(sheet, c, 0, headers[c], style: _header());
@@ -164,15 +175,30 @@ class ExcelService {
       final isIncome = tx.type == 'income';
       final alt = i.isOdd;
 
-      _set(sheet, 0, row, nameById[tx.accountId] ?? tx.accountId,
-          style: alt ? _altRow() : null);
+      _set(
+        sheet,
+        0,
+        row,
+        nameById[tx.accountId] ?? tx.accountId,
+        style: alt ? _altRow() : null,
+      );
       _set(sheet, 1, row, df.format(tx.date), style: alt ? _altRow() : null);
-      _set(sheet, 2, row, isIncome ? 'Entrata' : 'Spesa',
-          style: alt ? _altRow() : null);
-      _set(sheet, 3, row, nf.format(tx.amount),
-          style: alt
-              ? (isIncome ? _incomeAlt() : _expenseAlt())
-              : (isIncome ? _income() : _expense()));
+      _set(
+        sheet,
+        2,
+        row,
+        isIncome ? 'Entrata' : 'Spesa',
+        style: alt ? _altRow() : null,
+      );
+      _set(
+        sheet,
+        3,
+        row,
+        nf.format(tx.amount),
+        style: alt
+            ? (isIncome ? _incomeAlt() : _expenseAlt())
+            : (isIncome ? _income() : _expense()),
+      );
       _set(sheet, 4, row, tx.category, style: alt ? _altRow() : null);
       _set(sheet, 5, row, tx.note ?? '', style: alt ? _altRow() : null);
     }
@@ -243,8 +269,7 @@ class ExcelService {
 
     for (int i = 0; i < sortedMonths.length; i++) {
       final e = sortedMonths[i];
-      final label =
-          '${e.key.year}-${e.key.month.toString().padLeft(2, '0')}';
+      final label = '${e.key.year}-${e.key.month.toString().padLeft(2, '0')}';
       final alt = i.isOdd ? _altRow() : null;
       _set(sheet, 0, row, label, style: alt);
       _set(sheet, 1, row, nf.format(e.value.income), style: alt);
@@ -260,6 +285,13 @@ class ExcelService {
     final dir = await _getTemplateDir();
     final filePath = '$dir\\$fileName';
 
+    final bytes = generateTemplateBytes();
+    final file = File(filePath);
+    await file.writeAsBytes(bytes);
+    return file;
+  }
+
+  static Uint8List generateTemplateBytes() {
     final excel = Excel.createExcel();
     _buildIstruzioniSheet(excel['Istruzioni']);
     _buildContiTemplateSheet(excel['Conti']);
@@ -268,10 +300,7 @@ class ExcelService {
 
     final bytes = excel.save();
     if (bytes == null) throw Exception('Impossibile generare il template');
-
-    final file = File(filePath);
-    await file.writeAsBytes(bytes);
-    return file;
+    return Uint8List.fromList(bytes);
   }
 
   static void _buildIstruzioniSheet(Sheet sheet) {
@@ -300,7 +329,8 @@ class ExcelService {
 
     for (int i = 0; i < lines.length; i++) {
       final cell = sheet.cell(
-          CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i));
+        CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i),
+      );
       cell.value = TextCellValue(lines[i]);
       if (i == 0) cell.cellStyle = _header();
     }
@@ -333,30 +363,55 @@ class ExcelService {
     sheet.setColumnWidth(6, 30);
 
     const headers = [
-      'Account ID (opz.)', 'Nome Conto', 'Data (YYYY-MM-DD)',
-      'Tipo', 'Importo', 'Categoria', 'Note'
+      'Account ID (opz.)',
+      'Nome Conto',
+      'Data (YYYY-MM-DD)',
+      'Tipo',
+      'Importo',
+      'Categoria',
+      'Note',
     ];
     for (int c = 0; c < headers.length; c++) {
       _set(sheet, c, 0, headers[c], style: _header());
     }
 
-    final r1 = ['', 'Conto Corrente', '2026-06-23', 'income', '2000', 'Stipendio', 'Stipendio giugno'];
-    final r2 = ['', 'Carta di Credito', '2026-06-24', 'expense', '50.50', 'Alimentari', 'Spesa supermercato'];
-    for (int c = 0; c < r1.length; c++) { _set(sheet, c, 1, r1[c]); }
-    for (int c = 0; c < r2.length; c++) { _set(sheet, c, 2, r2[c]); }
+    final r1 = [
+      '',
+      'Conto Corrente',
+      '2026-06-23',
+      'income',
+      '2000',
+      'Stipendio',
+      'Stipendio giugno',
+    ];
+    final r2 = [
+      '',
+      'Carta di Credito',
+      '2026-06-24',
+      'expense',
+      '50.50',
+      'Alimentari',
+      'Spesa supermercato',
+    ];
+    for (int c = 0; c < r1.length; c++) {
+      _set(sheet, c, 1, r1[c]);
+    }
+    for (int c = 0; c < r2.length; c++) {
+      _set(sheet, c, 2, r2[c]);
+    }
   }
 
   // ── Import ─────────────────────────────────────────────────────────────────
 
-  static Future<({
-    List<Account> newAccounts,
-    List<TransactionEntry> transactions,
-    List<String> updatedAccountIds,
-    String? error,
-  })> importAccounts(
-    File file,
-    List<Account> existingAccounts,
-  ) async {
+  static Future<
+    ({
+      List<Account> newAccounts,
+      List<TransactionEntry> transactions,
+      List<String> updatedAccountIds,
+      String? error,
+    })
+  >
+  importAccounts(File file, List<Account> existingAccounts) async {
     try {
       final bytes = await file.readAsBytes();
       final excel = Excel.decodeBytes(bytes);
@@ -373,8 +428,10 @@ class ExcelService {
         );
       }
 
-      final (accountResult, accError) =
-          _parseContiSheet(contiSheet, existingAccounts);
+      final (accountResult, accError) = _parseContiSheet(
+        contiSheet,
+        existingAccounts,
+      );
       if (accError != null) {
         return (
           newAccounts: <Account>[],
@@ -384,8 +441,10 @@ class ExcelService {
         );
       }
 
-      final (txResult, txError) =
-          _parseTransazioniSheet(txSheet, accountResult.accountMap);
+      final (txResult, txError) = _parseTransazioniSheet(
+        txSheet,
+        accountResult.accountMap,
+      );
       if (txError != null) {
         return (
           newAccounts: <Account>[],
@@ -415,10 +474,11 @@ class ExcelService {
     ({
       Map<String, String> accountMap,
       List<Account> newAccounts,
-      List<String> updatedIds
+      List<String> updatedIds,
     }),
     String?,
-  ) _parseContiSheet(Sheet sheet, List<Account> existingAccounts) {
+  )
+  _parseContiSheet(Sheet sheet, List<Account> existingAccounts) {
     final newAccounts = <Account>[];
     final updatedIds = <String>[];
     final accountMap = <String, String>{};
@@ -437,7 +497,11 @@ class ExcelService {
         balance = double.parse(balanceCell.replaceAll(',', '.'));
       } catch (_) {
         return (
-          (accountMap: <String, String>{}, newAccounts: <Account>[], updatedIds: <String>[]),
+          (
+            accountMap: <String, String>{},
+            newAccounts: <Account>[],
+            updatedIds: <String>[],
+          ),
           'Riga ${i + 1} (Conti): Saldo Apertura non valido',
         );
       }
@@ -462,21 +526,27 @@ class ExcelService {
         accountMap[nameCell] = existingAcc.id;
       } else {
         final newId = _uuid.v4();
-        newAccounts.add(Account(
-          id: newId,
-          name: nameCell,
-          colorValue: 4294967295,
-          openingBalance: balance,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          deletedAt: null,
-        ));
+        newAccounts.add(
+          Account(
+            id: newId,
+            name: nameCell,
+            colorValue: 4294967295,
+            openingBalance: balance,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+            deletedAt: null,
+          ),
+        );
         accountMap[nameCell] = newId;
       }
     }
 
     return (
-      (accountMap: accountMap, newAccounts: newAccounts, updatedIds: updatedIds),
+      (
+        accountMap: accountMap,
+        newAccounts: newAccounts,
+        updatedIds: updatedIds,
+      ),
       null,
     );
   }
@@ -504,7 +574,10 @@ class ExcelService {
         return ([], 'Riga ${i + 1} (Transazioni): Data mancante');
       }
       if (!['income', 'expense'].contains(typeCell)) {
-        return ([], 'Riga ${i + 1} (Transazioni): Tipo deve essere "income" o "expense"');
+        return (
+          [],
+          'Riga ${i + 1} (Transazioni): Tipo deve essere "income" o "expense"',
+        );
       }
       if (categoryCell.isEmpty) {
         return ([], 'Riga ${i + 1} (Transazioni): Categoria mancante');
@@ -514,14 +587,20 @@ class ExcelService {
       try {
         date = df.parse(dateCell);
       } catch (_) {
-        return ([], 'Riga ${i + 1} (Transazioni): Data non valida (YYYY-MM-DD)');
+        return (
+          [],
+          'Riga ${i + 1} (Transazioni): Data non valida (YYYY-MM-DD)',
+        );
       }
 
       double amount;
       try {
         amount = double.parse(amountCell.replaceAll(',', '.'));
         if (amount <= 0) {
-          return ([], 'Riga ${i + 1} (Transazioni): Importo deve essere positivo');
+          return (
+            [],
+            'Riga ${i + 1} (Transazioni): Importo deve essere positivo',
+          );
         }
       } catch (_) {
         return ([], 'Riga ${i + 1} (Transazioni): Importo non valido');
@@ -531,18 +610,20 @@ class ExcelService {
           ? accountIdCell
           : (accountMap[accountNameCell] ?? accountNameCell);
 
-      transactions.add(TransactionEntry(
-        id: _uuid.v4(),
-        accountId: accountId,
-        amount: amount,
-        type: typeCell,
-        category: categoryCell,
-        date: date,
-        note: noteCell.isEmpty ? null : noteCell,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        deletedAt: null,
-      ));
+      transactions.add(
+        TransactionEntry(
+          id: _uuid.v4(),
+          accountId: accountId,
+          amount: amount,
+          type: typeCell,
+          category: categoryCell,
+          date: date,
+          note: noteCell.isEmpty ? null : noteCell,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          deletedAt: null,
+        ),
+      );
     }
 
     return (transactions, null);

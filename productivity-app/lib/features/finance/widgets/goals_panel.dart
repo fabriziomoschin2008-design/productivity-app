@@ -93,28 +93,39 @@ class _GoalCard extends ConsumerWidget {
               if (done)
                 const Padding(
                   padding: EdgeInsets.only(right: 6),
-                  child: Icon(Icons.check_circle,
-                      size: 15, color: AppColors.income),
+                  child: Icon(
+                    Icons.check_circle,
+                    size: 15,
+                    color: AppColors.income,
+                  ),
                 ),
               Expanded(
-                child: Text(goal.name,
-                    style: AppTextStyles.headingCard,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
+                child: Text(
+                  goal.name,
+                  style: AppTextStyles.headingCard,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               PopupMenuButton<String>(
                 onSelected: (v) => _onAction(context, ref, v),
                 itemBuilder: (_) => [
                   const PopupMenuItem(
-                      value: 'update', child: Text('Aggiorna importo')),
+                    value: 'update',
+                    child: Text('Aggiorna importo'),
+                  ),
                   if (!done)
                     const PopupMenuItem(
-                        value: 'complete', child: Text('Segna completato')),
-                  const PopupMenuItem(
-                      value: 'delete', child: Text('Elimina')),
+                      value: 'complete',
+                      child: Text('Segna completato'),
+                    ),
+                  const PopupMenuItem(value: 'delete', child: Text('Elimina')),
                 ],
-                icon: const Icon(Icons.more_vert,
-                    size: 16, color: AppColors.textDisabled),
+                icon: const Icon(
+                  Icons.more_vert,
+                  size: 16,
+                  color: AppColors.textDisabled,
+                ),
                 padding: EdgeInsets.zero,
                 splashRadius: 16,
               ),
@@ -151,8 +162,11 @@ class _GoalCard extends ConsumerWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.calendar_today_outlined,
-                    size: 11, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 11,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   'Scadenza: ${formatDateMedium(goal.deadline!)}',
@@ -163,10 +177,12 @@ class _GoalCard extends ConsumerWidget {
           ],
           if (goal.note != null && goal.note!.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(goal.note!,
-                style: AppTextStyles.bodySmall,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis),
+            Text(
+              goal.note!,
+              style: AppTextStyles.bodySmall,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ],
       ),
@@ -205,8 +221,10 @@ class _GoalCard extends ConsumerWidget {
                   Navigator.of(dialogCtx).pop();
                   notifier.deleteGoal(goal.id);
                 },
-                child: Text('Elimina',
-                    style: TextStyle(color: AppColors.expense)),
+                child: Text(
+                  'Elimina',
+                  style: TextStyle(color: AppColors.expense),
+                ),
               ),
             ],
           ),
@@ -230,8 +248,7 @@ class _UpdateProgressDialog extends ConsumerStatefulWidget {
       _UpdateProgressDialogState();
 }
 
-class _UpdateProgressDialogState
-    extends ConsumerState<_UpdateProgressDialog> {
+class _UpdateProgressDialogState extends ConsumerState<_UpdateProgressDialog> {
   late final TextEditingController _amountCtrl;
   String? _selectedAccountId;
   bool _deductFromAccount = false;
@@ -241,6 +258,12 @@ class _UpdateProgressDialogState
   void initState() {
     super.initState();
     _amountCtrl = TextEditingController();
+    final financeState = ref.read(financeProvider);
+    _selectedAccountId =
+        financeState.selectedAccountId ??
+        (financeState.accounts.isNotEmpty
+            ? financeState.accounts.first.account.id
+            : null);
   }
 
   @override
@@ -250,26 +273,26 @@ class _UpdateProgressDialogState
   }
 
   Future<void> _save() async {
-    final delta =
-        double.tryParse(_amountCtrl.text.replaceAll(',', '.'));
+    final delta = double.tryParse(_amountCtrl.text.replaceAll(',', '.'));
     if (delta == null || delta <= 0) return;
+    if (_deductFromAccount && _selectedAccountId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Seleziona un conto da cui scalare l\'importo.'),
+        ),
+      );
+      return;
+    }
     setState(() => _saving = true);
 
-    final newTotal = widget.currentAmount + delta;
     await ref
         .read(goalsProvider.notifier)
-        .updateProgress(widget.goalId, newTotal);
-
-    if (_deductFromAccount && _selectedAccountId != null) {
-      await ref.read(financeProvider.notifier).addTransaction(
-            accountId: _selectedAccountId!,
-            amount: delta,
-            type: 'expense',
-            category: 'Obiettivi',
-            date: DateTime.now(),
-            note: widget.goalName,
-          );
-    }
+        .contributeToGoal(
+          id: widget.goalId,
+          amount: delta,
+          accountId: _deductFromAccount ? _selectedAccountId : null,
+          note: widget.goalName,
+        );
 
     if (mounted) Navigator.of(context).pop();
   }
@@ -287,8 +310,10 @@ class _UpdateProgressDialogState
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Aggiungi importo',
-                  style: AppTextStyles.headingCard.copyWith(fontSize: 16)),
+              Text(
+                'Aggiungi importo',
+                style: AppTextStyles.headingCard.copyWith(fontSize: 16),
+              ),
               const SizedBox(height: 4),
               Text(
                 'Totale attuale: ${formatCurrency(widget.currentAmount)}',
@@ -301,8 +326,9 @@ class _UpdateProgressDialogState
                   labelText: 'Importo da aggiungere',
                   prefixText: '€ ',
                 ),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 autofocus: true,
                 onSubmitted: (_) => _save(),
               ),
@@ -333,13 +359,14 @@ class _UpdateProgressDialogState
                       isDense: true,
                     ),
                     items: accounts
-                        .map((a) => DropdownMenuItem(
-                              value: a.account.id,
-                              child: Text(a.account.name),
-                            ))
+                        .map(
+                          (a) => DropdownMenuItem(
+                            value: a.account.id,
+                            child: Text(a.account.name),
+                          ),
+                        )
                         .toList(),
-                    onChanged: (v) =>
-                        setState(() => _selectedAccountId = v),
+                    onChanged: (v) => setState(() => _selectedAccountId = v),
                   ),
                 ],
               ],

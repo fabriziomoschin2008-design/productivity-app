@@ -10,6 +10,7 @@ import '../../../data/local/database.dart';
 import '../models/account_with_balance.dart';
 import '../providers/finance_providers.dart';
 import '../services/excel_service.dart';
+import '../services/template_download_service.dart';
 import '../state/finance_state.dart';
 import 'add_account_dialog.dart';
 import 'charts_panel.dart';
@@ -74,7 +75,10 @@ class AccountsPanel extends ConsumerWidget {
   // ── Export ──────────────────────────────────────────────────────────────────
 
   Future<void> _export(
-      BuildContext context, WidgetRef ref, FinanceState state) async {
+    BuildContext context,
+    WidgetRef ref,
+    FinanceState state,
+  ) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -105,9 +109,9 @@ class AccountsPanel extends ConsumerWidget {
     } catch (e) {
       if (!context.mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Errore export: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Errore export: $e')));
     }
   }
 
@@ -161,8 +165,7 @@ class AccountsPanel extends ConsumerWidget {
             key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
         if (boundary != null) {
           final image = await boundary.toImage(pixelRatio: 2.0);
-          final data =
-              await image.toByteData(format: ui.ImageByteFormat.png);
+          final data = await image.toByteData(format: ui.ImageByteFormat.png);
           if (data != null) images.add(data.buffer.asUint8List());
         }
       } catch (_) {
@@ -206,9 +209,9 @@ class AccountsPanel extends ConsumerWidget {
             }
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Errore import: $e')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Errore import: $e')));
             }
           }
         },
@@ -220,31 +223,54 @@ class AccountsPanel extends ConsumerWidget {
 
   Future<void> _downloadTemplate(BuildContext context) async {
     try {
-      final file = await ExcelService.generateTemplate();
+      final bytes = ExcelService.generateTemplateBytes();
+      final result = await saveTemplateBytes(
+        bytes: bytes,
+        fileName: 'Template_Conti.xlsx',
+        mimeType:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      if (result.cancelled || !context.mounted) return;
+
+      if (result.savedPath == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Template inviato al download del browser. Per scegliere sempre la cartella, abilita la richiesta di salvataggio nel browser.',
+            ),
+          ),
+        );
+        return;
+      }
+
       if (!context.mounted) return;
       showDialog(
         context: context,
-        builder: (_) => ExportDialog(exportedDir: file.parent.path),
+        builder: (_) => ExportDialog(exportedDir: result.savedPath!),
       );
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Errore download template: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Errore download template: $e')));
     }
   }
 
   // ── Delete confirm ──────────────────────────────────────────────────────────
 
   void _confirmDelete(
-      BuildContext context, WidgetRef ref, AccountWithBalance awb) {
+    BuildContext context,
+    WidgetRef ref,
+    AccountWithBalance awb,
+  ) {
     showDialog(
       context: context,
       useRootNavigator: false,
       builder: (dialogCtx) => AlertDialog(
         title: const Text('Elimina conto'),
         content: Text(
-            'Eliminare "${awb.account.name}" e tutti i suoi movimenti?'),
+          'Eliminare "${awb.account.name}" e tutti i suoi movimenti?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogCtx).pop(),
@@ -253,12 +279,9 @@ class AccountsPanel extends ConsumerWidget {
           TextButton(
             onPressed: () {
               Navigator.of(dialogCtx).pop();
-              ref
-                  .read(financeProvider.notifier)
-                  .deleteAccount(awb.account.id);
+              ref.read(financeProvider.notifier).deleteAccount(awb.account.id);
             },
-            child:
-                Text('Elimina', style: TextStyle(color: AppColors.expense)),
+            child: Text('Elimina', style: TextStyle(color: AppColors.expense)),
           ),
         ],
       ),
@@ -406,9 +429,11 @@ class _AccountTile extends StatelessWidget {
                 : Colors.transparent,
             border: selected
                 ? const Border(
-                    left: BorderSide(color: AppColors.accent, width: 3))
+                    left: BorderSide(color: AppColors.accent, width: 3),
+                  )
                 : const Border(
-                    left: BorderSide(color: Colors.transparent, width: 3)),
+                    left: BorderSide(color: Colors.transparent, width: 3),
+                  ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Row(
@@ -416,8 +441,7 @@ class _AccountTile extends StatelessWidget {
               Container(
                 width: 10,
                 height: 10,
-                decoration:
-                    BoxDecoration(color: color, shape: BoxShape.circle),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -428,8 +452,9 @@ class _AccountTile extends StatelessWidget {
                       awb.account.name,
                       style: AppTextStyles.headingCard.copyWith(
                         fontSize: 13,
-                        fontWeight:
-                            selected ? FontWeight.w600 : FontWeight.w500,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -455,8 +480,11 @@ class _AccountTile extends StatelessWidget {
                   PopupMenuItem(value: 'edit', child: Text('Modifica')),
                   PopupMenuItem(value: 'delete', child: Text('Elimina')),
                 ],
-                icon: const Icon(Icons.more_vert,
-                    size: 16, color: AppColors.textDisabled),
+                icon: const Icon(
+                  Icons.more_vert,
+                  size: 16,
+                  color: AppColors.textDisabled,
+                ),
                 padding: EdgeInsets.zero,
                 splashRadius: 16,
               ),
@@ -504,8 +532,11 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.account_balance_wallet_outlined,
-                size: 36, color: AppColors.textDisabled),
+            Icon(
+              Icons.account_balance_wallet_outlined,
+              size: 36,
+              color: AppColors.textDisabled,
+            ),
             const SizedBox(height: 12),
             Text('Nessun conto', style: AppTextStyles.bodySmall),
             const SizedBox(height: 4),
@@ -537,8 +568,10 @@ class _ExportProgressDialog extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             const SizedBox(width: 16),
-            Text('Generazione export in corso…',
-                style: AppTextStyles.bodySmall),
+            Text(
+              'Generazione export in corso…',
+              style: AppTextStyles.bodySmall,
+            ),
           ],
         ),
       ),

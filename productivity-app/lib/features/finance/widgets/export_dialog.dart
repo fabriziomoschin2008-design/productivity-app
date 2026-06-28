@@ -11,7 +11,8 @@ class ExportDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final files = _listFiles();
+    final dirPath = _resolvedDirectoryPath();
+    final files = _listFiles(dirPath);
 
     return Dialog(
       backgroundColor: AppColors.surface,
@@ -34,10 +35,7 @@ class ExportDialog extends StatelessWidget {
                   color: AppColors.background,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: SelectableText(
-                  exportedDir,
-                  style: AppTextStyles.bodySmall,
-                ),
+                child: SelectableText(dirPath, style: AppTextStyles.bodySmall),
               ),
               if (files.isNotEmpty) ...[
                 const SizedBox(height: 14),
@@ -68,12 +66,17 @@ class ExportDialog extends StatelessWidget {
     );
   }
 
-  List<File> _listFiles() {
+  String _resolvedDirectoryPath() {
+    final entity = FileSystemEntity.typeSync(exportedDir);
+    if (entity == FileSystemEntityType.file) {
+      return File(exportedDir).parent.path;
+    }
+    return exportedDir;
+  }
+
+  List<File> _listFiles(String dirPath) {
     try {
-      return Directory(exportedDir)
-          .listSync()
-          .whereType<File>()
-          .toList()
+      return Directory(dirPath).listSync().whereType<File>().toList()
         ..sort((a, b) => a.path.compareTo(b.path));
     } catch (_) {
       return [];
@@ -81,7 +84,8 @@ class ExportDialog extends StatelessWidget {
   }
 
   Future<void> _openDir() async {
-    await Process.run('explorer', [exportedDir.replaceAll('/', '\\')]);
+    final dirPath = _resolvedDirectoryPath();
+    await Process.run('explorer', [dirPath.replaceAll('/', '\\')]);
   }
 }
 
@@ -104,9 +108,11 @@ class _FileLine extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(name,
-                style: AppTextStyles.bodySmall,
-                overflow: TextOverflow.ellipsis),
+            child: Text(
+              name,
+              style: AppTextStyles.bodySmall,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

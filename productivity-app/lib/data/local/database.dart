@@ -110,8 +110,10 @@ class Habits extends Table {
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
   TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get name => text()();
-  TextColumn get category => text().withDefault(const Constant(''))(); // 'Mattina'|'Pomeriggio'|'Sera'
-  IntColumn get sortOrder => integer().named('sort_order').withDefault(const Constant(0))();
+  TextColumn get category =>
+      text().withDefault(const Constant(''))(); // 'Mattina'|'Pomeriggio'|'Sera'
+  IntColumn get sortOrder =>
+      integer().named('sort_order').withDefault(const Constant(0))();
   DateTimeColumn get createdAt =>
       dateTime().named('created_at').withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt =>
@@ -220,8 +222,9 @@ class Trackers extends Table {
       integer().named('color_value').withDefault(const Constant(0xFFFF6B45))();
   IntColumn get sortOrder =>
       integer().named('sort_order').withDefault(const Constant(0))();
-  BoolColumn get isDailyAutoIncrement =>
-      boolean().named('daily_auto_increment').withDefault(const Constant(false))();
+  BoolColumn get isDailyAutoIncrement => boolean()
+      .named('daily_auto_increment')
+      .withDefault(const Constant(false))();
   DateTimeColumn get createdAt =>
       dateTime().named('created_at').withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt =>
@@ -245,8 +248,9 @@ class Movies extends Table {
   TextColumn get genreNames => text().named('genre_names').nullable()();
   TextColumn get status => text().withDefault(const Constant('watched'))();
   IntColumn get userRating => integer().named('user_rating').nullable()();
-  BoolColumn get inOriginalLanguage =>
-      boolean().named('in_original_language').withDefault(const Constant(false))();
+  BoolColumn get inOriginalLanguage => boolean()
+      .named('in_original_language')
+      .withDefault(const Constant(false))();
   DateTimeColumn get addedAt =>
       dateTime().named('added_at').withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt =>
@@ -273,8 +277,9 @@ class TvSeries extends Table {
   // JSON array of ints: [1, 2, 3]
   TextColumn get watchedSeasons =>
       text().named('watched_seasons').withDefault(const Constant('[]'))();
-  BoolColumn get inOriginalLanguage =>
-      boolean().named('in_original_language').withDefault(const Constant(false))();
+  BoolColumn get inOriginalLanguage => boolean()
+      .named('in_original_language')
+      .withDefault(const Constant(false))();
   DateTimeColumn get addedAt =>
       dateTime().named('added_at').withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt =>
@@ -290,8 +295,11 @@ class Games extends Table {
   TextColumn get userId => text().named('user_id').nullable()();
   TextColumn get title => text()();
   TextColumn get platform => text().nullable()();
-  TextColumn get status => text().withDefault(const Constant('playing'))(); // playing | completed | want_to_play
-  TextColumn get objectives => text().withDefault(const Constant('[]'))(); // JSON [{desc, done}]
+  TextColumn get status => text().withDefault(
+    const Constant('playing'),
+  )(); // playing | completed | want_to_play
+  TextColumn get objectives =>
+      text().withDefault(const Constant('[]'))(); // JSON [{desc, done}]
   IntColumn get userRating => integer().named('user_rating').nullable()();
   DateTimeColumn get addedAt =>
       dateTime().named('added_at').withDefault(currentDateAndTime)();
@@ -321,7 +329,25 @@ class SyncQueueEntries extends Table {
 }
 
 @DriftDatabase(
-    tables: [Accounts, TransactionEntries, Goals, TodoLists, TodoItems, NoteFolders, Notes, Habits, HabitLogs, CalendarEvents, NoteGoals, Trackers, Movies, TvSeries, Games, SyncQueueEntries])
+  tables: [
+    Accounts,
+    TransactionEntries,
+    Goals,
+    TodoLists,
+    TodoItems,
+    NoteFolders,
+    Notes,
+    Habits,
+    HabitLogs,
+    CalendarEvents,
+    NoteGoals,
+    Trackers,
+    Movies,
+    TvSeries,
+    Games,
+    SyncQueueEntries,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -330,144 +356,144 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) => m.createAll(),
-        onUpgrade: (m, from, to) async {
-          if (from < 2) await m.createTable(goals);
-          if (from < 3) {
-            await m.createTable(todoLists);
-            await m.createTable(todoItems);
-          }
-          if (from < 4) await m.addColumn(todoItems, todoItems.hasDueTime);
-          if (from < 5) {
-            await m.createTable(noteFolders);
-            await m.createTable(notes);
-          }
-          if (from < 6) {
-            await m.createTable(habits);
-            await m.createTable(habitLogs);
-            await m.createTable(calendarEvents);
-          }
-          if (from < 7) await m.createTable(noteGoals);
-          if (from < 8) await m.createTable(trackers);
-          if (from < 9) {
-            await m.addColumn(trackers, trackers.isDailyAutoIncrement);
-          }
-          if (from < 10) {
-            await m.createTable(movies);
-            await m.createTable(tvSeries);
-          }
-          if (from < 11) await m.createTable(games);
-          if (from < 12) {
-            await customStatement(
-              'ALTER TABLE accounts ADD COLUMN updated_at INTEGER',
-            );
-            await m.addColumn(accounts, accounts.deletedAt);
-            await customStatement(
-              'UPDATE accounts SET updated_at = created_at WHERE updated_at IS NULL',
-            );
-            await customStatement(
-              'ALTER TABLE transaction_entries ADD COLUMN updated_at INTEGER',
-            );
-            await m.addColumn(transactionEntries, transactionEntries.deletedAt);
-            await customStatement(
-              'UPDATE transaction_entries SET updated_at = created_at WHERE updated_at IS NULL',
-            );
-            await customStatement(
-              'ALTER TABLE goals ADD COLUMN updated_at INTEGER',
-            );
-            await m.addColumn(goals, goals.deletedAt);
-            await customStatement(
-              'UPDATE goals SET updated_at = created_at WHERE updated_at IS NULL',
-            );
-            await customStatement(
-              'ALTER TABLE todo_lists ADD COLUMN updated_at INTEGER',
-            );
-            await m.addColumn(todoLists, todoLists.deletedAt);
-            await customStatement(
-              'UPDATE todo_lists SET updated_at = created_at WHERE updated_at IS NULL',
-            );
-            await customStatement(
-              'ALTER TABLE todo_items ADD COLUMN updated_at INTEGER',
-            );
-            await m.addColumn(todoItems, todoItems.deletedAt);
-            await customStatement(
-              'UPDATE todo_items SET updated_at = created_at WHERE updated_at IS NULL',
-            );
-            await customStatement(
-              'ALTER TABLE habits ADD COLUMN updated_at INTEGER',
-            );
-            await m.addColumn(habits, habits.deletedAt);
-            await customStatement(
-              'UPDATE habits SET updated_at = created_at WHERE updated_at IS NULL',
-            );
-            await customStatement(
-              'ALTER TABLE habit_logs ADD COLUMN updated_at INTEGER',
-            );
-            await m.addColumn(habitLogs, habitLogs.deletedAt);
-            await customStatement(
-              "UPDATE habit_logs SET updated_at = CAST(strftime('%s', 'now') AS INTEGER) WHERE updated_at IS NULL",
-            );
-            await customStatement(
-              'ALTER TABLE calendar_events ADD COLUMN updated_at INTEGER',
-            );
-            await m.addColumn(calendarEvents, calendarEvents.deletedAt);
-            await customStatement(
-              'UPDATE calendar_events SET updated_at = created_at WHERE updated_at IS NULL',
-            );
-            await customStatement(
-              'ALTER TABLE note_folders ADD COLUMN updated_at INTEGER',
-            );
-            await m.addColumn(noteFolders, noteFolders.deletedAt);
-            await customStatement(
-              'UPDATE note_folders SET updated_at = created_at WHERE updated_at IS NULL',
-            );
-            await m.addColumn(notes, notes.deletedAt);
-            await m.addColumn(noteGoals, noteGoals.deletedAt);
-            await m.addColumn(trackers, trackers.deletedAt);
-            await customStatement(
-              'ALTER TABLE movies ADD COLUMN updated_at INTEGER',
-            );
-            await m.addColumn(movies, movies.deletedAt);
-            await customStatement(
-              'UPDATE movies SET updated_at = added_at WHERE updated_at IS NULL',
-            );
-            await customStatement(
-              'ALTER TABLE tv_series ADD COLUMN updated_at INTEGER',
-            );
-            await m.addColumn(tvSeries, tvSeries.deletedAt);
-            await customStatement(
-              'UPDATE tv_series SET updated_at = added_at WHERE updated_at IS NULL',
-            );
-            await customStatement(
-              'ALTER TABLE games ADD COLUMN updated_at INTEGER',
-            );
-            await m.addColumn(games, games.deletedAt);
-            await customStatement(
-              'UPDATE games SET updated_at = added_at WHERE updated_at IS NULL',
-            );
-          }
-          if (from < 13) {
-            await m.createTable(syncQueueEntries);
-          }
-          if (from < 14) {
-            await m.addColumn(accounts, accounts.userId);
-            await m.addColumn(transactionEntries, transactionEntries.userId);
-            await m.addColumn(goals, goals.userId);
-            await m.addColumn(todoLists, todoLists.userId);
-            await m.addColumn(todoItems, todoItems.userId);
-            await m.addColumn(habits, habits.userId);
-            await m.addColumn(habitLogs, habitLogs.userId);
-            await m.addColumn(calendarEvents, calendarEvents.userId);
-            await m.addColumn(noteFolders, noteFolders.userId);
-            await m.addColumn(notes, notes.userId);
-            await m.addColumn(noteGoals, noteGoals.userId);
-            await m.addColumn(trackers, trackers.userId);
-            await m.addColumn(movies, movies.userId);
-            await m.addColumn(tvSeries, tvSeries.userId);
-            await m.addColumn(games, games.userId);
-          }
-        },
-      );
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) await m.createTable(goals);
+      if (from < 3) {
+        await m.createTable(todoLists);
+        await m.createTable(todoItems);
+      }
+      if (from < 4) await m.addColumn(todoItems, todoItems.hasDueTime);
+      if (from < 5) {
+        await m.createTable(noteFolders);
+        await m.createTable(notes);
+      }
+      if (from < 6) {
+        await m.createTable(habits);
+        await m.createTable(habitLogs);
+        await m.createTable(calendarEvents);
+      }
+      if (from < 7) await m.createTable(noteGoals);
+      if (from < 8) await m.createTable(trackers);
+      if (from < 9) {
+        await m.addColumn(trackers, trackers.isDailyAutoIncrement);
+      }
+      if (from < 10) {
+        await m.createTable(movies);
+        await m.createTable(tvSeries);
+      }
+      if (from < 11) await m.createTable(games);
+      if (from < 12) {
+        await customStatement(
+          'ALTER TABLE accounts ADD COLUMN updated_at INTEGER',
+        );
+        await m.addColumn(accounts, accounts.deletedAt);
+        await customStatement(
+          'UPDATE accounts SET updated_at = created_at WHERE updated_at IS NULL',
+        );
+        await customStatement(
+          'ALTER TABLE transaction_entries ADD COLUMN updated_at INTEGER',
+        );
+        await m.addColumn(transactionEntries, transactionEntries.deletedAt);
+        await customStatement(
+          'UPDATE transaction_entries SET updated_at = created_at WHERE updated_at IS NULL',
+        );
+        await customStatement(
+          'ALTER TABLE goals ADD COLUMN updated_at INTEGER',
+        );
+        await m.addColumn(goals, goals.deletedAt);
+        await customStatement(
+          'UPDATE goals SET updated_at = created_at WHERE updated_at IS NULL',
+        );
+        await customStatement(
+          'ALTER TABLE todo_lists ADD COLUMN updated_at INTEGER',
+        );
+        await m.addColumn(todoLists, todoLists.deletedAt);
+        await customStatement(
+          'UPDATE todo_lists SET updated_at = created_at WHERE updated_at IS NULL',
+        );
+        await customStatement(
+          'ALTER TABLE todo_items ADD COLUMN updated_at INTEGER',
+        );
+        await m.addColumn(todoItems, todoItems.deletedAt);
+        await customStatement(
+          'UPDATE todo_items SET updated_at = created_at WHERE updated_at IS NULL',
+        );
+        await customStatement(
+          'ALTER TABLE habits ADD COLUMN updated_at INTEGER',
+        );
+        await m.addColumn(habits, habits.deletedAt);
+        await customStatement(
+          'UPDATE habits SET updated_at = created_at WHERE updated_at IS NULL',
+        );
+        await customStatement(
+          'ALTER TABLE habit_logs ADD COLUMN updated_at INTEGER',
+        );
+        await m.addColumn(habitLogs, habitLogs.deletedAt);
+        await customStatement(
+          "UPDATE habit_logs SET updated_at = CAST(strftime('%s', 'now') AS INTEGER) WHERE updated_at IS NULL",
+        );
+        await customStatement(
+          'ALTER TABLE calendar_events ADD COLUMN updated_at INTEGER',
+        );
+        await m.addColumn(calendarEvents, calendarEvents.deletedAt);
+        await customStatement(
+          'UPDATE calendar_events SET updated_at = created_at WHERE updated_at IS NULL',
+        );
+        await customStatement(
+          'ALTER TABLE note_folders ADD COLUMN updated_at INTEGER',
+        );
+        await m.addColumn(noteFolders, noteFolders.deletedAt);
+        await customStatement(
+          'UPDATE note_folders SET updated_at = created_at WHERE updated_at IS NULL',
+        );
+        await m.addColumn(notes, notes.deletedAt);
+        await m.addColumn(noteGoals, noteGoals.deletedAt);
+        await m.addColumn(trackers, trackers.deletedAt);
+        await customStatement(
+          'ALTER TABLE movies ADD COLUMN updated_at INTEGER',
+        );
+        await m.addColumn(movies, movies.deletedAt);
+        await customStatement(
+          'UPDATE movies SET updated_at = added_at WHERE updated_at IS NULL',
+        );
+        await customStatement(
+          'ALTER TABLE tv_series ADD COLUMN updated_at INTEGER',
+        );
+        await m.addColumn(tvSeries, tvSeries.deletedAt);
+        await customStatement(
+          'UPDATE tv_series SET updated_at = added_at WHERE updated_at IS NULL',
+        );
+        await customStatement(
+          'ALTER TABLE games ADD COLUMN updated_at INTEGER',
+        );
+        await m.addColumn(games, games.deletedAt);
+        await customStatement(
+          'UPDATE games SET updated_at = added_at WHERE updated_at IS NULL',
+        );
+      }
+      if (from < 13) {
+        await m.createTable(syncQueueEntries);
+      }
+      if (from < 14) {
+        await m.addColumn(accounts, accounts.userId);
+        await m.addColumn(transactionEntries, transactionEntries.userId);
+        await m.addColumn(goals, goals.userId);
+        await m.addColumn(todoLists, todoLists.userId);
+        await m.addColumn(todoItems, todoItems.userId);
+        await m.addColumn(habits, habits.userId);
+        await m.addColumn(habitLogs, habitLogs.userId);
+        await m.addColumn(calendarEvents, calendarEvents.userId);
+        await m.addColumn(noteFolders, noteFolders.userId);
+        await m.addColumn(notes, notes.userId);
+        await m.addColumn(noteGoals, noteGoals.userId);
+        await m.addColumn(trackers, trackers.userId);
+        await m.addColumn(movies, movies.userId);
+        await m.addColumn(tvSeries, tvSeries.userId);
+        await m.addColumn(games, games.userId);
+      }
+    },
+  );
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -484,9 +510,9 @@ class AppDatabase extends _$AppDatabase {
     String entityId,
     String operation,
   ) async {
-    await (delete(syncQueueEntries)
-          ..where((q) =>
-              q.entityType.equals(entityType) & q.entityId.equals(entityId)))
+    await (delete(syncQueueEntries)..where(
+          (q) => q.entityType.equals(entityType) & q.entityId.equals(entityId),
+        ))
         .go();
     await into(syncQueueEntries).insert(
       SyncQueueEntriesCompanion.insert(
@@ -501,51 +527,196 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> assignUserIdToUnownedRows(String userId) async {
     await transaction(() async {
-      await (update(accounts)..where((t) => t.userId.isNull())).write(
-        AccountsCompanion(userId: Value(userId)),
-      );
-      await (update(transactionEntries)..where((t) => t.userId.isNull())).write(
-        TransactionEntriesCompanion(userId: Value(userId)),
-      );
-      await (update(goals)..where((t) => t.userId.isNull())).write(
-        GoalsCompanion(userId: Value(userId)),
-      );
-      await (update(todoLists)..where((t) => t.userId.isNull())).write(
-        TodoListsCompanion(userId: Value(userId)),
-      );
-      await (update(todoItems)..where((t) => t.userId.isNull())).write(
-        TodoItemsCompanion(userId: Value(userId)),
-      );
-      await (update(habits)..where((t) => t.userId.isNull())).write(
-        HabitsCompanion(userId: Value(userId)),
-      );
-      await (update(habitLogs)..where((t) => t.userId.isNull())).write(
-        HabitLogsCompanion(userId: Value(userId)),
-      );
-      await (update(calendarEvents)..where((t) => t.userId.isNull())).write(
-        CalendarEventsCompanion(userId: Value(userId)),
-      );
-      await (update(noteFolders)..where((t) => t.userId.isNull())).write(
-        NoteFoldersCompanion(userId: Value(userId)),
-      );
-      await (update(notes)..where((t) => t.userId.isNull())).write(
-        NotesCompanion(userId: Value(userId)),
-      );
-      await (update(noteGoals)..where((t) => t.userId.isNull())).write(
-        NoteGoalsCompanion(userId: Value(userId)),
-      );
-      await (update(trackers)..where((t) => t.userId.isNull())).write(
-        TrackersCompanion(userId: Value(userId)),
-      );
-      await (update(movies)..where((t) => t.userId.isNull())).write(
-        MoviesCompanion(userId: Value(userId)),
-      );
-      await (update(tvSeries)..where((t) => t.userId.isNull())).write(
-        TvSeriesCompanion(userId: Value(userId)),
-      );
-      await (update(games)..where((t) => t.userId.isNull())).write(
-        GamesCompanion(userId: Value(userId)),
-      );
+      final now = DateTime.now();
+
+      final accountIds = await (select(
+        accounts,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (accountIds.isNotEmpty) {
+        await (update(accounts)..where((t) => t.userId.isNull())).write(
+          AccountsCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in accountIds) {
+          await _queueSyncChange('accounts', id, 'upsert');
+        }
+      }
+
+      final transactionIds = await (select(
+        transactionEntries,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (transactionIds.isNotEmpty) {
+        await (update(
+          transactionEntries,
+        )..where((t) => t.userId.isNull())).write(
+          TransactionEntriesCompanion(
+            userId: Value(userId),
+            updatedAt: Value(now),
+          ),
+        );
+        for (final id in transactionIds) {
+          await _queueSyncChange('transaction_entries', id, 'upsert');
+        }
+      }
+
+      final goalIds = await (select(
+        goals,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (goalIds.isNotEmpty) {
+        await (update(goals)..where((t) => t.userId.isNull())).write(
+          GoalsCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in goalIds) {
+          await _queueSyncChange('goals', id, 'upsert');
+        }
+      }
+
+      final todoListIds = await (select(
+        todoLists,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (todoListIds.isNotEmpty) {
+        await (update(todoLists)..where((t) => t.userId.isNull())).write(
+          TodoListsCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in todoListIds) {
+          await _queueSyncChange('todo_lists', id, 'upsert');
+        }
+      }
+
+      final todoItemIds = await (select(
+        todoItems,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (todoItemIds.isNotEmpty) {
+        await (update(todoItems)..where((t) => t.userId.isNull())).write(
+          TodoItemsCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in todoItemIds) {
+          await _queueSyncChange('todo_items', id, 'upsert');
+        }
+      }
+
+      final habitIds = await (select(
+        habits,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (habitIds.isNotEmpty) {
+        await (update(habits)..where((t) => t.userId.isNull())).write(
+          HabitsCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in habitIds) {
+          await _queueSyncChange('habits', id, 'upsert');
+        }
+      }
+
+      final habitLogRows = await (select(
+        habitLogs,
+      )..where((t) => t.userId.isNull())).get();
+      if (habitLogRows.isNotEmpty) {
+        await (update(habitLogs)..where((t) => t.userId.isNull())).write(
+          HabitLogsCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final row in habitLogRows) {
+          await _queueSyncChange(
+            'habit_logs',
+            '${row.habitId}|${row.date.toIso8601String()}',
+            'upsert',
+          );
+        }
+      }
+
+      final calendarEventIds = await (select(
+        calendarEvents,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (calendarEventIds.isNotEmpty) {
+        await (update(calendarEvents)..where((t) => t.userId.isNull())).write(
+          CalendarEventsCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in calendarEventIds) {
+          await _queueSyncChange('calendar_events', id, 'upsert');
+        }
+      }
+
+      final noteFolderIds = await (select(
+        noteFolders,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (noteFolderIds.isNotEmpty) {
+        await (update(noteFolders)..where((t) => t.userId.isNull())).write(
+          NoteFoldersCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in noteFolderIds) {
+          await _queueSyncChange('note_folders', id, 'upsert');
+        }
+      }
+
+      final noteIds = await (select(
+        notes,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (noteIds.isNotEmpty) {
+        await (update(notes)..where((t) => t.userId.isNull())).write(
+          NotesCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in noteIds) {
+          await _queueSyncChange('notes', id, 'upsert');
+        }
+      }
+
+      final noteGoalIds = await (select(
+        noteGoals,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (noteGoalIds.isNotEmpty) {
+        await (update(noteGoals)..where((t) => t.userId.isNull())).write(
+          NoteGoalsCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in noteGoalIds) {
+          await _queueSyncChange('note_goals', id, 'upsert');
+        }
+      }
+
+      final trackerIds = await (select(
+        trackers,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (trackerIds.isNotEmpty) {
+        await (update(trackers)..where((t) => t.userId.isNull())).write(
+          TrackersCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in trackerIds) {
+          await _queueSyncChange('trackers', id, 'upsert');
+        }
+      }
+
+      final movieIds = await (select(
+        movies,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (movieIds.isNotEmpty) {
+        await (update(movies)..where((t) => t.userId.isNull())).write(
+          MoviesCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in movieIds) {
+          await _queueSyncChange('movies', id, 'upsert');
+        }
+      }
+
+      final tvSeriesIds = await (select(
+        tvSeries,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (tvSeriesIds.isNotEmpty) {
+        await (update(tvSeries)..where((t) => t.userId.isNull())).write(
+          TvSeriesCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in tvSeriesIds) {
+          await _queueSyncChange('tv_series', id, 'upsert');
+        }
+      }
+
+      final gameIds = await (select(
+        games,
+      )..where((t) => t.userId.isNull())).map((t) => t.id).get();
+      if (gameIds.isNotEmpty) {
+        await (update(games)..where((t) => t.userId.isNull())).write(
+          GamesCompanion(userId: Value(userId), updatedAt: Value(now)),
+        );
+        for (final id in gameIds) {
+          await _queueSyncChange('games', id, 'upsert');
+        }
+      }
     });
   }
 
@@ -553,8 +724,9 @@ class AppDatabase extends _$AppDatabase {
       (select(accounts)..where((t) => t.id.equals(id))).getSingleOrNull();
 
   Future<TransactionEntry?> getTransactionByIdIncludingDeleted(String id) =>
-      (select(transactionEntries)..where((t) => t.id.equals(id)))
-          .getSingleOrNull();
+      (select(
+        transactionEntries,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
 
   Future<Goal?> getGoalByIdIncludingDeleted(String id) =>
       (select(goals)..where((g) => g.id.equals(id))).getSingleOrNull();
@@ -579,8 +751,7 @@ class AppDatabase extends _$AppDatabase {
     DateTime date,
   ) =>
       (select(habitLogs)
-            ..where((l) =>
-                l.habitId.equals(habitId) & l.date.equals(date)))
+            ..where((l) => l.habitId.equals(habitId) & l.date.equals(date)))
           .getSingleOrNull();
 
   Future<CalendarEvent?> getCalendarEventByIdIncludingDeleted(String id) =>
@@ -693,27 +864,25 @@ class AppDatabase extends _$AppDatabase {
   Future<void> deleteAccountWithTransactions(String accountId) async {
     await transaction(() async {
       final now = DateTime.now();
-      final txIds = await (select(transactionEntries)
-            ..where((t) =>
-                t.accountId.equals(accountId) & t.deletedAt.isNull()))
-          .map((t) => t.id)
-          .get();
-      await (update(transactionEntries)
-            ..where((t) =>
-                t.accountId.equals(accountId) & t.deletedAt.isNull()))
+      final txIds =
+          await (select(transactionEntries)..where(
+                (t) => t.accountId.equals(accountId) & t.deletedAt.isNull(),
+              ))
+              .map((t) => t.id)
+              .get();
+      await (update(
+            transactionEntries,
+          )..where((t) => t.accountId.equals(accountId) & t.deletedAt.isNull()))
           .write(
-        TransactionEntriesCompanion(
-          deletedAt: Value(now),
-          updatedAt: Value(now),
-        ),
-      );
-      await (update(accounts)
-            ..where((t) => t.id.equals(accountId) & t.deletedAt.isNull()))
-          .write(
-        AccountsCompanion(
-          deletedAt: Value(now),
-          updatedAt: Value(now),
-        ),
+            TransactionEntriesCompanion(
+              deletedAt: Value(now),
+              updatedAt: Value(now),
+            ),
+          );
+      await (update(
+        accounts,
+      )..where((t) => t.id.equals(accountId) & t.deletedAt.isNull())).write(
+        AccountsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
       );
       for (final txId in txIds) {
         await _queueSyncChange('transaction_entries', txId, 'delete');
@@ -754,13 +923,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteTransactionById(String id) async {
     final now = DateTime.now();
-    await (update(transactionEntries)
-          ..where((t) => t.id.equals(id) & t.deletedAt.isNull()))
-        .write(
-      TransactionEntriesCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ),
+    await (update(
+      transactionEntries,
+    )..where((t) => t.id.equals(id) & t.deletedAt.isNull())).write(
+      TransactionEntriesCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
     await _queueSyncChange('transaction_entries', id, 'delete');
   }
@@ -787,19 +953,68 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateGoal(GoalsCompanion entry) async {
-    await (update(goals)..where((g) => g.id.equals(entry.id.value))).write(entry);
+    await (update(
+      goals,
+    )..where((g) => g.id.equals(entry.id.value))).write(entry);
     await _queueSyncChange('goals', entry.id.value, 'upsert');
+  }
+
+  Future<void> contributeToGoal({
+    required String goalId,
+    required double amount,
+    String? accountId,
+    String? note,
+  }) async {
+    final goal = await getGoalByIdIncludingDeleted(goalId);
+    if (goal == null || goal.deletedAt != null) {
+      throw StateError('Obiettivo non trovato');
+    }
+    if (accountId != null) {
+      final account = await getAccountByIdIncludingDeleted(accountId);
+      if (account == null || account.deletedAt != null) {
+        throw StateError('Conto non trovato');
+      }
+    }
+
+    final now = DateTime.now();
+    final newTotal = goal.currentAmount + amount;
+    final isCompleted = goal.isCompleted || newTotal >= goal.targetAmount;
+
+    await transaction(() async {
+      await (update(goals)..where((g) => g.id.equals(goalId))).write(
+        GoalsCompanion(
+          currentAmount: Value(newTotal),
+          isCompleted: Value(isCompleted),
+          updatedAt: Value(now),
+        ),
+      );
+      await _queueSyncChange('goals', goalId, 'upsert');
+
+      if (accountId != null) {
+        final txId = _uuid.v4();
+        await into(transactionEntries).insert(
+          TransactionEntriesCompanion.insert(
+            id: Value(txId),
+            userId: Value(_currentUserId()),
+            accountId: accountId,
+            amount: amount,
+            type: 'expense',
+            category: 'Obiettivi',
+            date: now,
+            note: Value(note),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
+        await _queueSyncChange('transaction_entries', txId, 'upsert');
+      }
+    });
   }
 
   Future<void> deleteGoalById(String id) async {
     final now = DateTime.now();
     await (update(goals)..where((g) => g.id.equals(id) & g.deletedAt.isNull()))
-        .write(
-      GoalsCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ),
-    );
+        .write(GoalsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
     await _queueSyncChange('goals', id, 'delete');
   }
 
@@ -827,25 +1042,20 @@ class AppDatabase extends _$AppDatabase {
   Future<void> deleteTodoListWithItems(String listId) async {
     await transaction(() async {
       final now = DateTime.now();
-      final itemIds = await (select(todoItems)
-            ..where((t) => t.listId.equals(listId) & t.deletedAt.isNull()))
-          .map((t) => t.id)
-          .get();
-      await (update(todoItems)
-            ..where((t) => t.listId.equals(listId) & t.deletedAt.isNull()))
-          .write(
-        TodoItemsCompanion(
-          deletedAt: Value(now),
-          updatedAt: Value(now),
-        ),
+      final itemIds =
+          await (select(todoItems)
+                ..where((t) => t.listId.equals(listId) & t.deletedAt.isNull()))
+              .map((t) => t.id)
+              .get();
+      await (update(
+        todoItems,
+      )..where((t) => t.listId.equals(listId) & t.deletedAt.isNull())).write(
+        TodoItemsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
       );
-      await (update(todoLists)
-            ..where((t) => t.id.equals(listId) & t.deletedAt.isNull()))
-          .write(
-        TodoListsCompanion(
-          deletedAt: Value(now),
-          updatedAt: Value(now),
-        ),
+      await (update(
+        todoLists,
+      )..where((t) => t.id.equals(listId) & t.deletedAt.isNull())).write(
+        TodoListsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
       );
       for (final itemId in itemIds) {
         await _queueSyncChange('todo_items', itemId, 'delete');
@@ -876,20 +1086,18 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateTodoItem(TodoItemsCompanion entry) async {
-    await (update(todoItems)..where((t) => t.id.equals(entry.id.value)))
-        .write(entry);
+    await (update(
+      todoItems,
+    )..where((t) => t.id.equals(entry.id.value))).write(entry);
     await _queueSyncChange('todo_items', entry.id.value, 'upsert');
   }
 
   Future<void> deleteTodoItemById(String id) async {
     final now = DateTime.now();
-    await (update(todoItems)
-          ..where((t) => t.id.equals(id) & t.deletedAt.isNull()))
-        .write(
-      TodoItemsCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ),
+    await (update(
+      todoItems,
+    )..where((t) => t.id.equals(id) & t.deletedAt.isNull())).write(
+      TodoItemsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
     await _queueSyncChange('todo_items', id, 'delete');
   }
@@ -918,23 +1126,19 @@ class AppDatabase extends _$AppDatabase {
   Future<void> deleteNoteFolderById(String folderId) async {
     await transaction(() async {
       final now = DateTime.now();
-      final noteIds = await (select(notes)
-            ..where((n) =>
-                n.folderId.equals(folderId) & n.deletedAt.isNull()))
-          .map((n) => n.id)
-          .get();
-      await (update(notes)..where((n) => n.folderId.equals(folderId)))
-          .write(NotesCompanion(
-        folderId: const Value(null),
-        updatedAt: Value(now),
-      ));
-      await (update(noteFolders)
-            ..where((f) => f.id.equals(folderId) & f.deletedAt.isNull()))
-          .write(
-        NoteFoldersCompanion(
-          deletedAt: Value(now),
-          updatedAt: Value(now),
-        ),
+      final noteIds =
+          await (select(notes)..where(
+                (n) => n.folderId.equals(folderId) & n.deletedAt.isNull(),
+              ))
+              .map((n) => n.id)
+              .get();
+      await (update(notes)..where((n) => n.folderId.equals(folderId))).write(
+        NotesCompanion(folderId: const Value(null), updatedAt: Value(now)),
+      );
+      await (update(
+        noteFolders,
+      )..where((f) => f.id.equals(folderId) & f.deletedAt.isNull())).write(
+        NoteFoldersCompanion(deletedAt: Value(now), updatedAt: Value(now)),
       );
       for (final noteId in noteIds) {
         await _queueSyncChange('notes', noteId, 'upsert');
@@ -973,31 +1177,31 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateNote(NotesCompanion entry) async {
-    await (update(notes)..where((n) => n.id.equals(entry.id.value))).write(entry);
+    await (update(
+      notes,
+    )..where((n) => n.id.equals(entry.id.value))).write(entry);
     await _queueSyncChange('notes', entry.id.value, 'upsert');
   }
 
   Future<void> deleteNoteById(String id) async {
     final now = DateTime.now();
     await (update(notes)..where((n) => n.id.equals(id) & n.deletedAt.isNull()))
-        .write(
-      NotesCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ),
-    );
+        .write(NotesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
     await _queueSyncChange('notes', id, 'delete');
   }
 
   // --- Habits ---
 
   Stream<List<Habit>> watchHabits() =>
-      (select(habits)..orderBy([
-        (h) => OrderingTerm.asc(h.deletedAt),
-        (h) => OrderingTerm.asc(h.category),
-        (h) => OrderingTerm.asc(h.sortOrder),
-        (h) => OrderingTerm.asc(h.createdAt),
-      ])..where((h) => h.deletedAt.isNull())).watch();
+      (select(habits)
+            ..orderBy([
+              (h) => OrderingTerm.asc(h.deletedAt),
+              (h) => OrderingTerm.asc(h.category),
+              (h) => OrderingTerm.asc(h.sortOrder),
+              (h) => OrderingTerm.asc(h.createdAt),
+            ])
+            ..where((h) => h.deletedAt.isNull()))
+          .watch();
 
   Future<void> insertHabit(HabitsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
@@ -1013,28 +1217,26 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateHabit(HabitsCompanion entry) async {
-    await (update(habits)..where((h) => h.id.equals(entry.id.value))).write(entry);
+    await (update(
+      habits,
+    )..where((h) => h.id.equals(entry.id.value))).write(entry);
     await _queueSyncChange('habits', entry.id.value, 'upsert');
   }
 
   Future<void> deleteHabitById(String id) async {
     await transaction(() async {
       final now = DateTime.now();
-      final logs = await (select(habitLogs)
-            ..where((l) => l.habitId.equals(id) & l.deletedAt.isNull()))
-          .get();
-      await (update(habitLogs)
-            ..where((l) => l.habitId.equals(id) & l.deletedAt.isNull()))
-          .write(HabitLogsCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ));
+      final logs = await (select(
+        habitLogs,
+      )..where((l) => l.habitId.equals(id) & l.deletedAt.isNull())).get();
+      await (update(
+        habitLogs,
+      )..where((l) => l.habitId.equals(id) & l.deletedAt.isNull())).write(
+        HabitLogsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+      );
       await (update(habits)
             ..where((h) => h.id.equals(id) & h.deletedAt.isNull()))
-          .write(HabitsCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ));
+          .write(HabitsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
       for (final log in logs) {
         await _queueSyncChange(
           'habit_logs',
@@ -1049,11 +1251,12 @@ class AppDatabase extends _$AppDatabase {
   // --- HabitLogs ---
 
   Stream<List<HabitLog>> watchHabitLogsForRange(DateTime from, DateTime to) =>
-      (select(habitLogs)
-            ..where((l) =>
+      (select(habitLogs)..where(
+            (l) =>
                 l.date.isBiggerOrEqualValue(from) &
                 l.date.isSmallerOrEqualValue(to) &
-                l.deletedAt.isNull()))
+                l.deletedAt.isNull(),
+          ))
           .watch();
 
   Future<void> setHabitLog(HabitLogsCompanion entry) async {
@@ -1072,17 +1275,15 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> clearHabitLog(String habitId, DateTime date) async {
     final now = DateTime.now();
-    await (update(habitLogs)
-          ..where((l) =>
+    await (update(habitLogs)..where(
+          (l) =>
               l.habitId.equals(habitId) &
               l.date.equals(date) &
-              l.deletedAt.isNull()))
+              l.deletedAt.isNull(),
+        ))
         .write(
-      HabitLogsCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ),
-    );
+          HabitLogsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+        );
     await _queueSyncChange(
       'habit_logs',
       '$habitId|${date.toIso8601String()}',
@@ -1092,19 +1293,23 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<HabitLog>> getRecentHabitLogs(DateTime from) =>
       (select(habitLogs)
-            ..where((l) =>
-                l.date.isBiggerOrEqualValue(from) & l.deletedAt.isNull())
+            ..where(
+              (l) => l.date.isBiggerOrEqualValue(from) & l.deletedAt.isNull(),
+            )
             ..orderBy([(l) => OrderingTerm.desc(l.date)]))
           .get();
 
   // --- Trackers ---
 
   Stream<List<Tracker>> watchTrackers() =>
-      (select(trackers)..orderBy([
-        (t) => OrderingTerm.asc(t.deletedAt),
-        (t) => OrderingTerm.asc(t.sortOrder),
-        (t) => OrderingTerm.asc(t.createdAt),
-      ])..where((t) => t.deletedAt.isNull())).watch();
+      (select(trackers)
+            ..orderBy([
+              (t) => OrderingTerm.asc(t.deletedAt),
+              (t) => OrderingTerm.asc(t.sortOrder),
+              (t) => OrderingTerm.asc(t.createdAt),
+            ])
+            ..where((t) => t.deletedAt.isNull()))
+          .watch();
 
   Future<void> insertTracker(TrackersCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
@@ -1120,8 +1325,9 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateTracker(TrackersCompanion entry) async {
-    await (update(trackers)..where((t) => t.id.equals(entry.id.value)))
-        .write(entry);
+    await (update(
+      trackers,
+    )..where((t) => t.id.equals(entry.id.value))).write(entry);
     await _queueSyncChange('trackers', entry.id.value, 'upsert');
   }
 
@@ -1129,12 +1335,7 @@ class AppDatabase extends _$AppDatabase {
     final now = DateTime.now();
     await (update(trackers)
           ..where((t) => t.id.equals(id) & t.deletedAt.isNull()))
-        .write(
-      TrackersCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ),
-    );
+        .write(TrackersCompanion(deletedAt: Value(now), updatedAt: Value(now)));
     await _queueSyncChange('trackers', id, 'delete');
   }
 
@@ -1160,20 +1361,18 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateNoteGoal(NoteGoalsCompanion entry) async {
-    await (update(noteGoals)..where((g) => g.id.equals(entry.id.value)))
-        .write(entry);
+    await (update(
+      noteGoals,
+    )..where((g) => g.id.equals(entry.id.value))).write(entry);
     await _queueSyncChange('note_goals', entry.id.value, 'upsert');
   }
 
   Future<void> deleteNoteGoalById(String id) async {
     final now = DateTime.now();
-    await (update(noteGoals)
-          ..where((g) => g.id.equals(id) & g.deletedAt.isNull()))
-        .write(
-      NoteGoalsCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ),
+    await (update(
+      noteGoals,
+    )..where((g) => g.id.equals(id) & g.deletedAt.isNull())).write(
+      NoteGoalsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
     await _queueSyncChange('note_goals', id, 'delete');
   }
@@ -1200,19 +1399,16 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateMovie(MoviesCompanion entry) async {
-    await (update(movies)..where((m) => m.id.equals(entry.id.value))).write(entry);
+    await (update(
+      movies,
+    )..where((m) => m.id.equals(entry.id.value))).write(entry);
     await _queueSyncChange('movies', entry.id.value, 'upsert');
   }
 
   Future<void> deleteMovieById(String id) async {
     final now = DateTime.now();
     await (update(movies)..where((m) => m.id.equals(id) & m.deletedAt.isNull()))
-        .write(
-      MoviesCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ),
-    );
+        .write(MoviesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
     await _queueSyncChange('movies', id, 'delete');
   }
 
@@ -1238,7 +1434,9 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateTvSeries(TvSeriesCompanion entry) async {
-    await (update(tvSeries)..where((s) => s.id.equals(entry.id.value))).write(entry);
+    await (update(
+      tvSeries,
+    )..where((s) => s.id.equals(entry.id.value))).write(entry);
     await _queueSyncChange('tv_series', entry.id.value, 'upsert');
   }
 
@@ -1246,12 +1444,7 @@ class AppDatabase extends _$AppDatabase {
     final now = DateTime.now();
     await (update(tvSeries)
           ..where((s) => s.id.equals(id) & s.deletedAt.isNull()))
-        .write(
-      TvSeriesCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ),
-    );
+        .write(TvSeriesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
     await _queueSyncChange('tv_series', id, 'delete');
   }
 
@@ -1277,19 +1470,16 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateGame(GamesCompanion entry) async {
-    await (update(games)..where((g) => g.id.equals(entry.id.value))).write(entry);
+    await (update(
+      games,
+    )..where((g) => g.id.equals(entry.id.value))).write(entry);
     await _queueSyncChange('games', entry.id.value, 'upsert');
   }
 
   Future<void> deleteGameById(String id) async {
     final now = DateTime.now();
     await (update(games)..where((g) => g.id.equals(id) & g.deletedAt.isNull()))
-        .write(
-      GamesCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ),
-    );
+        .write(GamesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
     await _queueSyncChange('games', id, 'delete');
   }
 
@@ -1315,38 +1505,31 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateCalendarEvent(CalendarEventsCompanion entry) async {
-    await (update(calendarEvents)..where((e) => e.id.equals(entry.id.value)))
-        .write(entry);
+    await (update(
+      calendarEvents,
+    )..where((e) => e.id.equals(entry.id.value))).write(entry);
     await _queueSyncChange('calendar_events', entry.id.value, 'upsert');
   }
 
   Future<void> deleteCalendarEventById(String id) async {
     final now = DateTime.now();
-    await (update(calendarEvents)
-          ..where((e) => e.id.equals(id) & e.deletedAt.isNull()))
-        .write(
-      CalendarEventsCompanion(
-        deletedAt: Value(now),
-        updatedAt: Value(now),
-      ),
+    await (update(
+      calendarEvents,
+    )..where((e) => e.id.equals(id) & e.deletedAt.isNull())).write(
+      CalendarEventsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
     await _queueSyncChange('calendar_events', id, 'delete');
   }
 
-  Stream<List<SyncQueueEntry>> watchPendingSyncQueue() =>
-      (select(syncQueueEntries)
-            ..orderBy([(q) => OrderingTerm.asc(q.createdAt)]))
-          .watch();
+  Stream<List<SyncQueueEntry>> watchPendingSyncQueue() => (select(
+    syncQueueEntries,
+  )..orderBy([(q) => OrderingTerm.asc(q.createdAt)])).watch();
 
-  Future<List<SyncQueueEntry>> getPendingSyncQueue() =>
-      (select(syncQueueEntries)
-            ..orderBy([(q) => OrderingTerm.asc(q.createdAt)]))
-          .get();
+  Future<List<SyncQueueEntry>> getPendingSyncQueue() => (select(
+    syncQueueEntries,
+  )..orderBy([(q) => OrderingTerm.asc(q.createdAt)])).get();
 
-  Future<void> markSyncEntryFailed(
-    String id,
-    String errorMessage,
-  ) =>
+  Future<void> markSyncEntryFailed(String id, String errorMessage) =>
       (update(syncQueueEntries)..where((q) => q.id.equals(id))).write(
         SyncQueueEntriesCompanion(
           lastAttemptAt: Value(DateTime.now()),

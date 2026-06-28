@@ -24,14 +24,19 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
     DateTime? deadline,
     String? note,
   }) async {
-    AppLogger.instance.info('Obiettivo aggiunto: $name (target: €$targetAmount)');
-    await _db.insertGoal(GoalsCompanion.insert(
-      name: name,
-      targetAmount: targetAmount,
-      currentAmount: Value(currentAmount),
-      deadline: Value(deadline),
-      note: Value(note),
-    ));
+    AppLogger.instance.info(
+      'Obiettivo aggiunto: $name (target: €$targetAmount)',
+    );
+    await _db.insertGoal(
+      GoalsCompanion.insert(
+        name: name,
+        targetAmount: targetAmount,
+        currentAmount: Value(currentAmount),
+        isCompleted: Value(currentAmount >= targetAmount),
+        deadline: Value(deadline),
+        note: Value(note),
+      ),
+    );
   }
 
   Future<void> updateProgress(String id, double newAmount) async {
@@ -39,11 +44,38 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
     final goal = state.goals.where((g) => g.id == id).firstOrNull;
     final justCompleted =
         goal != null && newAmount >= goal.targetAmount && !goal.isCompleted;
-    await _db.updateGoal(GoalsCompanion(
-      id: Value(id),
-      currentAmount: Value(newAmount),
-      updatedAt: Value(DateTime.now()),
-    ));
+    await _db.updateGoal(
+      GoalsCompanion(
+        id: Value(id),
+        currentAmount: Value(newAmount),
+        isCompleted: Value(goal != null && newAmount >= goal.targetAmount),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    if (justCompleted) {
+      NotificationScheduler.instance.showGoalCompleted(goal);
+    }
+  }
+
+  Future<void> contributeToGoal({
+    required String id,
+    required double amount,
+    String? accountId,
+    String? note,
+  }) async {
+    final goal = state.goals.where((g) => g.id == id).firstOrNull;
+    final justCompleted =
+        goal != null &&
+        goal.currentAmount + amount >= goal.targetAmount &&
+        !goal.isCompleted;
+
+    await _db.contributeToGoal(
+      goalId: id,
+      amount: amount,
+      accountId: accountId,
+      note: note,
+    );
+
     if (justCompleted) {
       NotificationScheduler.instance.showGoalCompleted(goal);
     }
@@ -51,11 +83,13 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
 
   Future<void> completeGoal(String id) async {
     AppLogger.instance.info('Obiettivo completato: id=$id');
-    await _db.updateGoal(GoalsCompanion(
-      id: Value(id),
-      isCompleted: const Value(true),
-      updatedAt: Value(DateTime.now()),
-    ));
+    await _db.updateGoal(
+      GoalsCompanion(
+        id: Value(id),
+        isCompleted: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   Future<void> deleteGoal(String id) async {
