@@ -8,6 +8,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/services/app_paths.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -94,7 +95,9 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
   Future<void> _save() async {
     if (!mounted || !_hasChanges) return;
     _hasChanges = false;
-    await ref.read(notesProvider.notifier).updateNote(
+    await ref
+        .read(notesProvider.notifier)
+        .updateNote(
           id: widget.note.id,
           title: _titleController.text,
           content: jsonEncode(_controller.document.toDelta().toJson()),
@@ -139,12 +142,7 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
       builder: (_) => const LinkNoteDialog(),
     );
     if (!mounted || result == null) return;
-    _insertEmbed(
-        noteLinkEmbedKey,
-        jsonEncode({
-          'id': _uuid.v4(),
-          ...result,
-        }));
+    _insertEmbed(noteLinkEmbedKey, jsonEncode({'id': _uuid.v4(), ...result}));
   }
 
   Future<void> _insertFile() async {
@@ -185,19 +183,25 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final isPinned = ref.watch(notesProvider.select((s) =>
-        s.notes
-            .where((n) => n.id == widget.note.id)
-            .firstOrNull
-            ?.isPinned ??
-        widget.note.isPinned));
+    final horizontalPadding = AdaptiveLayout.editorHorizontalPadding(context);
+
+    final isPinned = ref.watch(
+      notesProvider.select(
+        (s) =>
+            s.notes
+                .where((n) => n.id == widget.note.id)
+                .firstOrNull
+                ?.isPinned ??
+            widget.note.isPinned,
+      ),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header: titolo + pin
         Padding(
-          padding: const EdgeInsets.fromLTRB(40, 24, 16, 0),
+          padding: EdgeInsets.fromLTRB(horizontalPadding, 24, 16, 0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -209,7 +213,9 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
                     border: InputBorder.none,
                     hintText: 'Senza titolo',
                     hintStyle: TextStyle(
-                        color: AppColors.textDisabled, fontSize: 26),
+                      color: AppColors.textDisabled,
+                      fontSize: 26,
+                    ),
                     contentPadding: EdgeInsets.zero,
                     isDense: true,
                   ),
@@ -233,54 +239,60 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
           ),
         ),
         // Toolbar
-        QuillSimpleToolbar(
-          controller: _controller,
-          config: const QuillSimpleToolbarConfig(
-            showFontFamily: false,
-            showFontSize: false,
-            showColorButton: true,
-            showBackgroundColorButton: true,
-            showClearFormat: false,
-            showAlignmentButtons: false,
-            showIndent: false,
-            showSearchButton: false,
-            showSubscript: false,
-            showSuperscript: false,
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: QuillSimpleToolbar(
+            controller: _controller,
+            config: const QuillSimpleToolbarConfig(
+              showFontFamily: false,
+              showFontSize: false,
+              showColorButton: true,
+              showBackgroundColorButton: true,
+              showClearFormat: false,
+              showAlignmentButtons: false,
+              showIndent: false,
+              showSearchButton: false,
+              showSubscript: false,
+              showSuperscript: false,
+            ),
           ),
         ),
         // Embed actions row
         Container(
           height: 36,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: const BoxDecoration(
             border: Border(bottom: BorderSide(color: AppColors.divider)),
           ),
-          child: Row(
-            children: [
-              _EmbedToolbarBtn(
-                icon: Icons.table_chart_outlined,
-                label: 'Tabella',
-                onPressed: _insertTable,
-              ),
-              const SizedBox(width: 4),
-              _EmbedToolbarBtn(
-                icon: Icons.bar_chart_outlined,
-                label: 'Grafico',
-                onPressed: _insertChart,
-              ),
-              const SizedBox(width: 4),
-              _EmbedToolbarBtn(
-                icon: Icons.attach_file_rounded,
-                label: 'Allega',
-                onPressed: _insertFile,
-              ),
-              const SizedBox(width: 4),
-              _EmbedToolbarBtn(
-                icon: Icons.link,
-                label: 'Collega',
-                onPressed: _insertNoteLink,
-              ),
-            ],
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              children: [
+                _EmbedToolbarBtn(
+                  icon: Icons.table_chart_outlined,
+                  label: 'Tabella',
+                  onPressed: _insertTable,
+                ),
+                const SizedBox(width: 4),
+                _EmbedToolbarBtn(
+                  icon: Icons.bar_chart_outlined,
+                  label: 'Grafico',
+                  onPressed: _insertChart,
+                ),
+                const SizedBox(width: 4),
+                _EmbedToolbarBtn(
+                  icon: Icons.attach_file_rounded,
+                  label: 'Allega',
+                  onPressed: _insertFile,
+                ),
+                const SizedBox(width: 4),
+                _EmbedToolbarBtn(
+                  icon: Icons.link,
+                  label: 'Collega',
+                  onPressed: _insertNoteLink,
+                ),
+              ],
+            ),
           ),
         ),
         // Editor: SingleChildScrollView esterno gestisce lo scroll
@@ -291,7 +303,12 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
               controller: _controller,
               config: QuillEditorConfig(
                 placeholder: 'Inizia a scrivere...',
-                padding: const EdgeInsets.fromLTRB(40, 16, 40, 80),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  16,
+                  horizontalPadding,
+                  80,
+                ),
                 scrollable: false,
                 expands: false,
                 embedBuilders: const [
@@ -304,7 +321,10 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
                   final uri = Uri.tryParse(url);
                   if (uri != null) {
                     try {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
                     } catch (_) {}
                   }
                 },
@@ -323,8 +343,11 @@ class _EmbedToolbarBtn extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
-  const _EmbedToolbarBtn(
-      {required this.icon, required this.label, required this.onPressed});
+  const _EmbedToolbarBtn({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -338,9 +361,12 @@ class _EmbedToolbarBtn extends StatelessWidget {
           children: [
             Icon(icon, size: 14, color: AppColors.textSecondary),
             const SizedBox(width: 4),
-            Text(label,
-                style: AppTextStyles.label
-                    .copyWith(color: AppColors.textSecondary)),
+            Text(
+              label,
+              style: AppTextStyles.label.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
           ],
         ),
       ),
@@ -359,12 +385,18 @@ class _EmptyEditorState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.description_outlined,
-              size: 40, color: AppColors.textDisabled),
+          Icon(
+            Icons.description_outlined,
+            size: 40,
+            color: AppColors.textDisabled,
+          ),
           const SizedBox(height: 14),
-          Text('Nessuna nota selezionata',
-              style: AppTextStyles.bodyRegular
-                  .copyWith(color: AppColors.textSecondary)),
+          Text(
+            'Nessuna nota selezionata',
+            style: AppTextStyles.bodyRegular.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 4),
           Text('Seleziona o crea una nota', style: AppTextStyles.label),
         ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/local/database.dart';
@@ -44,13 +45,14 @@ class _EditAccountDialogState extends ConsumerState<EditAccountDialog> {
   Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
-    final balance = double.tryParse(
-          _balanceController.text.replaceAll(',', '.'),
-        ) ??
+    final balance =
+        double.tryParse(_balanceController.text.replaceAll(',', '.')) ??
         widget.account.openingBalance;
 
     setState(() => _saving = true);
-    await ref.read(financeProvider.notifier).editAccount(
+    await ref
+        .read(financeProvider.notifier)
+        .editAccount(
           id: widget.account.id,
           name: name,
           colorValue: AppColors.accountColors[_selectedColorIndex].toARGB32(),
@@ -63,15 +65,17 @@ class _EditAccountDialogState extends ConsumerState<EditAccountDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       child: SizedBox(
-        width: 400,
+        width: AdaptiveLayout.dialogWidth(context, 400),
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Modifica conto',
-                  style: AppTextStyles.headingCard.copyWith(fontSize: 17)),
+              Text(
+                'Modifica conto',
+                style: AppTextStyles.headingCard.copyWith(fontSize: 17),
+              ),
               const SizedBox(height: 24),
               TextField(
                 controller: _nameController,
@@ -87,8 +91,9 @@ class _EditAccountDialogState extends ConsumerState<EditAccountDialog> {
                   labelText: 'Saldo iniziale',
                   prefixText: '€ ',
                 ),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 onSubmitted: (_) => _save(),
               ),
               const SizedBox(height: 20),
@@ -110,14 +115,16 @@ class _EditAccountDialogState extends ConsumerState<EditAccountDialog> {
                         shape: BoxShape.circle,
                         border: selected
                             ? Border.all(
-                                color: AppColors.textPrimary, width: 2.5)
+                                color: AppColors.textPrimary,
+                                width: 2.5,
+                              )
                             : null,
                         boxShadow: selected
                             ? [
                                 BoxShadow(
                                   color: color.withValues(alpha: 0.4),
                                   blurRadius: 6,
-                                )
+                                ),
                               ]
                             : null,
                       ),
@@ -126,14 +133,15 @@ class _EditAccountDialogState extends ConsumerState<EditAccountDialog> {
                 }),
               ),
               const SizedBox(height: 28),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Annulla'),
                   ),
-                  const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: _saving ? null : _save,
                     child: const Text('Salva'),

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 
@@ -31,7 +32,7 @@ class _ImportDialogState extends State<ImportDialog> {
     return Dialog(
       backgroundColor: AppColors.surface,
       child: SizedBox(
-        width: 500,
+        width: AdaptiveLayout.dialogWidth(context, 500),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(

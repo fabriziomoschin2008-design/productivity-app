@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../providers/calendar_providers.dart';
@@ -15,6 +16,30 @@ class CalendarScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (AdaptiveLayout.isCompact(context)) {
+      return ColoredBox(
+        color: AppColors.background,
+        child: const DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              TabBar(
+                tabs: [
+                  Tab(text: 'Abitudini'),
+                  Tab(text: 'Calendario'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [HabitsSidePanel(), _CalendarMainArea()],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ColoredBox(
       color: AppColors.background,
       child: const Row(
@@ -57,24 +82,23 @@ class _TabBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
         children: [
           _TabButton(
             label: 'Abitudini',
             icon: Icons.repeat,
             active: activeTab == CalendarTab.habits,
-            onTap: () => ref
-                .read(calendarProvider.notifier)
-                .setTab(CalendarTab.habits),
+            onTap: () =>
+                ref.read(calendarProvider.notifier).setTab(CalendarTab.habits),
           ),
-          const SizedBox(width: 8),
           _TabButton(
             label: 'Calendario',
             icon: Icons.calendar_month,
             active: activeTab == CalendarTab.events,
-            onTap: () => ref
-                .read(calendarProvider.notifier)
-                .setTab(CalendarTab.events),
+            onTap: () =>
+                ref.read(calendarProvider.notifier).setTab(CalendarTab.events),
           ),
         ],
       ),
@@ -114,9 +138,11 @@ class _TabButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
-                size: 15,
-                color: active ? AppColors.primary : AppColors.textSecondary),
+            Icon(
+              icon,
+              size: 15,
+              color: active ? AppColors.primary : AppColors.textSecondary,
+            ),
             const SizedBox(width: 6),
             Text(
               label,
@@ -143,7 +169,9 @@ class _HabitsArea extends ConsumerWidget {
         // Sub-toggle: Oggi / Settimana / Mese
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
+          child: Wrap(
+            spacing: 4,
+            runSpacing: 4,
             children: [
               _ViewToggle(
                 label: 'Oggi',
@@ -152,7 +180,6 @@ class _HabitsArea extends ConsumerWidget {
                     .read(calendarProvider.notifier)
                     .setHabitView(HabitView.daily),
               ),
-              const SizedBox(width: 4),
               _ViewToggle(
                 label: 'Settimana',
                 active: habitView == HabitView.weekly,
@@ -160,7 +187,6 @@ class _HabitsArea extends ConsumerWidget {
                     .read(calendarProvider.notifier)
                     .setHabitView(HabitView.weekly),
               ),
-              const SizedBox(width: 4),
               _ViewToggle(
                 label: 'Mese',
                 active: habitView == HabitView.monthly,

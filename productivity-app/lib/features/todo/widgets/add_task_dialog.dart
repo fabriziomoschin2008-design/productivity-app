@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/date_formatter.dart';
@@ -85,13 +86,21 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
       } else {
         // Scade a mezzanotte del giorno indicato (fine giornata = 23:59:59)
         finalDueDate = DateTime(
-            _dueDate!.year, _dueDate!.month, _dueDate!.day, 23, 59, 59);
+          _dueDate!.year,
+          _dueDate!.month,
+          _dueDate!.day,
+          23,
+          59,
+          59,
+        );
       }
     }
 
     final note = _noteController.text.trim();
     setState(() => _saving = true);
-    await ref.read(todoProvider.notifier).addTask(
+    await ref
+        .read(todoProvider.notifier)
+        .addTask(
           title: title,
           listId: _selectedListId,
           note: note.isEmpty ? null : note,
@@ -106,15 +115,17 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       child: SizedBox(
-        width: 440,
+        width: AdaptiveLayout.dialogWidth(context, 440),
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Nuova attività',
-                  style: AppTextStyles.headingCard.copyWith(fontSize: 17)),
+              Text(
+                'Nuova attività',
+                style: AppTextStyles.headingCard.copyWith(fontSize: 17),
+              ),
               const SizedBox(height: 24),
               TextField(
                 controller: _titleController,
@@ -131,23 +142,28 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
                   decoration: const InputDecoration(labelText: 'Lista'),
                   items: [
                     const DropdownMenuItem<String?>(
-                        value: null, child: Text('Nessuna lista')),
-                    ...widget.lists.map((l) => DropdownMenuItem<String?>(
-                          value: l.id,
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                    color: Color(l.colorValue),
-                                    shape: BoxShape.circle),
+                      value: null,
+                      child: Text('Nessuna lista'),
+                    ),
+                    ...widget.lists.map(
+                      (l) => DropdownMenuItem<String?>(
+                        value: l.id,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: Color(l.colorValue),
+                                shape: BoxShape.circle,
                               ),
-                              const SizedBox(width: 8),
-                              Text(l.name),
-                            ],
-                          ),
-                        )),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(l.name),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                   onChanged: (v) => setState(() => _selectedListId = v),
                 ),
@@ -155,31 +171,37 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
               // Priorità
               Text('Priorità', style: AppTextStyles.label),
               const SizedBox(height: 8),
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   _PriorityChip(
-                      label: 'Nessuna',
-                      color: AppColors.textDisabled,
-                      selected: _priority == 0,
-                      onTap: () => setState(() => _priority = 0)),
+                    label: 'Nessuna',
+                    color: AppColors.textDisabled,
+                    selected: _priority == 0,
+                    onTap: () => setState(() => _priority = 0),
+                  ),
                   const SizedBox(width: 8),
                   _PriorityChip(
-                      label: 'Bassa',
-                      color: const Color(0xFF27AE60),
-                      selected: _priority == 1,
-                      onTap: () => setState(() => _priority = 1)),
+                    label: 'Bassa',
+                    color: const Color(0xFF27AE60),
+                    selected: _priority == 1,
+                    onTap: () => setState(() => _priority = 1),
+                  ),
                   const SizedBox(width: 8),
                   _PriorityChip(
-                      label: 'Media',
-                      color: AppColors.accent,
-                      selected: _priority == 2,
-                      onTap: () => setState(() => _priority = 2)),
+                    label: 'Media',
+                    color: AppColors.accent,
+                    selected: _priority == 2,
+                    onTap: () => setState(() => _priority = 2),
+                  ),
                   const SizedBox(width: 8),
                   _PriorityChip(
-                      label: 'Alta',
-                      color: AppColors.expense,
-                      selected: _priority == 3,
-                      onTap: () => setState(() => _priority = 3)),
+                    label: 'Alta',
+                    color: AppColors.expense,
+                    selected: _priority == 3,
+                    onTap: () => setState(() => _priority = 3),
+                  ),
                 ],
               ),
               const SizedBox(height: 14),
@@ -188,19 +210,21 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
                 onTap: _pickDate,
                 borderRadius: BorderRadius.circular(8),
                 child: InputDecorator(
-                  decoration:
-                      const InputDecoration(labelText: 'Scadenza (opzionale)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Scadenza (opzionale)',
+                  ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        _dueDate != null
-                            ? formatDateMedium(_dueDate!)
-                            : 'Nessuna scadenza',
-                        style: AppTextStyles.bodyRegular.copyWith(
-                          color: _dueDate != null
-                              ? null
-                              : AppColors.textSecondary,
+                      Expanded(
+                        child: Text(
+                          _dueDate != null
+                              ? formatDateMedium(_dueDate!)
+                              : 'Nessuna scadenza',
+                          style: AppTextStyles.bodyRegular.copyWith(
+                            color: _dueDate != null
+                                ? null
+                                : AppColors.textSecondary,
+                          ),
                         ),
                       ),
                       Row(
@@ -212,13 +236,18 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
                                 _dueDate = null;
                                 _dueTime = null;
                               }),
-                              child: const Icon(Icons.clear,
-                                  size: 14,
-                                  color: AppColors.textSecondary),
+                              child: const Icon(
+                                Icons.clear,
+                                size: 14,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.calendar_today_outlined,
-                              size: 16, color: AppColors.textSecondary),
+                          const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 16,
+                            color: AppColors.textSecondary,
+                          ),
                         ],
                       ),
                     ],
@@ -232,19 +261,21 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
                   onTap: _pickTime,
                   borderRadius: BorderRadius.circular(8),
                   child: InputDecorator(
-                    decoration:
-                        const InputDecoration(labelText: 'Ora specifica (opzionale)'),
+                    decoration: const InputDecoration(
+                      labelText: 'Ora specifica (opzionale)',
+                    ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          _dueTime != null
-                              ? _dueTime!.format(context)
-                              : 'Scade a mezzanotte',
-                          style: AppTextStyles.bodyRegular.copyWith(
-                            color: _dueTime != null
-                                ? null
-                                : AppColors.textSecondary,
+                        Expanded(
+                          child: Text(
+                            _dueTime != null
+                                ? _dueTime!.format(context)
+                                : 'Scade a mezzanotte',
+                            style: AppTextStyles.bodyRegular.copyWith(
+                              color: _dueTime != null
+                                  ? null
+                                  : AppColors.textSecondary,
+                            ),
                           ),
                         ),
                         Row(
@@ -252,15 +283,19 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
                           children: [
                             if (_dueTime != null)
                               GestureDetector(
-                                onTap: () =>
-                                    setState(() => _dueTime = null),
-                                child: const Icon(Icons.clear,
-                                    size: 14,
-                                    color: AppColors.textSecondary),
+                                onTap: () => setState(() => _dueTime = null),
+                                child: const Icon(
+                                  Icons.clear,
+                                  size: 14,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             const SizedBox(width: 4),
-                            const Icon(Icons.schedule_outlined,
-                                size: 16, color: AppColors.textSecondary),
+                            const Icon(
+                              Icons.schedule_outlined,
+                              size: 16,
+                              color: AppColors.textSecondary,
+                            ),
                           ],
                         ),
                       ],
@@ -271,19 +306,21 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
               const SizedBox(height: 14),
               TextField(
                 controller: _noteController,
-                decoration:
-                    const InputDecoration(labelText: 'Nota (opzionale)'),
+                decoration: const InputDecoration(
+                  labelText: 'Nota (opzionale)',
+                ),
                 maxLines: 2,
               ),
               const SizedBox(height: 28),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Annulla'),
                   ),
-                  const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: _saving ? null : _save,
                     child: const Text('Aggiungi'),

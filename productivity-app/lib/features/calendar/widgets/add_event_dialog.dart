@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/local/database.dart';
@@ -123,7 +124,7 @@ class _EventDialogState extends ConsumerState<_EventDialog> {
     return AlertDialog(
       title: Text(_isEditing ? 'Modifica evento' : 'Nuovo evento'),
       content: SizedBox(
-        width: 360,
+        width: AdaptiveLayout.dialogWidth(context, 360),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/local/database.dart';
@@ -42,25 +43,39 @@ class _EntertainmentScreenState extends ConsumerState<EntertainmentScreen>
 
   @override
   Widget build(BuildContext context) {
+    final compact = AdaptiveLayout.isCompact(context);
+    final horizontalPadding = compact ? 16.0 : 28.0;
     return ColoredBox(
       color: AppColors.background,
       child: Column(
         children: [
           // ── Header ──────────────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(28, 28, 28, 0),
-            child: Row(
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              compact ? 16 : 28,
+              horizontalPadding,
+              0,
+            ),
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text('Intrattenimento',
-                    style: AppTextStyles.headingCard.copyWith(
-                        fontSize: 22, fontWeight: FontWeight.w700)),
-                const Spacer(),
+                Text(
+                  'Intrattenimento',
+                  style: AppTextStyles.headingCard.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 AnimatedBuilder(
                   animation: _tabs,
                   builder: (_, _) {
                     final isGames = _tabs.index == 2;
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
+                    return Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
                       children: [
                         if (!isGames) ...[
                           IconButton(
@@ -68,21 +83,25 @@ class _EntertainmentScreenState extends ConsumerState<EntertainmentScreen>
                               context: context,
                               builder: (_) => const ApiKeyDialog(),
                             ),
-                            icon: const Icon(Icons.settings_rounded,
-                                color: AppColors.textSecondary, size: 20),
+                            icon: const Icon(
+                              Icons.settings_rounded,
+                              color: AppColors.textSecondary,
+                              size: 20,
+                            ),
                             tooltip: 'Impostazioni TMDb',
                           ),
-                          const SizedBox(width: 4),
                           IconButton(
                             onPressed: () => showDialog<void>(
                               context: context,
                               builder: (_) => const RefreshMetadataDialog(),
                             ),
-                            icon: const Icon(Icons.refresh_rounded,
-                                color: AppColors.textSecondary, size: 20),
+                            icon: const Icon(
+                              Icons.refresh_rounded,
+                              color: AppColors.textSecondary,
+                              size: 20,
+                            ),
                             tooltip: 'Aggiorna poster',
                           ),
-                          const SizedBox(width: 4),
                           OutlinedButton.icon(
                             onPressed: () => showDialog<void>(
                               context: context,
@@ -94,12 +113,14 @@ class _EntertainmentScreenState extends ConsumerState<EntertainmentScreen>
                               foregroundColor: AppColors.textSecondary,
                               side: const BorderSide(color: AppColors.border),
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10)),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 10),
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 10),
                         ] else ...[
                           OutlinedButton.icon(
                             onPressed: () => showDialog<void>(
@@ -112,12 +133,14 @@ class _EntertainmentScreenState extends ConsumerState<EntertainmentScreen>
                               foregroundColor: AppColors.textSecondary,
                               side: const BorderSide(color: AppColors.border),
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10)),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 10),
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 10),
                         ],
                         FilledButton.icon(
                           onPressed: () => showDialog<void>(
@@ -127,15 +150,20 @@ class _EntertainmentScreenState extends ConsumerState<EntertainmentScreen>
                                 : AddMediaDialog(isTv: _tabs.index == 1),
                           ),
                           icon: const Icon(Icons.add_rounded, size: 18),
-                          label: Text(isGames
-                              ? 'Gioco'
-                              : (_tabs.index == 0 ? 'Film' : 'Serie TV')),
+                          label: Text(
+                            isGames
+                                ? 'Gioco'
+                                : (_tabs.index == 0 ? 'Film' : 'Serie TV'),
+                          ),
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 12),
+                              horizontal: 18,
+                              vertical: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -147,10 +175,15 @@ class _EntertainmentScreenState extends ConsumerState<EntertainmentScreen>
           ),
           // ── Tabs ────────────────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              12,
+              horizontalPadding,
+              0,
+            ),
             child: TabBar(
               controller: _tabs,
-              isScrollable: false,
+              isScrollable: compact,
               labelColor: AppColors.primary,
               unselectedLabelColor: AppColors.textSecondary,
               indicatorColor: AppColors.primary,
@@ -167,11 +200,7 @@ class _EntertainmentScreenState extends ConsumerState<EntertainmentScreen>
           Expanded(
             child: TabBarView(
               controller: _tabs,
-              children: const [
-                _MoviesTab(),
-                _TvTab(),
-                _GamesTab(),
-              ],
+              children: const [_MoviesTab(), _TvTab(), _GamesTab()],
             ),
           ),
         ],
@@ -333,7 +362,8 @@ class _TvCard extends ConsumerWidget {
     return MediaCard(
       title: series.title,
       posterUrl: posterUrl,
-      year: series.firstAirDate?.length != null &&
+      year:
+          series.firstAirDate?.length != null &&
               series.firstAirDate!.length >= 4
           ? series.firstAirDate!.substring(0, 4)
           : null,
@@ -430,18 +460,24 @@ class _Toolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      child: Row(
+      padding: EdgeInsets.fromLTRB(
+        AdaptiveLayout.isPhone(context) ? 16 : 24,
+        16,
+        AdaptiveLayout.isPhone(context) ? 16 : 24,
+        8,
+      ),
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 12,
         children: [
           SizedBox(
-            width: 240,
+            width: AdaptiveLayout.isPhone(context) ? double.infinity : 240,
             child: TextField(
               controller: searchCtrl,
               onChanged: onSearch,
               decoration: _searchDec(),
             ),
           ),
-          const SizedBox(width: 16),
           StatusFilterRow(current: filter, onChanged: onFilter),
         ],
       ),
@@ -465,18 +501,24 @@ class _GamesToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      child: Row(
+      padding: EdgeInsets.fromLTRB(
+        AdaptiveLayout.isPhone(context) ? 16 : 24,
+        16,
+        AdaptiveLayout.isPhone(context) ? 16 : 24,
+        8,
+      ),
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 12,
         children: [
           SizedBox(
-            width: 240,
+            width: AdaptiveLayout.isPhone(context) ? double.infinity : 240,
             child: TextField(
               controller: searchCtrl,
               onChanged: onSearch,
               decoration: _searchDec(),
             ),
           ),
-          const SizedBox(width: 16),
           GamesFilterRow(current: filter, onChanged: onFilter),
         ],
       ),
@@ -485,24 +527,29 @@ class _GamesToolbar extends StatelessWidget {
 }
 
 InputDecoration _searchDec() => InputDecoration(
-      hintText: 'Cerca...',
-      isDense: true,
-      prefixIcon: const Icon(Icons.search_rounded,
-          color: AppColors.textSecondary, size: 18),
-      filled: true,
-      fillColor: AppColors.surface,
-      border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border)),
-      enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border)),
-      focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-    );
+  hintText: 'Cerca...',
+  isDense: true,
+  prefixIcon: const Icon(
+    Icons.search_rounded,
+    color: AppColors.textSecondary,
+    size: 18,
+  ),
+  filled: true,
+  fillColor: AppColors.surface,
+  border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10),
+    borderSide: const BorderSide(color: AppColors.border),
+  ),
+  enabledBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10),
+    borderSide: const BorderSide(color: AppColors.border),
+  ),
+  focusedBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10),
+    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+  ),
+  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+);
 
 class _PosterGrid extends StatelessWidget {
   final int itemCount;
@@ -513,9 +560,14 @@ class _PosterGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 170,
+      padding: EdgeInsets.fromLTRB(
+        AdaptiveLayout.isPhone(context) ? 16 : 24,
+        8,
+        AdaptiveLayout.isPhone(context) ? 16 : 24,
+        24,
+      ),
+      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: AdaptiveLayout.isPhone(context) ? 150 : 170,
         childAspectRatio: 2 / 3,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
@@ -539,10 +591,14 @@ class _EmptyState extends StatelessWidget {
         children: [
           Icon(icon, size: 56, color: AppColors.textDisabled),
           const SizedBox(height: 16),
-          Text(label,
-              style: AppTextStyles.bodyRegular
-                  .copyWith(color: AppColors.textSecondary, fontSize: 15),
-              textAlign: TextAlign.center),
+          Text(
+            label,
+            style: AppTextStyles.bodyRegular.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 15,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );

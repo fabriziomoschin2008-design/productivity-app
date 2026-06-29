@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/services/logger_service.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -71,9 +72,8 @@ class _ChartEmbedWidget extends StatelessWidget {
     final title = data['title'] as String? ?? '';
     final labels =
         (data['labels'] as List?)?.map((e) => e.toString()).toList() ?? [];
-    final values = (data['values'] as List?)
-            ?.map((e) => (e as num).toDouble())
-            .toList() ??
+    final values =
+        (data['values'] as List?)?.map((e) => (e as num).toDouble()).toList() ??
         [];
 
     return Container(
@@ -94,8 +94,8 @@ class _ChartEmbedWidget extends StatelessWidget {
                   chartType == 'pie'
                       ? Icons.pie_chart_outline
                       : chartType == 'line'
-                          ? Icons.show_chart
-                          : Icons.bar_chart_outlined,
+                      ? Icons.show_chart
+                      : Icons.bar_chart_outlined,
                   size: 15,
                   color: AppColors.textSecondary,
                 ),
@@ -103,8 +103,9 @@ class _ChartEmbedWidget extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title.isNotEmpty ? title : 'Grafico',
-                    style: AppTextStyles.bodySmall
-                        .copyWith(fontWeight: FontWeight.w600),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 if (!readOnly) ...[
@@ -134,11 +135,9 @@ class _ChartEmbedWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildChart(
-      String type, List<String> labels, List<double> values) {
+  Widget _buildChart(String type, List<String> labels, List<double> values) {
     if (values.isEmpty) {
-      return Center(
-          child: Text('Nessun dato', style: AppTextStyles.label));
+      return Center(child: Text('Nessun dato', style: AppTextStyles.label));
     }
     return switch (type) {
       'line' => _LineChartWidget(labels: labels, values: values),
@@ -167,8 +166,7 @@ class _ChartEmbedWidget extends StatelessWidget {
       controller.replaceText(
         offset,
         1,
-        BlockEmbed.custom(
-            CustomBlockEmbed(chartEmbedKey, jsonEncode(result))),
+        BlockEmbed.custom(CustomBlockEmbed(chartEmbedKey, jsonEncode(result))),
         null,
       );
     });
@@ -190,7 +188,9 @@ class _ChartEmbedWidget extends StatelessWidget {
     if (embedNode != null && embedNode.parent != null) {
       try {
         final offset = (embedNode as Node).documentOffset;
-        AppLogger.instance.info('Offset grafico trovato via albero nodi: $offset');
+        AppLogger.instance.info(
+          'Offset grafico trovato via albero nodi: $offset',
+        );
         callback(offset);
         return;
       } catch (e) {
@@ -202,13 +202,15 @@ class _ChartEmbedWidget extends StatelessWidget {
     // Funziona anche se il widget/nodo ha perso l'aggancio all'albero dei nodi.
     try {
       final selfId = (jsonDecode(rawData) as Map<String, dynamic>)['id'];
-      AppLogger.instance.info('Ricerca offset grafico nel Delta con ID: $selfId');
+      AppLogger.instance.info(
+        'Ricerca offset grafico nel Delta con ID: $selfId',
+      );
       int offset = 0;
       for (final op in controller.document.toDelta().toList()) {
         if (op.isInsert && op.data is Map) {
           final map = op.data as Map;
           dynamic stored;
-          
+
           if (map.containsKey(chartEmbedKey)) {
             stored = map[chartEmbedKey];
           } else if (map.containsKey('custom')) {
@@ -228,13 +230,17 @@ class _ChartEmbedWidget extends StatelessWidget {
               final storedId =
                   (jsonDecode(stored as String) as Map<String, dynamic>)['id'];
               if (storedId == selfId) {
-                AppLogger.instance.info('Offset grafico trovato via Delta (ID matching): $offset');
+                AppLogger.instance.info(
+                  'Offset grafico trovato via Delta (ID matching): $offset',
+                );
                 callback(offset);
                 return;
               }
             } catch (_) {
               if (stored == rawData) {
-                AppLogger.instance.info('Offset grafico trovato via Delta (raw matching): $offset');
+                AppLogger.instance.info(
+                  'Offset grafico trovato via Delta (raw matching): $offset',
+                );
                 callback(offset);
                 return;
               }
@@ -244,13 +250,16 @@ class _ChartEmbedWidget extends StatelessWidget {
         final d = op.data;
         offset += d is String ? d.length : 1;
       }
-      AppLogger.instance.warning('Impossibile trovare l\'offset del grafico nel Delta');
+      AppLogger.instance.warning(
+        'Impossibile trovare l\'offset del grafico nel Delta',
+      );
     } catch (e) {
-      AppLogger.instance.error('Errore durante la ricerca fallback nel Delta: $e');
+      AppLogger.instance.error(
+        'Errore durante la ricerca fallback nel Delta: $e',
+      );
     }
   }
 }
-
 
 // ---------------------------------------------------------------------------
 // Chart renderers
@@ -276,8 +285,9 @@ class _BarChartWidget extends StatelessWidget {
                 toY: values[i],
                 color: _chartColors[i % _chartColors.length],
                 width: 18,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(3)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(3),
+                ),
               ),
             ],
           ),
@@ -293,9 +303,11 @@ class _BarChartWidget extends StatelessWidget {
                 }
                 return Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text(labels[i],
-                      style: const TextStyle(fontSize: 10),
-                      overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    labels[i],
+                    style: const TextStyle(fontSize: 10),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 );
               },
             ),
@@ -310,10 +322,12 @@ class _BarChartWidget extends StatelessWidget {
               ),
             ),
           ),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
@@ -357,7 +371,9 @@ class _LineChartWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final spots = List.generate(
-        values.length, (i) => FlSpot(i.toDouble(), values[i]));
+      values.length,
+      (i) => FlSpot(i.toDouble(), values[i]),
+    );
     final minY = values.reduce((a, b) => a < b ? a : b);
     final maxY = values.reduce((a, b) => a > b ? a : b);
     final pad = (maxY - minY) * 0.2 + 1;
@@ -389,8 +405,7 @@ class _LineChartWidget extends StatelessWidget {
                 }
                 return Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text(labels[i],
-                      style: const TextStyle(fontSize: 10)),
+                  child: Text(labels[i], style: const TextStyle(fontSize: 10)),
                 );
               },
             ),
@@ -405,10 +420,12 @@ class _LineChartWidget extends StatelessWidget {
               ),
             ),
           ),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
@@ -416,8 +433,7 @@ class _LineChartWidget extends StatelessWidget {
             tooltipBorder: const BorderSide(color: AppColors.border),
             getTooltipItems: (spots) => spots.map((s) {
               final i = s.x.toInt();
-              final label =
-                  i >= 0 && i < labels.length ? labels[i] : '';
+              final label = i >= 0 && i < labels.length ? labels[i] : '';
               final v = s.y;
               final valStr = v == v.truncateToDouble()
                   ? v.toInt().toString()
@@ -475,9 +491,10 @@ class _PieChartWidgetState extends State<_PieChartWidget> {
                       ? '${(widget.values[i] / total * 100).toStringAsFixed(1)}%'
                       : '',
                   titleStyle: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 );
               }),
               pieTouchData: PieTouchData(
@@ -517,9 +534,11 @@ class _PieChartWidgetState extends State<_PieChartWidget> {
                       ),
                       const SizedBox(width: 6),
                       Expanded(
-                        child: Text(widget.labels[i],
-                            style: const TextStyle(fontSize: 10),
-                            overflow: TextOverflow.ellipsis),
+                        child: Text(
+                          widget.labels[i],
+                          style: const TextStyle(fontSize: 10),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
@@ -554,21 +573,19 @@ class _ChartConfigDialogState extends State<ChartConfigDialog> {
     super.initState();
     final d = widget.initialData;
     _type = d?['chartType'] as String? ?? 'bar';
-    _titleCtrl =
-        TextEditingController(text: d?['title'] as String? ?? '');
+    _titleCtrl = TextEditingController(text: d?['title'] as String? ?? '');
     final labels =
         (d?['labels'] as List?)?.map((e) => e.toString()).toList() ?? [];
-    final values = (d?['values'] as List?)
-            ?.map((e) => (e as num).toDouble())
-            .toList() ??
+    final values =
+        (d?['values'] as List?)?.map((e) => (e as num).toDouble()).toList() ??
         [];
     _rows = List.generate(
       labels.isEmpty ? 3 : labels.length,
       (i) => _DataRow(
-        label: TextEditingController(
-            text: i < labels.length ? labels[i] : ''),
+        label: TextEditingController(text: i < labels.length ? labels[i] : ''),
         value: TextEditingController(
-            text: i < values.length ? values[i].toString() : ''),
+          text: i < values.length ? values[i].toString() : '',
+        ),
       ),
     );
   }
@@ -582,8 +599,11 @@ class _ChartConfigDialogState extends State<ChartConfigDialog> {
     super.dispose();
   }
 
-  void _addRow() => setState(() => _rows
-      .add(_DataRow(label: TextEditingController(), value: TextEditingController())));
+  void _addRow() => setState(
+    () => _rows.add(
+      _DataRow(label: TextEditingController(), value: TextEditingController()),
+    ),
+  );
 
   void _removeRow(int i) {
     if (_rows.length <= 1) return;
@@ -594,17 +614,14 @@ class _ChartConfigDialogState extends State<ChartConfigDialog> {
   }
 
   void _save() {
-    final id =
-        (widget.initialData?['id'] as String?) ?? _uuid.v4();
+    final id = (widget.initialData?['id'] as String?) ?? _uuid.v4();
     Navigator.of(context).pop({
       'id': id,
       'chartType': _type,
       'title': _titleCtrl.text.trim(),
-      'labels':
-          _rows.map((r) => r.label.text.trim()).toList(),
+      'labels': _rows.map((r) => r.label.text.trim()).toList(),
       'values': _rows
-          .map((r) =>
-              double.tryParse(r.value.text.replaceAll(',', '.')) ?? 0.0)
+          .map((r) => double.tryParse(r.value.text.replaceAll(',', '.')) ?? 0.0)
           .toList(),
     });
   }
@@ -613,15 +630,17 @@ class _ChartConfigDialogState extends State<ChartConfigDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       child: SizedBox(
-        width: 440,
+        width: AdaptiveLayout.dialogWidth(context, 440),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Configura grafico',
-                  style: AppTextStyles.headingCard.copyWith(fontSize: 16)),
+              Text(
+                'Configura grafico',
+                style: AppTextStyles.headingCard.copyWith(fontSize: 16),
+              ),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -641,23 +660,33 @@ class _ChartConfigDialogState extends State<ChartConfigDialog> {
                 controller: _titleCtrl,
                 autofocus: true,
                 decoration: const InputDecoration(
-                    labelText: 'Titolo', isDense: true),
+                  labelText: 'Titolo',
+                  isDense: true,
+                ),
               ),
               const SizedBox(height: 16),
               const Row(
                 children: [
                   Expanded(
-                      flex: 2,
-                      child: Text('Etichetta',
-                          style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600))),
+                    flex: 2,
+                    child: Text(
+                      'Etichetta',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                   SizedBox(width: 8),
                   Expanded(
-                      child: Text('Valore',
-                          style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600))),
+                    child: Text(
+                      'Valore',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                   SizedBox(width: 32),
                 ],
               ),
@@ -678,7 +707,9 @@ class _ChartConfigDialogState extends State<ChartConfigDialog> {
                                 child: TextField(
                                   controller: _rows[i].label,
                                   decoration: const InputDecoration(
-                                      isDense: true, hintText: 'Etichetta'),
+                                    isDense: true,
+                                    hintText: 'Etichetta',
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -686,10 +717,13 @@ class _ChartConfigDialogState extends State<ChartConfigDialog> {
                                 child: TextField(
                                   controller: _rows[i].value,
                                   decoration: const InputDecoration(
-                                      isDense: true, hintText: '0'),
+                                    isDense: true,
+                                    hintText: '0',
+                                  ),
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
-                                          decimal: true),
+                                        decimal: true,
+                                      ),
                                 ),
                               ),
                               const SizedBox(width: 4),
@@ -698,8 +732,9 @@ class _ChartConfigDialogState extends State<ChartConfigDialog> {
                                     ? () => _removeRow(i)
                                     : null,
                                 icon: const Icon(
-                                    Icons.remove_circle_outline,
-                                    size: 16),
+                                  Icons.remove_circle_outline,
+                                  size: 16,
+                                ),
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
                                 color: AppColors.expense,
@@ -739,11 +774,11 @@ class _ChartConfigDialogState extends State<ChartConfigDialog> {
   }
 
   String _typeName(String t) => switch (t) {
-        'bar' => 'Barre',
-        'line' => 'Linea',
-        'pie' => 'Torta',
-        _ => t,
-      };
+    'bar' => 'Barre',
+    'line' => 'Linea',
+    'pie' => 'Torta',
+    _ => t,
+  };
 }
 
 class _DataRow {
@@ -779,8 +814,7 @@ class EmbedActionBtn extends StatelessWidget {
       color: AppColors.textSecondary,
       tooltip: tooltip,
       padding: const EdgeInsets.all(4),
-      constraints:
-          const BoxConstraints(minWidth: 28, minHeight: 28),
+      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
     );
   }
 }

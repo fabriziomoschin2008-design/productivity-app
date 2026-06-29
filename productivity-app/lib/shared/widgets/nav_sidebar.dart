@@ -9,6 +9,51 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import 'auth_dialog.dart';
 
+class AppNavDestination {
+  final IconData icon;
+  final String label;
+  final String path;
+
+  const AppNavDestination({
+    required this.icon,
+    required this.label,
+    required this.path,
+  });
+}
+
+const appNavDestinations = <AppNavDestination>[
+  AppNavDestination(
+    icon: Icons.account_balance_wallet_rounded,
+    label: 'Finanze',
+    path: '/finance',
+  ),
+  AppNavDestination(
+    icon: Icons.sticky_note_2_rounded,
+    label: 'Note',
+    path: '/notes',
+  ),
+  AppNavDestination(
+    icon: Icons.calendar_month_rounded,
+    label: 'Calendario',
+    path: '/calendar',
+  ),
+  AppNavDestination(
+    icon: Icons.check_circle_rounded,
+    label: 'To-do',
+    path: '/todo',
+  ),
+  AppNavDestination(
+    icon: Icons.track_changes_rounded,
+    label: 'Tracker',
+    path: '/tracker',
+  ),
+  AppNavDestination(
+    icon: Icons.movie_rounded,
+    label: 'Media',
+    path: '/entertainment',
+  ),
+];
+
 class NavSidebar extends ConsumerWidget {
   const NavSidebar({super.key});
 
@@ -34,42 +79,13 @@ class NavSidebar extends ConsumerWidget {
           const SizedBox(height: 18),
           const _CubbyLogo(),
           const SizedBox(height: 28),
-          _NavItem(
-            icon: Icons.account_balance_wallet_rounded,
-            label: 'Finanze',
-            path: '/finance',
-            active: location.startsWith('/finance'),
-          ),
-          _NavItem(
-            icon: Icons.sticky_note_2_rounded,
-            label: 'Note',
-            path: '/notes',
-            active: location.startsWith('/notes'),
-          ),
-          _NavItem(
-            icon: Icons.calendar_month_rounded,
-            label: 'Calendario',
-            path: '/calendar',
-            active: location.startsWith('/calendar'),
-          ),
-          _NavItem(
-            icon: Icons.check_circle_rounded,
-            label: 'To-do',
-            path: '/todo',
-            active: location.startsWith('/todo'),
-          ),
-          _NavItem(
-            icon: Icons.track_changes_rounded,
-            label: 'Tracker',
-            path: '/tracker',
-            active: location.startsWith('/tracker'),
-          ),
-          _NavItem(
-            icon: Icons.movie_rounded,
-            label: 'Media',
-            path: '/entertainment',
-            active: location.startsWith('/entertainment'),
-          ),
+          for (final destination in appNavDestinations)
+            _NavItem(
+              icon: destination.icon,
+              label: destination.label,
+              path: destination.path,
+              active: location.startsWith(destination.path),
+            ),
           const Spacer(),
           _AuthNavItem(user: authUser),
           const SizedBox(height: 16),
@@ -157,15 +173,13 @@ class _AuthNavItem extends StatelessWidget {
                 Icon(
                   icon,
                   size: 22,
-                  color:
-                      isLoggedIn ? AppColors.income : AppColors.navItem,
+                  color: isLoggedIn ? AppColors.income : AppColors.navItem,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   label,
                   style: AppTextStyles.navLabel.copyWith(
-                    color:
-                        isLoggedIn ? AppColors.income : AppColors.navItem,
+                    color: isLoggedIn ? AppColors.income : AppColors.navItem,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -175,6 +189,36 @@ class _AuthNavItem extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class MobileBottomNav extends StatelessWidget {
+  final String location;
+
+  const MobileBottomNav({super.key, required this.location});
+
+  @override
+  Widget build(BuildContext context) {
+    final currentIndex = appNavDestinations.indexWhere(
+      (destination) => location.startsWith(destination.path),
+    );
+    final compact = MediaQuery.sizeOf(context).width < 600;
+    return NavigationBar(
+      selectedIndex: currentIndex < 0 ? 0 : currentIndex,
+      onDestinationSelected: (index) =>
+          context.go(appNavDestinations[index].path),
+      height: 70,
+      labelBehavior: compact
+          ? NavigationDestinationLabelBehavior.onlyShowSelected
+          : NavigationDestinationLabelBehavior.alwaysShow,
+      destinations: [
+        for (final destination in appNavDestinations)
+          NavigationDestination(
+            icon: Icon(destination.icon),
+            label: destination.label,
+          ),
+      ],
     );
   }
 }
@@ -200,24 +244,24 @@ class _CubbyLogo extends ConsumerWidget {
         );
       },
       child: Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.35),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.primary, AppColors.secondary],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: const Icon(Icons.check_rounded, color: Colors.white, size: 24),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.35),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Icon(Icons.check_rounded, color: Colors.white, size: 24),
       ),
     );
   }

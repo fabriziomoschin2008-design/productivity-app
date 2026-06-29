@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../providers/finance_providers.dart';
@@ -28,13 +29,13 @@ class _AddAccountDialogState extends ConsumerState<AddAccountDialog> {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
 
-    final balance = double.tryParse(
-          _balanceController.text.replaceAll(',', '.'),
-        ) ??
-        0.0;
+    final balance =
+        double.tryParse(_balanceController.text.replaceAll(',', '.')) ?? 0.0;
 
     setState(() => _saving = true);
-    await ref.read(financeProvider.notifier).addAccount(
+    await ref
+        .read(financeProvider.notifier)
+        .addAccount(
           name: name,
           colorValue: AppColors.accountColors[_selectedColorIndex].toARGB32(),
           openingBalance: balance,
@@ -46,14 +47,17 @@ class _AddAccountDialogState extends ConsumerState<AddAccountDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       child: SizedBox(
-        width: 400,
+        width: AdaptiveLayout.dialogWidth(context, 400),
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Nuovo conto', style: AppTextStyles.headingCard.copyWith(fontSize: 17)),
+              Text(
+                'Nuovo conto',
+                style: AppTextStyles.headingCard.copyWith(fontSize: 17),
+              ),
               const SizedBox(height: 24),
               TextField(
                 controller: _nameController,
@@ -69,7 +73,9 @@ class _AddAccountDialogState extends ConsumerState<AddAccountDialog> {
                   labelText: 'Saldo iniziale',
                   prefixText: '€ ',
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 onSubmitted: (_) => _save(),
               ),
               const SizedBox(height: 20),
@@ -91,14 +97,16 @@ class _AddAccountDialogState extends ConsumerState<AddAccountDialog> {
                         shape: BoxShape.circle,
                         border: selected
                             ? Border.all(
-                                color: AppColors.textPrimary, width: 2.5)
+                                color: AppColors.textPrimary,
+                                width: 2.5,
+                              )
                             : null,
                         boxShadow: selected
                             ? [
                                 BoxShadow(
                                   color: color.withValues(alpha: 0.4),
                                   blurRadius: 6,
-                                )
+                                ),
                               ]
                             : null,
                       ),
@@ -107,14 +115,15 @@ class _AddAccountDialogState extends ConsumerState<AddAccountDialog> {
                 }),
               ),
               const SizedBox(height: 28),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Annulla'),
                   ),
-                  const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: _saving ? null : _save,
                     child: const Text('Crea conto'),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/layout/adaptive_layout.dart';
 import '../../core/debug/debug_panel.dart';
 import '../../core/debug/debug_provider.dart';
 import '../../features/calendar/screens/calendar_screen.dart';
@@ -21,18 +22,12 @@ final appRouter = GoRouter(
           path: '/finance',
           builder: (ctx, state) => const FinanceScreen(),
         ),
-        GoRoute(
-          path: '/notes',
-          builder: (ctx, state) => const NotesScreen(),
-        ),
+        GoRoute(path: '/notes', builder: (ctx, state) => const NotesScreen()),
         GoRoute(
           path: '/calendar',
           builder: (ctx, state) => const CalendarScreen(),
         ),
-        GoRoute(
-          path: '/todo',
-          builder: (ctx, state) => const TodoScreen(),
-        ),
+        GoRoute(path: '/todo', builder: (ctx, state) => const TodoScreen()),
         GoRoute(
           path: '/tracker',
           builder: (ctx, state) => const TrackerScreen(),
@@ -53,15 +48,22 @@ class _AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final debugMode = ref.watch(debugModeProvider);
+    final location = GoRouterState.of(context).uri.path;
+    final compact = AdaptiveLayout.isCompact(context);
+
     return Scaffold(
+      bottomNavigationBar: compact ? MobileBottomNav(location: location) : null,
       body: Stack(
         children: [
-          Row(
-            children: [
-              const NavSidebar(),
-              Expanded(child: child),
-            ],
-          ),
+          if (compact)
+            SafeArea(bottom: false, child: child)
+          else
+            Row(
+              children: [
+                const NavSidebar(),
+                Expanded(child: child),
+              ],
+            ),
           if (debugMode) const DebugPanel(),
         ],
       ),

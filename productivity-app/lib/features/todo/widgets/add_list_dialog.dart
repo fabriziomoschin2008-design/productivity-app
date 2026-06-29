@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../providers/todo_providers.dart';
@@ -26,7 +27,9 @@ class _AddListDialogState extends ConsumerState<AddListDialog> {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
     setState(() => _saving = true);
-    await ref.read(todoProvider.notifier).addList(
+    await ref
+        .read(todoProvider.notifier)
+        .addList(
           name: name,
           colorValue: AppColors.accountColors[_selectedColorIndex].toARGB32(),
         );
@@ -37,20 +40,21 @@ class _AddListDialogState extends ConsumerState<AddListDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       child: SizedBox(
-        width: 360,
+        width: AdaptiveLayout.dialogWidth(context, 360),
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Nuova lista',
-                  style: AppTextStyles.headingCard.copyWith(fontSize: 17)),
+              Text(
+                'Nuova lista',
+                style: AppTextStyles.headingCard.copyWith(fontSize: 17),
+              ),
               const SizedBox(height: 24),
               TextField(
                 controller: _nameController,
-                decoration:
-                    const InputDecoration(labelText: 'Nome lista'),
+                decoration: const InputDecoration(labelText: 'Nome lista'),
                 autofocus: true,
                 textCapitalization: TextCapitalization.sentences,
                 onSubmitted: (_) => _save(),
@@ -60,13 +64,11 @@ class _AddListDialogState extends ConsumerState<AddListDialog> {
               const SizedBox(height: 10),
               Wrap(
                 spacing: 10,
-                children:
-                    List.generate(AppColors.accountColors.length, (i) {
+                children: List.generate(AppColors.accountColors.length, (i) {
                   final color = AppColors.accountColors[i];
                   final selected = i == _selectedColorIndex;
                   return GestureDetector(
-                    onTap: () =>
-                        setState(() => _selectedColorIndex = i),
+                    onTap: () => setState(() => _selectedColorIndex = i),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 150),
                       width: 30,
@@ -76,14 +78,16 @@ class _AddListDialogState extends ConsumerState<AddListDialog> {
                         shape: BoxShape.circle,
                         border: selected
                             ? Border.all(
-                                color: AppColors.textPrimary, width: 2.5)
+                                color: AppColors.textPrimary,
+                                width: 2.5,
+                              )
                             : null,
                         boxShadow: selected
                             ? [
                                 BoxShadow(
                                   color: color.withValues(alpha: 0.4),
                                   blurRadius: 6,
-                                )
+                                ),
                               ]
                             : null,
                       ),
@@ -92,14 +96,15 @@ class _AddListDialogState extends ConsumerState<AddListDialog> {
                 }),
               ),
               const SizedBox(height: 28),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Annulla'),
                   ),
-                  const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: _saving ? null : _save,
                     child: const Text('Crea lista'),

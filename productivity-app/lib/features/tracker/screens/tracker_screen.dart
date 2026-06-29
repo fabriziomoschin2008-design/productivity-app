@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../providers/tracker_providers.dart';
@@ -12,6 +13,8 @@ class TrackerScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trackers = ref.watch(trackerProvider.select((s) => s.trackers));
+    final compact = AdaptiveLayout.isPhone(context);
+    final horizontalPadding = compact ? 16.0 : 32.0;
 
     return ColoredBox(
       color: AppColors.background,
@@ -20,12 +23,22 @@ class TrackerScreen extends ConsumerWidget {
         children: [
           // Header
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 32).copyWith(top: 32, bottom: 20),
-            child: Row(
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: compact ? 16 : 24,
+            ),
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text('Tracker', style: AppTextStyles.headingCard.copyWith(fontSize: 22, fontWeight: FontWeight.w700)),
-                const Spacer(),
+                Text(
+                  'Tracker',
+                  style: AppTextStyles.headingCard.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 FilledButton.icon(
                   onPressed: () => showDialog<void>(
                     context: context,
@@ -36,9 +49,12 @@ class TrackerScreen extends ConsumerWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 12),
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ],
@@ -50,12 +66,14 @@ class TrackerScreen extends ConsumerWidget {
             child: trackers.isEmpty
                 ? const _EmptyState()
                 : SingleChildScrollView(
-                    padding: const EdgeInsets.all(32),
+                    padding: EdgeInsets.all(compact ? 16 : 32),
                     child: Wrap(
                       spacing: 20,
                       runSpacing: 20,
                       children: trackers
-                          .map((t) => TrackerCard(key: ValueKey(t.id), tracker: t))
+                          .map(
+                            (t) => TrackerCard(key: ValueKey(t.id), tracker: t),
+                          )
                           .toList(),
                     ),
                   ),
@@ -75,17 +93,24 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.track_changes_rounded,
-              size: 56, color: AppColors.textDisabled),
+          Icon(
+            Icons.track_changes_rounded,
+            size: 56,
+            color: AppColors.textDisabled,
+          ),
           const SizedBox(height: 16),
-          Text('Nessun tracker ancora',
-              style: AppTextStyles.bodyRegular.copyWith(fontSize: 15)
-                  .copyWith(color: AppColors.textSecondary)),
+          Text(
+            'Nessun tracker ancora',
+            style: AppTextStyles.bodyRegular
+                .copyWith(fontSize: 15)
+                .copyWith(color: AppColors.textSecondary),
+          ),
           const SizedBox(height: 8),
           Text(
             'Premi "Nuovo" per aggiungere la tua prima regola.',
-            style: AppTextStyles.bodySmall
-                .copyWith(color: AppColors.textDisabled),
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textDisabled,
+            ),
             textAlign: TextAlign.center,
           ),
         ],

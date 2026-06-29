@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 
@@ -19,7 +20,7 @@ class ExportDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: AppColors.surface,
       child: SizedBox(
-        width: 460,
+        width: AdaptiveLayout.dialogWidth(context, 460),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 560),
           child: Padding(

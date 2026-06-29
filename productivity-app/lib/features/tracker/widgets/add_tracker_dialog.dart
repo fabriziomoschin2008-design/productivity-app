@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/local/database.dart';
@@ -43,8 +44,9 @@ class _AddTrackerDialogState extends ConsumerState<AddTrackerDialog> {
     super.initState();
     final e = widget.existing;
     _nameCtrl = TextEditingController(text: e?.name ?? '');
-    _targetCtrl =
-        TextEditingController(text: e != null ? _fmt(e.targetValue) : '');
+    _targetCtrl = TextEditingController(
+      text: e != null ? _fmt(e.targetValue) : '',
+    );
     _stepCtrl = TextEditingController(text: e != null ? _fmt(e.step) : '1');
     _unitCtrl = TextEditingController(text: e?.unit ?? '');
     _selectedColor = e?.colorValue ?? _trackerColors.first.toARGB32();
@@ -95,11 +97,12 @@ class _AddTrackerDialogState extends ConsumerState<AddTrackerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final compact = AdaptiveLayout.isPhone(context);
     return Dialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: SizedBox(
-        width: 400,
+        width: AdaptiveLayout.dialogWidth(context, 400),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(28),
           child: Form(
@@ -117,49 +120,110 @@ class _AddTrackerDialogState extends ConsumerState<AddTrackerDialog> {
                   controller: _nameCtrl,
                   label: 'Nome',
                   hint: 'es. Capelli scrunchati',
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Inserisci un nome' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Inserisci un nome'
+                      : null,
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _Field(
-                        controller: _targetCtrl,
-                        label: 'Obiettivo',
-                        hint: '15',
-                        keyboard: TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+                compact
+                    ? Column(
+                        children: [
+                          _Field(
+                            controller: _targetCtrl,
+                            label: 'Obiettivo',
+                            hint: '15',
+                            keyboard: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9.]'),
+                              ),
+                            ],
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Obbligatorio';
+                              }
+                              final n = double.tryParse(v.trim());
+                              if (n == null || n <= 0) return 'Numero > 0';
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _Field(
+                            controller: _stepCtrl,
+                            label: 'Incremento',
+                            hint: '1',
+                            keyboard: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9.]'),
+                              ),
+                            ],
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Obbligatorio';
+                              }
+                              final n = double.tryParse(v.trim());
+                              if (n == null || n <= 0) return 'Numero > 0';
+                              return null;
+                            },
+                          ),
                         ],
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Obbligatorio';
-                          final n = double.tryParse(v.trim());
-                          if (n == null || n <= 0) return 'Numero > 0';
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _Field(
-                        controller: _stepCtrl,
-                        label: 'Incremento',
-                        hint: '1',
-                        keyboard: TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: _Field(
+                              controller: _targetCtrl,
+                              label: 'Obiettivo',
+                              hint: '15',
+                              keyboard: const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'[0-9.]'),
+                                ),
+                              ],
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) {
+                                  return 'Obbligatorio';
+                                }
+                                final n = double.tryParse(v.trim());
+                                if (n == null || n <= 0) return 'Numero > 0';
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _Field(
+                              controller: _stepCtrl,
+                              label: 'Incremento',
+                              hint: '1',
+                              keyboard: const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'[0-9.]'),
+                                ),
+                              ],
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) {
+                                  return 'Obbligatorio';
+                                }
+                                final n = double.tryParse(v.trim());
+                                if (n == null || n <= 0) return 'Numero > 0';
+                                return null;
+                              },
+                            ),
+                          ),
                         ],
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Obbligatorio';
-                          final n = double.tryParse(v.trim());
-                          if (n == null || n <= 0) return 'Numero > 0';
-                          return null;
-                        },
                       ),
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 16),
                 _Field(
                   controller: _unitCtrl,
@@ -175,7 +239,8 @@ class _AddTrackerDialogState extends ConsumerState<AddTrackerDialog> {
                   children: _trackerColors.map((c) {
                     final selected = c.toARGB32() == _selectedColor;
                     return GestureDetector(
-                      onTap: () => setState(() => _selectedColor = c.toARGB32()),
+                      onTap: () =>
+                          setState(() => _selectedColor = c.toARGB32()),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
                         width: 30,
@@ -185,7 +250,9 @@ class _AddTrackerDialogState extends ConsumerState<AddTrackerDialog> {
                           shape: BoxShape.circle,
                           border: selected
                               ? Border.all(
-                                  color: AppColors.textPrimary, width: 2.5)
+                                  color: AppColors.textPrimary,
+                                  width: 2.5,
+                                )
                               : null,
                           boxShadow: selected
                               ? [
@@ -193,7 +260,7 @@ class _AddTrackerDialogState extends ConsumerState<AddTrackerDialog> {
                                     color: c.withValues(alpha: 0.45),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
-                                  )
+                                  ),
                                 ]
                               : null,
                         ),
@@ -205,8 +272,10 @@ class _AddTrackerDialogState extends ConsumerState<AddTrackerDialog> {
                 // Auto-increment toggle
                 SwitchListTile(
                   dense: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
                   tileColor: AppColors.surfaceElevated,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -218,28 +287,31 @@ class _AddTrackerDialogState extends ConsumerState<AddTrackerDialog> {
                   ),
                   subtitle: Text(
                     'Aggiunge l\'incremento ogni giorno a mezzanotte',
-                    style: AppTextStyles.label
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.label.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   value: _dailyAuto,
                   activeThumbColor: AppColors.primary,
                   onChanged: (v) => setState(() => _dailyAuto = v),
                 ),
                 const SizedBox(height: 28),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 12,
+                  runSpacing: 8,
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       child: const Text('Annulla'),
                     ),
-                    const SizedBox(width: 12),
                     FilledButton(
                       onPressed: _submit,
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       child: Text(_isEdit ? 'Salva' : 'Crea'),
                     ),
@@ -286,12 +358,15 @@ class _Field extends StatelessWidget {
           style: AppTextStyles.bodyRegular,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: AppTextStyles.bodyRegular
-                .copyWith(color: AppColors.textDisabled),
+            hintStyle: AppTextStyles.bodyRegular.copyWith(
+              color: AppColors.textDisabled,
+            ),
             filled: true,
             fillColor: AppColors.surfaceElevated,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(color: AppColors.border),
@@ -302,18 +377,24 @@ class _Field extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.5,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: AppColors.expense, width: 1.5),
+              borderSide: const BorderSide(
+                color: AppColors.expense,
+                width: 1.5,
+              ),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: AppColors.expense, width: 1.5),
+              borderSide: const BorderSide(
+                color: AppColors.expense,
+                width: 1.5,
+              ),
             ),
           ),
         ),

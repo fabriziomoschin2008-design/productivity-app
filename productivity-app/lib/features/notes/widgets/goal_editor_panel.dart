@@ -8,6 +8,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/services/app_paths.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -41,8 +42,9 @@ class _GoalEditorState extends ConsumerState<GoalEditorPanel> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.goal.title);
-    _descController =
-        TextEditingController(text: widget.goal.description ?? '');
+    _descController = TextEditingController(
+      text: widget.goal.description ?? '',
+    );
     _deadline = widget.goal.deadline;
     _initController();
   }
@@ -88,11 +90,14 @@ class _GoalEditorState extends ConsumerState<GoalEditorPanel> {
   Future<void> _save() async {
     if (!mounted || !_hasChanges) return;
     _hasChanges = false;
-    await ref.read(noteGoalsProvider.notifier).updateGoal(
+    await ref
+        .read(noteGoalsProvider.notifier)
+        .updateGoal(
           id: widget.goal.id,
           title: _titleController.text,
-          description:
-              _descController.text.isEmpty ? null : _descController.text,
+          description: _descController.text.isEmpty
+              ? null
+              : _descController.text,
           deadline: _deadline,
           content: jsonEncode(_controller.document.toDelta().toJson()),
         );
@@ -172,14 +177,15 @@ class _GoalEditorState extends ConsumerState<GoalEditorPanel> {
           : '${destDir.path}${Platform.pathSeparator}$fileId.$ext';
       await File(file.path!).copy(destPath);
       _insertEmbed(
-          fileEmbedKey,
-          jsonEncode({
-            'id': fileId,
-            'fileName': file.name,
-            'storedPath': destPath,
-            'mimeType': mimeFromName(file.name),
-            'sizeBytes': file.size,
-          }));
+        fileEmbedKey,
+        jsonEncode({
+          'id': fileId,
+          'fileName': file.name,
+          'storedPath': destPath,
+          'mimeType': mimeFromName(file.name),
+          'sizeBytes': file.size,
+        }),
+      );
     }
   }
 
@@ -193,12 +199,7 @@ class _GoalEditorState extends ConsumerState<GoalEditorPanel> {
       builder: (_) => const LinkNoteDialog(),
     );
     if (!mounted || result == null) return;
-    _insertEmbed(
-        noteLinkEmbedKey,
-        jsonEncode({
-          'id': _uuid.v4(),
-          ...result,
-        }));
+    _insertEmbed(noteLinkEmbedKey, jsonEncode({'id': _uuid.v4(), ...result}));
   }
 
   String _formatDeadline(DateTime dt) {
@@ -209,20 +210,24 @@ class _GoalEditorState extends ConsumerState<GoalEditorPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = AdaptiveLayout.editorHorizontalPadding(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Structured header ─────────────────────────────────────
         Padding(
-          padding: const EdgeInsets.fromLTRB(40, 24, 16, 0),
+          padding: EdgeInsets.fromLTRB(horizontalPadding, 24, 16, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Icon(Icons.flag_outlined,
-                      size: 22, color: AppColors.primary),
+                  const Icon(
+                    Icons.flag_outlined,
+                    size: 22,
+                    color: AppColors.primary,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextField(
@@ -232,7 +237,9 @@ class _GoalEditorState extends ConsumerState<GoalEditorPanel> {
                         border: InputBorder.none,
                         hintText: 'Obiettivo',
                         hintStyle: TextStyle(
-                            color: AppColors.textDisabled, fontSize: 26),
+                          color: AppColors.textDisabled,
+                          fontSize: 26,
+                        ),
                         contentPadding: EdgeInsets.zero,
                         isDense: true,
                       ),
@@ -247,8 +254,9 @@ class _GoalEditorState extends ConsumerState<GoalEditorPanel> {
               const SizedBox(height: 10),
               TextField(
                 controller: _descController,
-                style: AppTextStyles.bodySmall
-                    .copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   hintText: 'Aggiungi una descrizione...',
@@ -266,8 +274,7 @@ class _GoalEditorState extends ConsumerState<GoalEditorPanel> {
               _deadline == null
                   ? TextButton.icon(
                       onPressed: _pickDeadline,
-                      icon: const Icon(Icons.calendar_today_outlined,
-                          size: 14),
+                      icon: const Icon(Icons.calendar_today_outlined, size: 14),
                       label: const Text('Aggiungi scadenza'),
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.textSecondary,
@@ -277,31 +284,41 @@ class _GoalEditorState extends ConsumerState<GoalEditorPanel> {
                         textStyle: AppTextStyles.bodySmall,
                       ),
                     )
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
+                  : Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        const Icon(Icons.calendar_today_outlined,
-                            size: 14, color: AppColors.primary),
-                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.calendar_today_outlined,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
                         Text(
                           _formatDeadline(_deadline!),
-                          style: AppTextStyles.bodySmall
-                              .copyWith(color: AppColors.primary),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.primary,
+                          ),
                         ),
-                        const SizedBox(width: 8),
                         InkWell(
                           onTap: _pickDeadline,
                           borderRadius: BorderRadius.circular(4),
-                          child: Text('Modifica',
-                              style: AppTextStyles.label
-                                  .copyWith(color: AppColors.primary)),
+                          child: Text(
+                            'Modifica',
+                            style: AppTextStyles.label.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 4),
                         InkWell(
                           onTap: _clearDeadline,
                           borderRadius: BorderRadius.circular(4),
-                          child: const Icon(Icons.close,
-                              size: 14, color: AppColors.textSecondary),
+                          child: const Icon(
+                            Icons.close,
+                            size: 14,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -309,52 +326,62 @@ class _GoalEditorState extends ConsumerState<GoalEditorPanel> {
             ],
           ),
         ),
-        const Divider(height: 16, indent: 40, endIndent: 16),
+        Divider(height: 16, indent: horizontalPadding, endIndent: 16),
         // ── Quill toolbar ────────────────────────────────────────
-        QuillSimpleToolbar(
-          controller: _controller,
-          config: const QuillSimpleToolbarConfig(
-            showFontFamily: false,
-            showFontSize: false,
-            showColorButton: true,
-            showBackgroundColorButton: true,
-            showClearFormat: false,
-            showAlignmentButtons: false,
-            showIndent: false,
-            showSearchButton: false,
-            showSubscript: false,
-            showSuperscript: false,
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: QuillSimpleToolbar(
+            controller: _controller,
+            config: const QuillSimpleToolbarConfig(
+              showFontFamily: false,
+              showFontSize: false,
+              showColorButton: true,
+              showBackgroundColorButton: true,
+              showClearFormat: false,
+              showAlignmentButtons: false,
+              showIndent: false,
+              showSearchButton: false,
+              showSubscript: false,
+              showSuperscript: false,
+            ),
           ),
         ),
         // ── Embed bar ─────────────────────────────────────────────
         Container(
           height: 36,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: const BoxDecoration(
             border: Border(bottom: BorderSide(color: AppColors.divider)),
           ),
-          child: Row(
-            children: [
-              _EmbedBtn(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              children: [
+                _EmbedBtn(
                   icon: Icons.table_chart_outlined,
                   label: 'Tabella',
-                  onPressed: _insertTable),
-              const SizedBox(width: 4),
-              _EmbedBtn(
+                  onPressed: _insertTable,
+                ),
+                const SizedBox(width: 4),
+                _EmbedBtn(
                   icon: Icons.bar_chart_outlined,
                   label: 'Grafico',
-                  onPressed: _insertChart),
-              const SizedBox(width: 4),
-              _EmbedBtn(
+                  onPressed: _insertChart,
+                ),
+                const SizedBox(width: 4),
+                _EmbedBtn(
                   icon: Icons.attach_file_rounded,
                   label: 'Allega',
-                  onPressed: _insertFile),
-              const SizedBox(width: 4),
-              _EmbedBtn(
+                  onPressed: _insertFile,
+                ),
+                const SizedBox(width: 4),
+                _EmbedBtn(
                   icon: Icons.link,
                   label: 'Collega',
-                  onPressed: _insertNoteLink),
-            ],
+                  onPressed: _insertNoteLink,
+                ),
+              ],
+            ),
           ),
         ),
         // ── Quill editor ──────────────────────────────────────────
@@ -364,7 +391,12 @@ class _GoalEditorState extends ConsumerState<GoalEditorPanel> {
               controller: _controller,
               config: QuillEditorConfig(
                 placeholder: 'Aggiungi note o piano di azione...',
-                padding: const EdgeInsets.fromLTRB(40, 16, 40, 80),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  16,
+                  horizontalPadding,
+                  80,
+                ),
                 scrollable: false,
                 expands: false,
                 embedBuilders: const [
@@ -377,8 +409,10 @@ class _GoalEditorState extends ConsumerState<GoalEditorPanel> {
                   final uri = Uri.tryParse(url);
                   if (uri != null) {
                     try {
-                      await launchUrl(uri,
-                          mode: LaunchMode.externalApplication);
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
                     } catch (_) {}
                   }
                 },
@@ -395,8 +429,11 @@ class _EmbedBtn extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
-  const _EmbedBtn(
-      {required this.icon, required this.label, required this.onPressed});
+  const _EmbedBtn({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -410,9 +447,12 @@ class _EmbedBtn extends StatelessWidget {
           children: [
             Icon(icon, size: 14, color: AppColors.textSecondary),
             const SizedBox(width: 4),
-            Text(label,
-                style: AppTextStyles.label
-                    .copyWith(color: AppColors.textSecondary)),
+            Text(
+              label,
+              style: AppTextStyles.label.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
           ],
         ),
       ),

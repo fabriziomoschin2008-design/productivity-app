@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/services/logger_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -79,20 +80,21 @@ class _NoteLinkWidget extends StatelessWidget {
     if (embedNode != null && (embedNode as Node).parent != null) {
       try {
         final offset = (embedNode as Node).documentOffset;
-        AppLogger.instance
-            .info('Offset collegamento trovato via albero nodi: $offset');
+        AppLogger.instance.info(
+          'Offset collegamento trovato via albero nodi: $offset',
+        );
         callback(offset);
         return;
       } catch (e) {
-        AppLogger.instance
-            .warning('Fallita strategia primaria di offset: $e');
+        AppLogger.instance.warning('Fallita strategia primaria di offset: $e');
       }
     }
 
     try {
       final selfId = (jsonDecode(rawData) as Map<String, dynamic>)['id'];
-      AppLogger.instance
-          .info('Ricerca offset collegamento nel Delta con ID: $selfId');
+      AppLogger.instance.info(
+        'Ricerca offset collegamento nel Delta con ID: $selfId',
+      );
       int offset = 0;
       for (final op in controller.document.toDelta().toList()) {
         if (op.isInsert && op.data is Map) {
@@ -117,14 +119,16 @@ class _NoteLinkWidget extends StatelessWidget {
                   (jsonDecode(stored as String) as Map<String, dynamic>)['id'];
               if (storedId == selfId) {
                 AppLogger.instance.info(
-                    'Offset collegamento trovato via Delta (ID matching): $offset');
+                  'Offset collegamento trovato via Delta (ID matching): $offset',
+                );
                 callback(offset);
                 return;
               }
             } catch (_) {
               if (stored == rawData) {
                 AppLogger.instance.info(
-                    'Offset collegamento trovato via Delta (raw matching): $offset');
+                  'Offset collegamento trovato via Delta (raw matching): $offset',
+                );
                 callback(offset);
                 return;
               }
@@ -134,11 +138,13 @@ class _NoteLinkWidget extends StatelessWidget {
         final d = op.data;
         offset += d is String ? d.length : 1;
       }
-      AppLogger.instance
-          .warning("Impossibile trovare l'offset del collegamento nel Delta");
+      AppLogger.instance.warning(
+        "Impossibile trovare l'offset del collegamento nel Delta",
+      );
     } catch (e) {
-      AppLogger.instance
-          .error('Errore durante la ricerca fallback nel Delta: $e');
+      AppLogger.instance.error(
+        'Errore durante la ricerca fallback nel Delta: $e',
+      );
     }
   }
 
@@ -152,11 +158,11 @@ class _NoteLinkWidget extends StatelessWidget {
             onTap: () => _navigate(ref),
             borderRadius: BorderRadius.circular(10),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.35)),
+                  color: AppColors.primary.withValues(alpha: 0.35),
+                ),
                 borderRadius: BorderRadius.circular(10),
                 color: AppColors.primary.withValues(alpha: 0.04),
               ),
@@ -181,8 +187,11 @@ class _NoteLinkWidget extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(Icons.arrow_forward,
-                      size: 14, color: AppColors.textSecondary),
+                  const Icon(
+                    Icons.arrow_forward,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
                   if (!readOnly) ...[
                     const SizedBox(width: 4),
                     EmbedActionBtn(
@@ -238,7 +247,7 @@ class _LinkNoteDialogState extends ConsumerState<LinkNoteDialog> {
     return AlertDialog(
       title: const Text('Collega una pagina'),
       content: SizedBox(
-        width: 360,
+        width: AdaptiveLayout.dialogWidth(context, 360),
         height: 400,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,10 +261,12 @@ class _LinkNoteDialogState extends ConsumerState<LinkNoteDialog> {
                 contentPadding: EdgeInsets.zero,
                 isDense: true,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppColors.border)),
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
               ),
               style: AppTextStyles.bodySmall,
               onChanged: (v) => setState(() => _query = v),
@@ -276,8 +287,9 @@ class _LinkNoteDialogState extends ConsumerState<LinkNoteDialog> {
                         onTap: () => Navigator.of(context).pop({
                           'pageId': note.id,
                           'pageType': 'note',
-                          'pageTitle':
-                              note.title.isEmpty ? 'Senza titolo' : note.title,
+                          'pageTitle': note.title.isEmpty
+                              ? 'Senza titolo'
+                              : note.title,
                         }),
                       ),
                   ],
@@ -293,8 +305,9 @@ class _LinkNoteDialogState extends ConsumerState<LinkNoteDialog> {
                         onTap: () => Navigator.of(context).pop({
                           'pageId': goal.id,
                           'pageType': 'goal',
-                          'pageTitle':
-                              goal.title.isEmpty ? 'Senza titolo' : goal.title,
+                          'pageTitle': goal.title.isEmpty
+                              ? 'Senza titolo'
+                              : goal.title,
                         }),
                       ),
                   ],
@@ -302,8 +315,10 @@ class _LinkNoteDialogState extends ConsumerState<LinkNoteDialog> {
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.only(top: 24),
-                        child: Text('Nessun risultato',
-                            style: AppTextStyles.label),
+                        child: Text(
+                          'Nessun risultato',
+                          style: AppTextStyles.label,
+                        ),
                       ),
                     ),
                 ],

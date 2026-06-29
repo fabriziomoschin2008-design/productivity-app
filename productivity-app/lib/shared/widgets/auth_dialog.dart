@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/layout/adaptive_layout.dart';
 import '../../core/services/error_handler.dart';
 import '../../core/services/logger_service.dart';
 import '../../core/theme/app_colors.dart';
@@ -68,6 +69,8 @@ class _AuthDialogState extends State<AuthDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final dialogWidth = AdaptiveLayout.dialogWidth(context, 360);
+
     return AlertDialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -79,7 +82,7 @@ class _AuthDialogState extends State<AuthDialog> {
         style: AppTextStyles.headingCard,
       ),
       content: SizedBox(
-        width: 360,
+        width: dialogWidth,
         child: Form(
           key: _formKey,
           child: Column(
@@ -143,11 +146,13 @@ class _AuthDialogState extends State<AuthDialog> {
         ),
         FilledButton(
           onPressed: _submitting ? null : _submit,
-          child: Text(_submitting
-              ? 'Attendi...'
-              : _isLogin
-                  ? 'Accedi'
-                  : 'Registrati'),
+          child: Text(
+            _submitting
+                ? 'Attendi...'
+                : _isLogin
+                ? 'Accedi'
+                : 'Registrati',
+          ),
         ),
       ],
     );

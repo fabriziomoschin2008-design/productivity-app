@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/dev/productivity-app/linux"
+    "cmake.sourceDirectory": "C:/dev/productivity-app/linux",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

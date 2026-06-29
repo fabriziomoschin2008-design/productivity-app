@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../providers/notes_providers.dart';
 
@@ -32,15 +33,17 @@ class _AddFolderDialogState extends ConsumerState<AddFolderDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       child: SizedBox(
-        width: 360,
+        width: AdaptiveLayout.dialogWidth(context, 360),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Nuova cartella',
-                  style: AppTextStyles.headingCard.copyWith(fontSize: 16)),
+              Text(
+                'Nuova cartella',
+                style: AppTextStyles.headingCard.copyWith(fontSize: 16),
+              ),
               const SizedBox(height: 20),
               TextField(
                 controller: _controller,
@@ -50,14 +53,15 @@ class _AddFolderDialogState extends ConsumerState<AddFolderDialog> {
                 onSubmitted: (_) => _save(),
               ),
               const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Annulla'),
                   ),
-                  const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: _saving ? null : _save,
                     child: const Text('Crea'),

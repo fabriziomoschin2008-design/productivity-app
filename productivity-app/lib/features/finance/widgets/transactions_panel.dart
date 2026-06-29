@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
@@ -37,21 +38,23 @@ class _TransactionsPanelState extends ConsumerState<TransactionsPanel> {
           onAddTransaction: account == null || _view == _FinanceView.goals
               ? null
               : () => showDialog(
-                    context: context,
-                    builder: (_) =>
-                        AddTransactionDialog(accountId: account.account.id),
-                  ),
+                  context: context,
+                  builder: (_) =>
+                      AddTransactionDialog(accountId: account.account.id),
+                ),
         ),
         const Divider(),
         Expanded(
           child: switch (_view) {
             _FinanceView.goals => const GoalsPanel(),
-            _FinanceView.charts => account == null
-                ? const _NoAccountSelected()
-                : ChartsPanel(transactions: state.transactions),
-            _FinanceView.transactions => account == null
-                ? const _NoAccountSelected()
-                : _TransactionList(transactions: state.transactions),
+            _FinanceView.charts =>
+              account == null
+                  ? const _NoAccountSelected()
+                  : ChartsPanel(transactions: state.transactions),
+            _FinanceView.transactions =>
+              account == null
+                  ? const _NoAccountSelected()
+                  : _TransactionList(transactions: state.transactions),
           },
         ),
       ],
@@ -74,45 +77,68 @@ class _TransactionsPanelHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = AdaptiveLayout.isPhone(context);
+    final titleSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          view == _FinanceView.goals
+              ? 'Obiettivi'
+              : (account?.account.name ?? ''),
+          style: AppTextStyles.headingCard.copyWith(fontSize: 17),
+        ),
+        if (view != _FinanceView.goals && account != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            formatCurrency(account!.balance),
+            style: AppTextStyles.displayAmount.copyWith(
+              color: account!.balance < 0
+                  ? AppColors.expense
+                  : AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ],
+    );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 20, 20, 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
+      padding: EdgeInsets.fromLTRB(compact ? 16 : 28, 20, 16, 16),
+      child: compact
+          ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  view == _FinanceView.goals
-                      ? 'Obiettivi'
-                      : (account?.account.name ?? ''),
-                  style: AppTextStyles.headingCard.copyWith(fontSize: 17),
+                titleSection,
+                const SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: _ViewTabs(view: view, onChanged: onViewChanged),
                 ),
-                if (view != _FinanceView.goals && account != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    formatCurrency(account!.balance),
-                    style: AppTextStyles.displayAmount.copyWith(
-                      color: account!.balance < 0
-                          ? AppColors.expense
-                          : AppColors.textPrimary,
-                    ),
+                if (onAddTransaction != null) ...[
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    onPressed: onAddTransaction,
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Movimento'),
+                  ),
+                ],
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: titleSection),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: _ViewTabs(view: view, onChanged: onViewChanged),
+                ),
+                if (onAddTransaction != null) ...[
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: onAddTransaction,
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Movimento'),
                   ),
                 ],
               ],
             ),
-          ),
-          _ViewTabs(view: view, onChanged: onViewChanged),
-          if (onAddTransaction != null) ...[
-            const SizedBox(width: 8),
-            ElevatedButton.icon(
-              onPressed: onAddTransaction,
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('Movimento'),
-            ),
-          ],
-        ],
-      ),
     );
   }
 }
@@ -144,10 +170,8 @@ class _ViewTabs extends StatelessWidget {
       icon: Icon(icon, size: 14),
       label: Text(label, style: const TextStyle(fontSize: 12)),
       style: TextButton.styleFrom(
-        foregroundColor:
-            active ? AppColors.accent : AppColors.textSecondary,
-        padding:
-            const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        foregroundColor: active ? AppColors.accent : AppColors.textSecondary,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
@@ -166,13 +190,18 @@ class _TransactionList extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.receipt_long_outlined,
-                size: 36, color: AppColors.textDisabled),
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 36,
+              color: AppColors.textDisabled,
+            ),
             const SizedBox(height: 12),
             Text('Nessun movimento', style: AppTextStyles.bodySmall),
             const SizedBox(height: 4),
-            Text('Usa "Movimento" per aggiungerne uno',
-                style: AppTextStyles.label),
+            Text(
+              'Usa "Movimento" per aggiungerne uno',
+              style: AppTextStyles.label,
+            ),
           ],
         ),
       );
@@ -181,8 +210,7 @@ class _TransactionList extends ConsumerWidget {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: transactions.length,
-      separatorBuilder: (_, _) =>
-          const Divider(indent: 28, endIndent: 20),
+      separatorBuilder: (_, _) => const Divider(indent: 28, endIndent: 20),
       itemBuilder: (_, i) => _TransactionTile(
         tx: transactions[i],
         onDelete: () => ref
@@ -204,31 +232,46 @@ class _TransactionTile extends StatelessWidget {
     final isIncome = tx.type == 'income';
     final amountColor = isIncome ? AppColors.income : AppColors.expense;
     final amountText = (isIncome ? '+' : '-') + formatCurrency(tx.amount);
+    final compact = AdaptiveLayout.isPhone(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 16 : 28,
+        vertical: 10,
+      ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(formatDateShort(tx.date), style: AppTextStyles.label),
-              const SizedBox(height: 1),
-              Text(tx.category, style: AppTextStyles.bodyRegular),
-              if (tx.note != null && tx.note!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(tx.note!,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(formatDateShort(tx.date), style: AppTextStyles.label),
+                const SizedBox(height: 1),
+                Text(
+                  tx.category,
+                  style: AppTextStyles.bodyRegular,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (tx.note != null && tx.note!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      tx.note!,
                       style: AppTextStyles.bodySmall,
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                ),
-            ],
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+            ),
           ),
-          const Spacer(),
-          Text(amountText,
-              style:
-                  AppTextStyles.amountMedium.copyWith(color: amountColor)),
+          const SizedBox(width: 8),
+          Text(
+            amountText,
+            style: AppTextStyles.amountMedium.copyWith(color: amountColor),
+          ),
           const SizedBox(width: 8),
           IconButton(
             onPressed: onDelete,
@@ -253,12 +296,18 @@ class _NoAccountSelected extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.account_balance_outlined,
-              size: 40, color: AppColors.textDisabled),
+          Icon(
+            Icons.account_balance_outlined,
+            size: 40,
+            color: AppColors.textDisabled,
+          ),
           const SizedBox(height: 14),
-          Text('Seleziona un conto',
-              style: AppTextStyles.bodyRegular
-                  .copyWith(color: AppColors.textSecondary)),
+          Text(
+            'Seleziona un conto',
+            style: AppTextStyles.bodyRegular.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );

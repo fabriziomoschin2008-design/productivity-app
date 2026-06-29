@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/categories.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/date_formatter.dart';
@@ -62,8 +63,7 @@ class _AddTransactionDialogState extends ConsumerState<AddTransactionDialog> {
   }
 
   Future<void> _save() async {
-    final amount =
-        double.tryParse(_amountController.text.replaceAll(',', '.'));
+    final amount = double.tryParse(_amountController.text.replaceAll(',', '.'));
     if (amount == null || amount <= 0) return;
 
     final category = _isCustomCategory
@@ -72,7 +72,9 @@ class _AddTransactionDialogState extends ConsumerState<AddTransactionDialog> {
     if (category.isEmpty) return;
 
     setState(() => _saving = true);
-    await ref.read(financeProvider.notifier).addTransaction(
+    await ref
+        .read(financeProvider.notifier)
+        .addTransaction(
           accountId: widget.accountId,
           amount: amount,
           type: _type,
@@ -89,17 +91,21 @@ class _AddTransactionDialogState extends ConsumerState<AddTransactionDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       child: SizedBox(
-        width: 420,
+        width: AdaptiveLayout.dialogWidth(context, 420),
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Aggiungi movimento',
-                  style: AppTextStyles.headingCard.copyWith(fontSize: 17)),
+              Text(
+                'Aggiungi movimento',
+                style: AppTextStyles.headingCard.copyWith(fontSize: 17),
+              ),
               const SizedBox(height: 24),
-              Row(
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
                 children: [
                   _TypeToggle(
                     label: 'Spesa',
@@ -123,8 +129,9 @@ class _AddTransactionDialogState extends ConsumerState<AddTransactionDialog> {
                   labelText: 'Importo',
                   prefixText: '€ ',
                 ),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 autofocus: true,
                 onSubmitted: (_) => _save(),
               ),
@@ -165,12 +172,18 @@ class _AddTransactionDialogState extends ConsumerState<AddTransactionDialog> {
                 child: InputDecorator(
                   decoration: const InputDecoration(labelText: 'Data'),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(formatDateMedium(_date),
-                          style: AppTextStyles.bodyRegular),
-                      const Icon(Icons.calendar_today_outlined,
-                          size: 16, color: AppColors.textSecondary),
+                      Expanded(
+                        child: Text(
+                          formatDateMedium(_date),
+                          style: AppTextStyles.bodyRegular,
+                        ),
+                      ),
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
                     ],
                   ),
                 ),
@@ -178,19 +191,21 @@ class _AddTransactionDialogState extends ConsumerState<AddTransactionDialog> {
               const SizedBox(height: 14),
               TextField(
                 controller: _noteController,
-                decoration:
-                    const InputDecoration(labelText: 'Nota (opzionale)'),
+                decoration: const InputDecoration(
+                  labelText: 'Nota (opzionale)',
+                ),
                 maxLines: 2,
               ),
               const SizedBox(height: 28),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Annulla'),
                   ),
-                  const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: _saving ? null : _save,
                     child: const Text('Aggiungi'),
@@ -228,9 +243,7 @@ class _TypeToggle extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? color : AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: selected ? color : AppColors.border,
-          ),
+          border: Border.all(color: selected ? color : AppColors.border),
         ),
         child: Text(
           label,
