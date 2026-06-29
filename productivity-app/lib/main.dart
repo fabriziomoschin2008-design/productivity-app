@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_quill/flutter_quill.dart' show FlutterQuillLocalizations;
+import 'package:flutter_quill/flutter_quill.dart'
+    show FlutterQuillLocalizations;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,6 +9,7 @@ import 'core/notifications/notification_service.dart';
 import 'core/config/supabase_config.dart';
 import 'core/services/app_settings.dart';
 import 'core/services/sync_repository.dart';
+import 'core/services/sync_provider.dart';
 import 'core/services/sync_worker.dart';
 import 'core/services/error_handler.dart';
 import 'core/services/logger_service.dart';
@@ -51,11 +53,7 @@ class AppRoot extends StatefulWidget {
   final AppDatabase db;
   final SyncWorker syncWorker;
 
-  const AppRoot({
-    super.key,
-    required this.db,
-    required this.syncWorker,
-  });
+  const AppRoot({super.key, required this.db, required this.syncWorker});
 
   @override
   State<AppRoot> createState() => _AppRootState();
@@ -80,6 +78,7 @@ class _AppRootState extends State<AppRoot> {
     return ProviderScope(
       overrides: [
         databaseProvider.overrideWithValue(widget.db),
+        syncWorkerProvider.overrideWithValue(widget.syncWorker),
       ],
       child: const App(),
     );
@@ -103,10 +102,7 @@ class App extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('it'),
-        Locale('en'),
-      ],
+      supportedLocales: const [Locale('it'), Locale('en')],
     );
   }
 }

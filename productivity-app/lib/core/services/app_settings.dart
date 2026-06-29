@@ -27,4 +27,9 @@ class AppSettings {
     await init();
     await _prefs!.setString(key, value);
   }
+
+  static Future<void> removeString(String key) async {
+    await init();
+    await _prefs!.remove(key);
+  }
 }

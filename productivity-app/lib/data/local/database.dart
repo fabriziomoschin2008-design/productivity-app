@@ -505,15 +505,27 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
-  Future<void> _queueSyncChange(
+  Future<void> _removeQueuedSyncChange(
     String entityType,
     String entityId,
-    String operation,
   ) async {
     await (delete(syncQueueEntries)..where(
           (q) => q.entityType.equals(entityType) & q.entityId.equals(entityId),
         ))
         .go();
+  }
+
+  Future<void> _queueSyncChange(
+    String entityType,
+    String entityId,
+    String operation,
+  ) async {
+    if (!await _shouldQueueSyncChange(entityType, entityId)) {
+      await _removeQueuedSyncChange(entityType, entityId);
+      return;
+    }
+
+    await _removeQueuedSyncChange(entityType, entityId);
     await into(syncQueueEntries).insert(
       SyncQueueEntriesCompanion.insert(
         entityType: entityType,
@@ -524,6 +536,106 @@ class AppDatabase extends _$AppDatabase {
   }
 
   String? _currentUserId() => Supabase.instance.client.auth.currentUser?.id;
+
+  bool _canMutateOwnedRow(String? rowUserId) {
+    if (rowUserId == null) return true;
+    return rowUserId == _currentUserId();
+  }
+
+  Future<bool> _guardOwnedMutation({
+    required String entityType,
+    required String entityId,
+    required String? rowUserId,
+  }) async {
+    if (_canMutateOwnedRow(rowUserId)) return true;
+    AppLogger.instance.warning(
+      'Modifica locale bloccata per $entityType/$entityId: record sincronizzato senza sessione compatibile',
+    );
+    await _removeQueuedSyncChange(entityType, entityId);
+    return false;
+  }
+
+  Future<bool> _shouldQueueSyncChange(
+    String entityType,
+    String entityId,
+  ) async {
+    final currentUserId = _currentUserId();
+    if (currentUserId == null) return false;
+    final rowUserId = await _entityUserId(entityType, entityId);
+    return rowUserId == currentUserId;
+  }
+
+  Future<String?> _entityUserId(String entityType, String entityId) async {
+    switch (entityType) {
+      case 'accounts':
+        return (select(accounts)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'transaction_entries':
+        return (select(transactionEntries)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'goals':
+        return (select(goals)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'todo_lists':
+        return (select(todoLists)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'todo_items':
+        return (select(todoItems)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'note_folders':
+        return (select(noteFolders)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'notes':
+        return (select(notes)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'habits':
+        return (select(habits)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'habit_logs':
+        final parts = entityId.split('|');
+        if (parts.length != 2) return null;
+        final date = DateTime.tryParse(parts[1]);
+        if (date == null) return null;
+        return (select(habitLogs)
+              ..where((t) => t.habitId.equals(parts[0]) & t.date.equals(date)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'calendar_events':
+        return (select(calendarEvents)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'note_goals':
+        return (select(noteGoals)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'trackers':
+        return (select(trackers)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'movies':
+        return (select(movies)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'tv_series':
+        return (select(tvSeries)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      case 'games':
+        return (select(games)..where((t) => t.id.equals(entityId)))
+            .map((t) => t.userId)
+            .getSingleOrNull();
+      default:
+        return null;
+    }
+  }
 
   Future<void> assignUserIdToUnownedRows(String userId) async {
     await transaction(() async {
@@ -850,6 +962,17 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> upsertAccount(AccountsCompanion entry) async {
     final id = entry.id.present ? entry.id.value : _uuid.v4();
+    if (entry.id.present) {
+      final existing = await getAccountByIdIncludingDeleted(id);
+      if (existing != null &&
+          !await _guardOwnedMutation(
+            entityType: 'accounts',
+            entityId: id,
+            rowUserId: existing.userId,
+          )) {
+        return;
+      }
+    }
     final now = DateTime.now();
     final normalized = entry.copyWith(
       id: Value(id),
@@ -862,6 +985,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteAccountWithTransactions(String accountId) async {
+    final account = await getAccountByIdIncludingDeleted(accountId);
+    if (account == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'accounts',
+      entityId: accountId,
+      rowUserId: account.userId,
+    )) {
+      return;
+    }
     await transaction(() async {
       final now = DateTime.now();
       final txIds =
@@ -922,6 +1054,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteTransactionById(String id) async {
+    final existing = await getTransactionByIdIncludingDeleted(id);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'transaction_entries',
+      entityId: id,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     final now = DateTime.now();
     await (update(
       transactionEntries,
@@ -953,6 +1094,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateGoal(GoalsCompanion entry) async {
+    final existing = await getGoalByIdIncludingDeleted(entry.id.value);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'goals',
+      entityId: entry.id.value,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await (update(
       goals,
     )..where((g) => g.id.equals(entry.id.value))).write(entry);
@@ -969,10 +1119,24 @@ class AppDatabase extends _$AppDatabase {
     if (goal == null || goal.deletedAt != null) {
       throw StateError('Obiettivo non trovato');
     }
+    if (!await _guardOwnedMutation(
+      entityType: 'goals',
+      entityId: goalId,
+      rowUserId: goal.userId,
+    )) {
+      return;
+    }
     if (accountId != null) {
       final account = await getAccountByIdIncludingDeleted(accountId);
       if (account == null || account.deletedAt != null) {
         throw StateError('Conto non trovato');
+      }
+      if (!await _guardOwnedMutation(
+        entityType: 'accounts',
+        entityId: accountId,
+        rowUserId: account.userId,
+      )) {
+        return;
       }
     }
 
@@ -1012,6 +1176,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteGoalById(String id) async {
+    final existing = await getGoalByIdIncludingDeleted(id);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'goals',
+      entityId: id,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     final now = DateTime.now();
     await (update(goals)..where((g) => g.id.equals(id) & g.deletedAt.isNull()))
         .write(GoalsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
@@ -1040,6 +1213,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteTodoListWithItems(String listId) async {
+    final existing = await getTodoListByIdIncludingDeleted(listId);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'todo_lists',
+      entityId: listId,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await transaction(() async {
       final now = DateTime.now();
       final itemIds =
@@ -1086,6 +1268,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateTodoItem(TodoItemsCompanion entry) async {
+    final existing = await getTodoItemByIdIncludingDeleted(entry.id.value);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'todo_items',
+      entityId: entry.id.value,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await (update(
       todoItems,
     )..where((t) => t.id.equals(entry.id.value))).write(entry);
@@ -1093,6 +1284,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteTodoItemById(String id) async {
+    final existing = await getTodoItemByIdIncludingDeleted(id);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'todo_items',
+      entityId: id,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     final now = DateTime.now();
     await (update(
       todoItems,
@@ -1124,6 +1324,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteNoteFolderById(String folderId) async {
+    final existing = await getNoteFolderByIdIncludingDeleted(folderId);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'note_folders',
+      entityId: folderId,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await transaction(() async {
       final now = DateTime.now();
       final noteIds =
@@ -1177,6 +1386,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateNote(NotesCompanion entry) async {
+    final existing = await getNoteByIdIncludingDeleted(entry.id.value);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'notes',
+      entityId: entry.id.value,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await (update(
       notes,
     )..where((n) => n.id.equals(entry.id.value))).write(entry);
@@ -1184,6 +1402,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteNoteById(String id) async {
+    final existing = await getNoteByIdIncludingDeleted(id);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'notes',
+      entityId: id,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     final now = DateTime.now();
     await (update(notes)..where((n) => n.id.equals(id) & n.deletedAt.isNull()))
         .write(NotesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
@@ -1217,6 +1444,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateHabit(HabitsCompanion entry) async {
+    final existing = await getHabitByIdIncludingDeleted(entry.id.value);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'habits',
+      entityId: entry.id.value,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await (update(
       habits,
     )..where((h) => h.id.equals(entry.id.value))).write(entry);
@@ -1224,6 +1460,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteHabitById(String id) async {
+    final existing = await getHabitByIdIncludingDeleted(id);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'habits',
+      entityId: id,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await transaction(() async {
       final now = DateTime.now();
       final logs = await (select(
@@ -1260,6 +1505,19 @@ class AppDatabase extends _$AppDatabase {
           .watch();
 
   Future<void> setHabitLog(HabitLogsCompanion entry) async {
+    final existing = await getHabitLogIncludingDeleted(
+      entry.habitId.value,
+      entry.date.value,
+    );
+    if (existing != null &&
+        !await _guardOwnedMutation(
+          entityType: 'habit_logs',
+          entityId:
+              '${entry.habitId.value}|${entry.date.value.toIso8601String()}',
+          rowUserId: existing.userId,
+        )) {
+      return;
+    }
     final now = DateTime.now();
     final normalized = entry.copyWith(
       userId: entry.userId.present ? entry.userId : Value(_currentUserId()),
@@ -1274,6 +1532,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> clearHabitLog(String habitId, DateTime date) async {
+    final existing = await getHabitLogIncludingDeleted(habitId, date);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'habit_logs',
+      entityId: '$habitId|${date.toIso8601String()}',
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     final now = DateTime.now();
     await (update(habitLogs)..where(
           (l) =>
@@ -1325,6 +1592,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateTracker(TrackersCompanion entry) async {
+    final existing = await getTrackerByIdIncludingDeleted(entry.id.value);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'trackers',
+      entityId: entry.id.value,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await (update(
       trackers,
     )..where((t) => t.id.equals(entry.id.value))).write(entry);
@@ -1332,6 +1608,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteTrackerById(String id) async {
+    final existing = await getTrackerByIdIncludingDeleted(id);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'trackers',
+      entityId: id,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     final now = DateTime.now();
     await (update(trackers)
           ..where((t) => t.id.equals(id) & t.deletedAt.isNull()))
@@ -1361,6 +1646,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateNoteGoal(NoteGoalsCompanion entry) async {
+    final existing = await getNoteGoalByIdIncludingDeleted(entry.id.value);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'note_goals',
+      entityId: entry.id.value,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await (update(
       noteGoals,
     )..where((g) => g.id.equals(entry.id.value))).write(entry);
@@ -1368,6 +1662,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteNoteGoalById(String id) async {
+    final existing = await getNoteGoalByIdIncludingDeleted(id);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'note_goals',
+      entityId: id,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     final now = DateTime.now();
     await (update(
       noteGoals,
@@ -1399,6 +1702,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateMovie(MoviesCompanion entry) async {
+    final existing = await getMovieByIdIncludingDeleted(entry.id.value);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'movies',
+      entityId: entry.id.value,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await (update(
       movies,
     )..where((m) => m.id.equals(entry.id.value))).write(entry);
@@ -1406,6 +1718,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteMovieById(String id) async {
+    final existing = await getMovieByIdIncludingDeleted(id);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'movies',
+      entityId: id,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     final now = DateTime.now();
     await (update(movies)..where((m) => m.id.equals(id) & m.deletedAt.isNull()))
         .write(MoviesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
@@ -1434,6 +1755,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateTvSeries(TvSeriesCompanion entry) async {
+    final existing = await getTvSeriesByIdIncludingDeleted(entry.id.value);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'tv_series',
+      entityId: entry.id.value,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await (update(
       tvSeries,
     )..where((s) => s.id.equals(entry.id.value))).write(entry);
@@ -1441,6 +1771,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteTvSeriesById(String id) async {
+    final existing = await getTvSeriesByIdIncludingDeleted(id);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'tv_series',
+      entityId: id,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     final now = DateTime.now();
     await (update(tvSeries)
           ..where((s) => s.id.equals(id) & s.deletedAt.isNull()))
@@ -1470,6 +1809,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateGame(GamesCompanion entry) async {
+    final existing = await getGameByIdIncludingDeleted(entry.id.value);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'games',
+      entityId: entry.id.value,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await (update(
       games,
     )..where((g) => g.id.equals(entry.id.value))).write(entry);
@@ -1477,6 +1825,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteGameById(String id) async {
+    final existing = await getGameByIdIncludingDeleted(id);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'games',
+      entityId: id,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     final now = DateTime.now();
     await (update(games)..where((g) => g.id.equals(id) & g.deletedAt.isNull()))
         .write(GamesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
@@ -1505,6 +1862,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateCalendarEvent(CalendarEventsCompanion entry) async {
+    final existing = await getCalendarEventByIdIncludingDeleted(entry.id.value);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'calendar_events',
+      entityId: entry.id.value,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     await (update(
       calendarEvents,
     )..where((e) => e.id.equals(entry.id.value))).write(entry);
@@ -1512,6 +1878,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteCalendarEventById(String id) async {
+    final existing = await getCalendarEventByIdIncludingDeleted(id);
+    if (existing == null) return;
+    if (!await _guardOwnedMutation(
+      entityType: 'calendar_events',
+      entityId: id,
+      rowUserId: existing.userId,
+    )) {
+      return;
+    }
     final now = DateTime.now();
     await (update(
       calendarEvents,
@@ -1519,6 +1894,31 @@ class AppDatabase extends _$AppDatabase {
       CalendarEventsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
     await _queueSyncChange('calendar_events', id, 'delete');
+  }
+
+  Future<void> clearSyncedDataForUser(String userId) async {
+    await transaction(() async {
+      await (delete(accounts)..where((t) => t.userId.equals(userId))).go();
+      await (delete(
+        transactionEntries,
+      )..where((t) => t.userId.equals(userId))).go();
+      await (delete(goals)..where((t) => t.userId.equals(userId))).go();
+      await (delete(todoLists)..where((t) => t.userId.equals(userId))).go();
+      await (delete(todoItems)..where((t) => t.userId.equals(userId))).go();
+      await (delete(noteFolders)..where((t) => t.userId.equals(userId))).go();
+      await (delete(notes)..where((t) => t.userId.equals(userId))).go();
+      await (delete(habits)..where((t) => t.userId.equals(userId))).go();
+      await (delete(habitLogs)..where((t) => t.userId.equals(userId))).go();
+      await (delete(
+        calendarEvents,
+      )..where((t) => t.userId.equals(userId))).go();
+      await (delete(noteGoals)..where((t) => t.userId.equals(userId))).go();
+      await (delete(trackers)..where((t) => t.userId.equals(userId))).go();
+      await (delete(movies)..where((t) => t.userId.equals(userId))).go();
+      await (delete(tvSeries)..where((t) => t.userId.equals(userId))).go();
+      await (delete(games)..where((t) => t.userId.equals(userId))).go();
+      await delete(syncQueueEntries).go();
+    });
   }
 
   Stream<List<SyncQueueEntry>> watchPendingSyncQueue() => (select(

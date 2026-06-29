@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/auth/auth_provider.dart';
 import '../../core/debug/debug_provider.dart';
 import '../../core/services/error_handler.dart';
+import '../../core/services/sync_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import 'auth_dialog.dart';
@@ -54,6 +55,51 @@ const appNavDestinations = <AppNavDestination>[
   ),
 ];
 
+Future<void> handleAuthTap(BuildContext context, User? user) async {
+  final container = ProviderScope.containerOf(context, listen: false);
+  final syncWorker = container.read(syncWorkerProvider);
+  if (user == null) {
+    await showDialog<bool>(
+      context: context,
+      builder: (_) => const AuthDialog(),
+    );
+    return;
+  }
+
+  final confirm = await showDialog<bool>(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Disconnetti'),
+      content: Text('Vuoi uscire da ${user.email ?? 'questo account'}?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('Annulla'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: const Text('Esci'),
+        ),
+      ],
+    ),
+  );
+  if (confirm != true || !context.mounted) return;
+  try {
+    final userId = user.id;
+    await Supabase.instance.client.auth.signOut();
+    await syncWorker.clearLocalSyncedData(userId);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Disconnessione effettuata'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  } catch (e, s) {
+    AppErrorHandler.handle(e, s);
+  }
+}
+
 class NavSidebar extends ConsumerWidget {
   const NavSidebar({super.key});
 
@@ -100,47 +146,6 @@ class _AuthNavItem extends StatelessWidget {
 
   const _AuthNavItem({required this.user});
 
-  Future<void> _handleTap(BuildContext context) async {
-    if (user == null) {
-      await showDialog<bool>(
-        context: context,
-        builder: (_) => const AuthDialog(),
-      );
-      return;
-    }
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Disconnetti'),
-        content: Text('Vuoi uscire da ${user!.email ?? 'questo account'}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Annulla'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Esci'),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true || !context.mounted) return;
-    try {
-      await Supabase.instance.client.auth.signOut();
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Disconnessione effettuata'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (e, s) {
-      AppErrorHandler.handle(e, s);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isLoggedIn = user != null;
@@ -153,7 +158,7 @@ class _AuthNavItem extends StatelessWidget {
           : 'Accedi per attivare il sync',
       preferBelow: false,
       child: GestureDetector(
-        onTap: () => _handleTap(context),
+        onTap: () => handleAuthTap(context, user),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
           child: AnimatedContainer(
@@ -187,6 +192,62 @@ class _AuthNavItem extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class MobileAuthButton extends ConsumerWidget {
+  const MobileAuthButton({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authUserProvider).valueOrNull;
+    final isLoggedIn = user != null;
+    final syncWorker = ref.read(syncWorkerProvider);
+
+    return SafeArea(
+      minimum: const EdgeInsets.only(right: 16, bottom: 82),
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (isLoggedIn) ...[
+              FloatingActionButton.extended(
+                heroTag: 'mobile_sync_button',
+                onPressed: () async {
+                  await syncWorker.refreshNow(fullResync: true);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Refresh cloud completato'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                icon: const Icon(Icons.sync_rounded),
+                label: const Text('Refresh'),
+              ),
+              const SizedBox(height: 12),
+            ],
+            FloatingActionButton.extended(
+              heroTag: 'mobile_auth_button',
+              onPressed: () => handleAuthTap(context, user),
+              backgroundColor: isLoggedIn
+                  ? AppColors.income
+                  : AppColors.primary,
+              foregroundColor: Colors.white,
+              icon: Icon(
+                isLoggedIn ? Icons.cloud_done_rounded : Icons.login_rounded,
+              ),
+              label: Text(isLoggedIn ? 'Cloud' : 'Accedi'),
+            ),
+          ],
         ),
       ),
     );

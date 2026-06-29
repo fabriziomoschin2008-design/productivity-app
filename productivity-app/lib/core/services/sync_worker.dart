@@ -67,15 +67,30 @@ class SyncWorker {
     _pollTimer = null;
   }
 
+  Future<void> refreshNow({bool fullResync = false}) async {
+    if (fullResync) {
+      await _resetPullState();
+    }
+    await syncPending(forcePull: true);
+  }
+
+  Future<void> clearLocalSyncedData(String userId) async {
+    await _tearDownRealtime();
+    await _resetPullState();
+    await _db.clearSyncedDataForUser(userId);
+  }
+
   Future<void> _handleAuthStateChanged({bool forcePull = true}) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) {
       await _tearDownRealtime();
+      _lastPullAt = null;
       await syncPending(forcePull: forcePull);
       return;
     }
 
     if (_realtimeUserId != userId || _realtimeChannel == null) {
+      await _resetPullState();
       await _setUpRealtime(userId);
     }
 
@@ -128,6 +143,13 @@ class SyncWorker {
     }
   }
 
+  Future<void> _resetPullState() async {
+    _lastPullAt = null;
+    for (final table in _realtimeTables) {
+      await AppSettings.removeString(_cursorKey(table));
+    }
+  }
+
   Future<void> syncPending({bool forcePull = false}) async {
     if (_isSyncing) return;
     final session = _client.auth.currentSession;
@@ -139,7 +161,6 @@ class SyncWorker {
     }
     _isSyncing = true;
     try {
-      await _db.assignUserIdToUnownedRows(session.user.id);
       final entries = await _repo.getPending();
       final hadPendingEntries = entries.isNotEmpty;
       for (final entry in entries) {
@@ -378,6 +399,10 @@ class SyncWorker {
   Future<void> _syncEntry(SyncQueueEntry entry) async {
     final payload = await _payloadFor(entry);
     if (payload == null) return;
+    final currentUserId = _client.auth.currentUser?.id;
+    if (currentUserId == null) return;
+    final payloadUserId = payload['user_id'] as String?;
+    if (payloadUserId != currentUserId) return;
 
     switch (entry.entityType) {
       case 'habit_logs':
@@ -456,7 +481,7 @@ class SyncWorker {
 
   Map<String, dynamic> _accountToMap(Account row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'name': row.name,
     'color_value': row.colorValue,
     'opening_balance': row.openingBalance,
@@ -467,7 +492,7 @@ class SyncWorker {
 
   Map<String, dynamic> _transactionToMap(TransactionEntry row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'account_id': row.accountId,
     'amount': row.amount,
     'type': row.type,
@@ -481,7 +506,7 @@ class SyncWorker {
 
   Map<String, dynamic> _goalToMap(Goal row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'name': row.name,
     'target_amount': row.targetAmount,
     'current_amount': row.currentAmount,
@@ -495,7 +520,7 @@ class SyncWorker {
 
   Map<String, dynamic> _todoListToMap(TodoList row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'name': row.name,
     'color_value': row.colorValue,
     'created_at': _ts(row.createdAt),
@@ -505,7 +530,7 @@ class SyncWorker {
 
   Map<String, dynamic> _todoItemToMap(TodoItem row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'list_id': row.listId,
     'title': row.title,
     'note': row.note,
@@ -521,7 +546,7 @@ class SyncWorker {
 
   Map<String, dynamic> _noteFolderToMap(NoteFolder row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'name': row.name,
     'created_at': _ts(row.createdAt),
     'updated_at': _ts(row.updatedAt),
@@ -530,7 +555,7 @@ class SyncWorker {
 
   Map<String, dynamic> _noteToMap(Note row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'title': row.title,
     'content': row.content,
     'folder_id': row.folderId,
@@ -542,7 +567,7 @@ class SyncWorker {
 
   Map<String, dynamic> _habitToMap(Habit row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'name': row.name,
     'category': row.category,
     'sort_order': row.sortOrder,
@@ -553,7 +578,7 @@ class SyncWorker {
 
   Map<String, dynamic> _habitLogToMap(HabitLog row) => {
     'habit_id': row.habitId,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'date': _ts(row.date),
     'status': row.status,
     'updated_at': _ts(row.updatedAt),
@@ -562,7 +587,7 @@ class SyncWorker {
 
   Map<String, dynamic> _calendarEventToMap(CalendarEvent row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'title': row.title,
     'note': row.note,
     'start_date': _ts(row.startDate),
@@ -576,7 +601,7 @@ class SyncWorker {
 
   Map<String, dynamic> _noteGoalToMap(NoteGoal row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'title': row.title,
     'description': row.description,
     'deadline': _ts(row.deadline),
@@ -588,7 +613,7 @@ class SyncWorker {
 
   Map<String, dynamic> _trackerToMap(Tracker row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'name': row.name,
     'current_value': row.currentValue,
     'target_value': row.targetValue,
@@ -605,7 +630,7 @@ class SyncWorker {
 
   Map<String, dynamic> _movieToMap(Movy row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'tmdb_id': row.tmdbId,
     'title': row.title,
     'overview': row.overview,
@@ -624,7 +649,7 @@ class SyncWorker {
 
   Map<String, dynamic> _tvSeriesToMap(TvSery row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'tmdb_id': row.tmdbId,
     'title': row.title,
     'overview': row.overview,
@@ -644,7 +669,7 @@ class SyncWorker {
 
   Map<String, dynamic> _gameToMap(Game row) => {
     'id': row.id,
-    'user_id': row.userId ?? _client.auth.currentUser?.id,
+    'user_id': row.userId,
     'title': row.title,
     'platform': row.platform,
     'status': row.status,

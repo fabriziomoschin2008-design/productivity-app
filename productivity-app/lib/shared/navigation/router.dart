@@ -64,6 +64,7 @@ class _AppShell extends ConsumerWidget {
                 Expanded(child: child),
               ],
             ),
+          if (compact) const MobileAuthButton(),
           if (debugMode) const DebugPanel(),
         ],
       ),
