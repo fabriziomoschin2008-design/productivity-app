@@ -26,8 +26,10 @@ class _TransactionsPanelState extends ConsumerState<TransactionsPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(financeProvider);
-    final account = state.selectedAccount;
+    final account = ref.watch(financeProvider.select((s) => s.selectedAccount));
+    final transactions = ref.watch(
+      financeProvider.select((s) => s.transactions),
+    );
 
     return Column(
       children: [
@@ -50,11 +52,11 @@ class _TransactionsPanelState extends ConsumerState<TransactionsPanel> {
             _FinanceView.charts =>
               account == null
                   ? const _NoAccountSelected()
-                  : ChartsPanel(transactions: state.transactions),
+                  : ChartsPanel(transactions: transactions),
             _FinanceView.transactions =>
               account == null
                   ? const _NoAccountSelected()
-                  : _TransactionList(transactions: state.transactions),
+                  : _TransactionList(transactions: transactions),
           },
         ),
       ],

@@ -425,7 +425,12 @@ class _GamesTabState extends ConsumerState<_GamesTab> {
                   icon: Icons.videogame_asset_rounded,
                 )
               : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                  padding: EdgeInsets.fromLTRB(
+                    AdaptiveLayout.isPhone(context) ? 16 : 24,
+                    8,
+                    AdaptiveLayout.isPhone(context) ? 16 : 24,
+                    24,
+                  ),
                   itemCount: games.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (_, i) => GameCard(

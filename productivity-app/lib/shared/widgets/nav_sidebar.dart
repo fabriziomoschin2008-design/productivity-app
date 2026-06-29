@@ -13,11 +13,13 @@ import 'auth_dialog.dart';
 class AppNavDestination {
   final IconData icon;
   final String label;
+  final String mobileLabel;
   final String path;
 
   const AppNavDestination({
     required this.icon,
     required this.label,
+    required this.mobileLabel,
     required this.path,
   });
 }
@@ -26,31 +28,37 @@ const appNavDestinations = <AppNavDestination>[
   AppNavDestination(
     icon: Icons.account_balance_wallet_rounded,
     label: 'Finanze',
+    mobileLabel: 'Conti',
     path: '/finance',
   ),
   AppNavDestination(
     icon: Icons.sticky_note_2_rounded,
     label: 'Note',
+    mobileLabel: 'Note',
     path: '/notes',
   ),
   AppNavDestination(
     icon: Icons.calendar_month_rounded,
     label: 'Calendario',
+    mobileLabel: 'Agenda',
     path: '/calendar',
   ),
   AppNavDestination(
     icon: Icons.check_circle_rounded,
     label: 'To-do',
+    mobileLabel: 'To-do',
     path: '/todo',
   ),
   AppNavDestination(
     icon: Icons.track_changes_rounded,
     label: 'Tracker',
+    mobileLabel: 'Track',
     path: '/tracker',
   ),
   AppNavDestination(
     icon: Icons.movie_rounded,
     label: 'Media',
+    mobileLabel: 'Media',
     path: '/entertainment',
   ),
 ];
@@ -206,9 +214,11 @@ class MobileAuthButton extends ConsumerWidget {
     final user = ref.watch(authUserProvider).valueOrNull;
     final isLoggedIn = user != null;
     final syncWorker = ref.read(syncWorkerProvider);
+    final compact = MediaQuery.sizeOf(context).width < 600;
+    final bottomInset = compact ? 74.0 : 82.0;
 
     return SafeArea(
-      minimum: const EdgeInsets.only(right: 16, bottom: 82),
+      minimum: EdgeInsets.only(right: 12, bottom: bottomInset),
       child: Align(
         alignment: Alignment.bottomRight,
         child: Column(
@@ -230,10 +240,12 @@ class MobileAuthButton extends ConsumerWidget {
                 },
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                icon: const Icon(Icons.sync_rounded),
-                label: const Text('Refresh'),
+                icon: const Icon(Icons.sync_rounded, size: 18),
+                label: const Text('Sync'),
+                extendedPadding: const EdgeInsets.symmetric(horizontal: 14),
+                extendedIconLabelSpacing: 8,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
             ],
             FloatingActionButton.extended(
               heroTag: 'mobile_auth_button',
@@ -244,8 +256,11 @@ class MobileAuthButton extends ConsumerWidget {
               foregroundColor: Colors.white,
               icon: Icon(
                 isLoggedIn ? Icons.cloud_done_rounded : Icons.login_rounded,
+                size: 18,
               ),
               label: Text(isLoggedIn ? 'Cloud' : 'Accedi'),
+              extendedPadding: const EdgeInsets.symmetric(horizontal: 14),
+              extendedIconLabelSpacing: 8,
             ),
           ],
         ),
@@ -269,7 +284,7 @@ class MobileBottomNav extends StatelessWidget {
       selectedIndex: currentIndex < 0 ? 0 : currentIndex,
       onDestinationSelected: (index) =>
           context.go(appNavDestinations[index].path),
-      height: 70,
+      height: compact ? 66 : 70,
       labelBehavior: compact
           ? NavigationDestinationLabelBehavior.onlyShowSelected
           : NavigationDestinationLabelBehavior.alwaysShow,
@@ -277,7 +292,7 @@ class MobileBottomNav extends StatelessWidget {
         for (final destination in appNavDestinations)
           NavigationDestination(
             icon: Icon(destination.icon),
-            label: destination.label,
+            label: compact ? destination.mobileLabel : destination.label,
           ),
       ],
     );

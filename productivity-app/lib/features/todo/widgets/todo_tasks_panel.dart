@@ -150,9 +150,13 @@ class _TaskTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDone = task.isDone;
+    final compact = AdaptiveLayout.isPhone(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 16 : 28,
+        vertical: 10,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

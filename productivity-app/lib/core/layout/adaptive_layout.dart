@@ -29,4 +29,11 @@ class AdaptiveLayout {
   static double editorHorizontalPadding(BuildContext context) {
     return isPhone(context) ? 16 : 40;
   }
+
+  static double sidePanelWidth(
+    BuildContext context, {
+    double desktopWidth = 272,
+  }) {
+    return isCompact(context) ? double.infinity : desktopWidth;
+  }
 }

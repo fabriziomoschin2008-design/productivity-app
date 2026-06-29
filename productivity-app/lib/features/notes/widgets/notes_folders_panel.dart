@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/local/database.dart';
@@ -15,7 +16,7 @@ class NotesFoldersPanel extends ConsumerWidget {
     final goalState = ref.watch(noteGoalsProvider);
 
     return SizedBox(
-      width: 272,
+      width: AdaptiveLayout.sidePanelWidth(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -47,7 +48,8 @@ class NotesFoldersPanel extends ConsumerWidget {
                   label: 'Tutte le note',
                   icon: Icons.notes_outlined,
                   count: state.allNotesCount,
-                  selected: state.selectedFolderId == null &&
+                  selected:
+                      state.selectedFolderId == null &&
                       goalState.selectedGoalId == null,
                   onTap: () {
                     ref.read(notesProvider.notifier).selectFolder(null);
@@ -64,7 +66,8 @@ class NotesFoldersPanel extends ConsumerWidget {
                     _FolderTile(
                       name: folder.name,
                       count: state.countForFolder(folder.id),
-                      selected: state.selectedFolderId == folder.id &&
+                      selected:
+                          state.selectedFolderId == folder.id &&
                           goalState.selectedGoalId == null,
                       onTap: () {
                         ref
@@ -72,8 +75,8 @@ class NotesFoldersPanel extends ConsumerWidget {
                             .selectFolder(folder.id);
                         ref.read(noteGoalsProvider.notifier).selectGoal(null);
                       },
-                      onDelete: () => _confirmDelete(
-                          context, ref, folder.id, folder.name),
+                      onDelete: () =>
+                          _confirmDelete(context, ref, folder.id, folder.name),
                     ),
                 ],
                 // ── Obiettivi ──────────────────────────────────────
@@ -91,8 +94,11 @@ class NotesFoldersPanel extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(4),
                         child: const Padding(
                           padding: EdgeInsets.all(4),
-                          child: Icon(Icons.add,
-                              size: 16, color: AppColors.textSecondary),
+                          child: Icon(
+                            Icons.add,
+                            size: 16,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                     ],
@@ -103,8 +109,9 @@ class NotesFoldersPanel extends ConsumerWidget {
                     padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
                     child: Text(
                       'Nessun obiettivo',
-                      style: AppTextStyles.label
-                          .copyWith(color: AppColors.textDisabled),
+                      style: AppTextStyles.label.copyWith(
+                        color: AppColors.textDisabled,
+                      ),
                     ),
                   ),
                 for (final goal in goalState.goals)
@@ -112,13 +119,11 @@ class NotesFoldersPanel extends ConsumerWidget {
                     goal: goal,
                     selected: goalState.selectedGoalId == goal.id,
                     onTap: () {
-                      ref
-                          .read(noteGoalsProvider.notifier)
-                          .selectGoal(goal.id);
+                      ref.read(noteGoalsProvider.notifier).selectGoal(goal.id);
                       ref.read(notesProvider.notifier).selectNote(null);
                     },
-                    onDelete: () => _confirmDeleteGoal(
-                        context, ref, goal.id, goal.title),
+                    onDelete: () =>
+                        _confirmDeleteGoal(context, ref, goal.id, goal.title),
                   ),
               ],
             ),
@@ -129,21 +134,28 @@ class NotesFoldersPanel extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(
-      BuildContext context, WidgetRef ref, String id, String name) async {
+    BuildContext context,
+    WidgetRef ref,
+    String id,
+    String name,
+  ) async {
     final ok = await showDialog<bool>(
       context: context,
       useRootNavigator: false,
       builder: (_) => AlertDialog(
         title: const Text('Elimina cartella'),
         content: Text(
-            'Elimina "$name"? Le note al suo interno verranno spostate in "Tutte le note".'),
+          'Elimina "$name"? Le note al suo interno verranno spostate in "Tutte le note".',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Annulla')),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Annulla'),
+          ),
           TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Elimina')),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Elimina'),
+          ),
         ],
       ),
     );
@@ -151,7 +163,11 @@ class NotesFoldersPanel extends ConsumerWidget {
   }
 
   Future<void> _confirmDeleteGoal(
-      BuildContext context, WidgetRef ref, String id, String title) async {
+    BuildContext context,
+    WidgetRef ref,
+    String id,
+    String title,
+  ) async {
     final displayTitle = title.isEmpty ? 'Senza titolo' : title;
     final ok = await showDialog<bool>(
       context: context,
@@ -159,14 +175,17 @@ class NotesFoldersPanel extends ConsumerWidget {
       builder: (_) => AlertDialog(
         title: const Text('Elimina obiettivo'),
         content: Text(
-            'Elimina "$displayTitle"? Questa azione è irreversibile.'),
+          'Elimina "$displayTitle"? Questa azione è irreversibile.',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Annulla')),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Annulla'),
+          ),
           TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Elimina')),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Elimina'),
+          ),
         ],
       ),
     );
@@ -207,9 +226,11 @@ class _SmartViewTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon,
-                size: 16,
-                color: selected ? AppColors.primary : AppColors.textSecondary),
+            Icon(
+              icon,
+              size: 16,
+              color: selected ? AppColors.primary : AppColors.textSecondary,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -221,11 +242,12 @@ class _SmartViewTile extends StatelessWidget {
               ),
             ),
             if (count > 0)
-              Text('$count',
-                  style: AppTextStyles.label.copyWith(
-                      color: selected
-                          ? AppColors.primary
-                          : AppColors.textDisabled)),
+              Text(
+                '$count',
+                style: AppTextStyles.label.copyWith(
+                  color: selected ? AppColors.primary : AppColors.textDisabled,
+                ),
+              ),
           ],
         ),
       ),
@@ -264,9 +286,11 @@ class _FolderTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.folder_outlined,
-                size: 16,
-                color: selected ? AppColors.primary : AppColors.textSecondary),
+            Icon(
+              Icons.folder_outlined,
+              size: 16,
+              color: selected ? AppColors.primary : AppColors.textSecondary,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -279,18 +303,21 @@ class _FolderTile extends StatelessWidget {
               ),
             ),
             if (count > 0)
-              Text('$count',
-                  style: AppTextStyles.label.copyWith(
-                      color: selected
-                          ? AppColors.primary
-                          : AppColors.textDisabled)),
+              Text(
+                '$count',
+                style: AppTextStyles.label.copyWith(
+                  color: selected ? AppColors.primary : AppColors.textDisabled,
+                ),
+              ),
             PopupMenuButton<String>(
               onSelected: (v) {
                 if (v == 'delete') onDelete();
               },
               itemBuilder: (_) => [
                 const PopupMenuItem(
-                    value: 'delete', child: Text('Elimina cartella')),
+                  value: 'delete',
+                  child: Text('Elimina cartella'),
+                ),
               ],
               icon: const Icon(Icons.more_horiz, size: 14),
               iconColor: AppColors.textDisabled,
@@ -339,9 +366,11 @@ class _GoalTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.flag_outlined,
-                size: 16,
-                color: selected ? AppColors.primary : AppColors.textSecondary),
+            Icon(
+              Icons.flag_outlined,
+              size: 16,
+              color: selected ? AppColors.primary : AppColors.textSecondary,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -350,13 +379,12 @@ class _GoalTile extends StatelessWidget {
                   Text(
                     goal.title.isEmpty ? 'Senza titolo' : goal.title,
                     style: AppTextStyles.bodySmall.copyWith(
-                      fontWeight:
-                          selected ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                       color: goal.title.isEmpty
                           ? AppColors.textDisabled
                           : (selected
-                              ? AppColors.primary
-                              : AppColors.textPrimary),
+                                ? AppColors.primary
+                                : AppColors.textPrimary),
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -381,7 +409,9 @@ class _GoalTile extends StatelessWidget {
               },
               itemBuilder: (_) => [
                 const PopupMenuItem(
-                    value: 'delete', child: Text('Elimina obiettivo')),
+                  value: 'delete',
+                  child: Text('Elimina obiettivo'),
+                ),
               ],
               icon: const Icon(Icons.more_horiz, size: 14),
               iconColor: AppColors.textDisabled,

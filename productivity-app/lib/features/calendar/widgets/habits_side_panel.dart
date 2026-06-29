@@ -18,7 +18,7 @@ class HabitsSidePanel extends ConsumerWidget {
     final compact = AdaptiveLayout.isPhone(context);
 
     return SizedBox(
-      width: 272,
+      width: AdaptiveLayout.sidePanelWidth(context),
       child: Column(
         children: [
           Padding(

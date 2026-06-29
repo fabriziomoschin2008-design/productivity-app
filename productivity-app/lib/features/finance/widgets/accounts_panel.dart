@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
@@ -11,7 +12,6 @@ import '../models/account_with_balance.dart';
 import '../providers/finance_providers.dart';
 import '../services/excel_service.dart';
 import '../services/template_download_service.dart';
-import '../state/finance_state.dart';
 import 'add_account_dialog.dart';
 import 'charts_panel.dart';
 import 'edit_account_dialog.dart';
@@ -23,10 +23,16 @@ class AccountsPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(financeProvider);
+    final accounts = ref.watch(financeProvider.select((s) => s.accounts));
+    final selectedAccountId = ref.watch(
+      financeProvider.select((s) => s.selectedAccountId),
+    );
+    final totalBalance = ref.watch(
+      financeProvider.select((s) => s.totalBalance),
+    );
 
     return Container(
-      width: 272,
+      width: AdaptiveLayout.sidePanelWidth(context),
       color: AppColors.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,22 +42,22 @@ class AccountsPanel extends ConsumerWidget {
               context: context,
               builder: (_) => const AddAccountDialog(),
             ),
-            onExport: () => _export(context, ref, state),
+            onExport: () => _export(context, ref),
             onImport: () => _import(context, ref),
             onDownloadTemplate: () => _downloadTemplate(context),
           ),
           const Divider(),
           Expanded(
-            child: state.accounts.isEmpty
+            child: accounts.isEmpty
                 ? _EmptyState()
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: state.accounts.length,
+                    itemCount: accounts.length,
                     itemBuilder: (_, i) {
-                      final awb = state.accounts[i];
+                      final awb = accounts[i];
                       return _AccountTile(
                         awb: awb,
-                        selected: awb.account.id == state.selectedAccountId,
+                        selected: awb.account.id == selectedAccountId,
                         onTap: () => ref
                             .read(financeProvider.notifier)
                             .selectAccount(awb.account.id),
@@ -66,7 +72,7 @@ class AccountsPanel extends ConsumerWidget {
                   ),
           ),
           const Divider(),
-          _TotalRow(total: state.totalBalance),
+          _TotalRow(total: totalBalance),
         ],
       ),
     );
@@ -74,11 +80,8 @@ class AccountsPanel extends ConsumerWidget {
 
   // ── Export ──────────────────────────────────────────────────────────────────
 
-  Future<void> _export(
-    BuildContext context,
-    WidgetRef ref,
-    FinanceState state,
-  ) async {
+  Future<void> _export(BuildContext context, WidgetRef ref) async {
+    final state = ref.read(financeProvider);
     showDialog(
       context: context,
       barrierDismissible: false,

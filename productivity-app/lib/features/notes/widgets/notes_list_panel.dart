@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/local/database.dart';
@@ -24,11 +25,13 @@ class _NotesListPanelState extends ConsumerState<NotesListPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(notesProvider);
-    final notes = state.visibleNotes;
+    final notes = ref.watch(notesProvider.select((s) => s.visibleNotes));
+    final selectedNoteId = ref.watch(
+      notesProvider.select((s) => s.selectedNoteId),
+    );
 
     return SizedBox(
-      width: 280,
+      width: AdaptiveLayout.sidePanelWidth(context, desktopWidth: 280),
       child: Column(
         children: [
           Padding(
@@ -42,24 +45,27 @@ class _NotesListPanelState extends ConsumerState<NotesListPanel> {
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Cerca...',
-                        prefixIcon: const Icon(Icons.search,
-                            size: 16, color: AppColors.textDisabled),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          size: 16,
+                          color: AppColors.textDisabled,
+                        ),
                         contentPadding: EdgeInsets.zero,
                         isDense: true,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: AppColors.border),
+                          borderSide: const BorderSide(color: AppColors.border),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: AppColors.border),
+                          borderSide: const BorderSide(color: AppColors.border),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: const BorderSide(
-                              color: AppColors.primary, width: 1.5),
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
                         ),
                         filled: true,
                         fillColor: AppColors.surfaceElevated,
@@ -98,16 +104,10 @@ class _NotesListPanelState extends ConsumerState<NotesListPanel> {
                       final note = notes[i];
                       return _NoteTile(
                         note: note,
-                        selected: note.id ==
-                            ref.watch(notesProvider
-                                .select((s) => s.selectedNoteId)),
+                        selected: note.id == selectedNoteId,
                         onTap: () {
-                          ref
-                              .read(notesProvider.notifier)
-                              .selectNote(note.id);
-                          ref
-                              .read(noteGoalsProvider.notifier)
-                              .selectGoal(null);
+                          ref.read(notesProvider.notifier).selectNote(note.id);
+                          ref.read(noteGoalsProvider.notifier).selectGoal(null);
                         },
                         onDelete: () => ref
                             .read(notesProvider.notifier)
@@ -171,9 +171,7 @@ class _NoteTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        color: selected
-            ? AppColors.primary.withValues(alpha: 0.06)
-            : null,
+        color: selected ? AppColors.primary.withValues(alpha: 0.06) : null,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,8 +179,7 @@ class _NoteTile extends StatelessWidget {
             Row(
               children: [
                 if (note.isPinned) ...[
-                  const Icon(Icons.push_pin,
-                      size: 11, color: AppColors.accent),
+                  const Icon(Icons.push_pin, size: 11, color: AppColors.accent),
                   const SizedBox(width: 4),
                 ],
                 Expanded(
@@ -205,7 +202,9 @@ class _NoteTile extends StatelessWidget {
                   },
                   itemBuilder: (_) => [
                     const PopupMenuItem(
-                        value: 'delete', child: Text('Elimina nota')),
+                      value: 'delete',
+                      child: Text('Elimina nota'),
+                    ),
                   ],
                   icon: const Icon(Icons.more_horiz, size: 14),
                   iconColor: AppColors.textDisabled,
@@ -226,8 +225,10 @@ class _NoteTile extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               _formatDate(note.updatedAt),
-              style: AppTextStyles.label
-                  .copyWith(color: AppColors.textDisabled, fontSize: 10),
+              style: AppTextStyles.label.copyWith(
+                color: AppColors.textDisabled,
+                fontSize: 10,
+              ),
             ),
           ],
         ),
@@ -247,9 +248,12 @@ class _EmptyNotesList extends StatelessWidget {
         children: [
           Icon(Icons.note_outlined, size: 36, color: AppColors.textDisabled),
           const SizedBox(height: 12),
-          Text('Nessuna nota',
-              style: AppTextStyles.bodyRegular
-                  .copyWith(color: AppColors.textSecondary)),
+          Text(
+            'Nessuna nota',
+            style: AppTextStyles.bodyRegular.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 4),
           Text('Premi + per crearne una', style: AppTextStyles.label),
         ],

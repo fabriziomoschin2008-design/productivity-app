@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/local/database.dart';
@@ -15,7 +16,7 @@ class TodoListsPanel extends ConsumerWidget {
     final state = ref.watch(todoProvider);
 
     return Container(
-      width: 272,
+      width: AdaptiveLayout.sidePanelWidth(context),
       color: AppColors.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,11 +59,9 @@ class TodoListsPanel extends ConsumerWidget {
                         list: list,
                         count: state.countForList(list.id),
                         selected: state.selectedViewId == list.id,
-                        onTap: () => ref
-                            .read(todoProvider.notifier)
-                            .selectView(list.id),
-                        onDelete: () =>
-                            _confirmDelete(context, ref, list),
+                        onTap: () =>
+                            ref.read(todoProvider.notifier).selectView(list.id),
+                        onDelete: () => _confirmDelete(context, ref, list),
                       );
                     },
                   ),
@@ -72,15 +71,13 @@ class TodoListsPanel extends ConsumerWidget {
     );
   }
 
-  void _confirmDelete(
-      BuildContext context, WidgetRef ref, TodoList list) {
+  void _confirmDelete(BuildContext context, WidgetRef ref, TodoList list) {
     showDialog(
       context: context,
       useRootNavigator: false,
       builder: (_) => AlertDialog(
         title: const Text('Elimina lista'),
-        content: Text(
-            'Eliminare "${list.name}" e tutte le sue attività?'),
+        content: Text('Eliminare "${list.name}" e tutte le sue attività?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -91,8 +88,7 @@ class TodoListsPanel extends ConsumerWidget {
               Navigator.pop(context);
               ref.read(todoProvider.notifier).deleteList(list.id);
             },
-            child: Text('Elimina',
-                style: TextStyle(color: AppColors.expense)),
+            child: Text('Elimina', style: TextStyle(color: AppColors.expense)),
           ),
         ],
       ),
@@ -129,30 +125,25 @@ class _SmartViewTile extends StatelessWidget {
                 : Colors.transparent,
             border: Border(
               left: BorderSide(
-                color: selected
-                    ? AppColors.accent
-                    : Colors.transparent,
+                color: selected ? AppColors.accent : Colors.transparent,
                 width: 3,
               ),
             ),
           ),
-          padding: const EdgeInsets.symmetric(
-              horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Row(
             children: [
-              Icon(icon,
-                  size: 17,
-                  color: selected
-                      ? AppColors.primary
-                      : AppColors.textSecondary),
+              Icon(
+                icon,
+                size: 17,
+                color: selected ? AppColors.primary : AppColors.textSecondary,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   label,
                   style: AppTextStyles.bodyRegular.copyWith(
-                    fontWeight: selected
-                        ? FontWeight.w600
-                        : FontWeight.w400,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                     color: selected
                         ? AppColors.textPrimary
                         : AppColors.textSecondary,
@@ -163,9 +154,7 @@ class _SmartViewTile extends StatelessWidget {
                 Text(
                   '$count',
                   style: AppTextStyles.label.copyWith(
-                    color: selected
-                        ? AppColors.accent
-                        : AppColors.textDisabled,
+                    color: selected ? AppColors.accent : AppColors.textDisabled,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -238,24 +227,20 @@ class _ListTile extends StatelessWidget {
               ),
             ),
           ),
-          padding: const EdgeInsets.symmetric(
-              horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Row(
             children: [
               Container(
                 width: 10,
                 height: 10,
-                decoration: BoxDecoration(
-                    color: color, shape: BoxShape.circle),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   list.name,
                   style: AppTextStyles.bodyRegular.copyWith(
-                    fontWeight: selected
-                        ? FontWeight.w600
-                        : FontWeight.w400,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                     color: selected
                         ? AppColors.textPrimary
                         : AppColors.textSecondary,
@@ -268,9 +253,7 @@ class _ListTile extends StatelessWidget {
                 Text(
                   '$count',
                   style: AppTextStyles.label.copyWith(
-                    color: selected
-                        ? AppColors.accent
-                        : AppColors.textDisabled,
+                    color: selected ? AppColors.accent : AppColors.textDisabled,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -282,8 +265,11 @@ class _ListTile extends StatelessWidget {
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: 'delete', child: Text('Elimina')),
                 ],
-                icon: const Icon(Icons.more_vert,
-                    size: 16, color: AppColors.textDisabled),
+                icon: const Icon(
+                  Icons.more_vert,
+                  size: 16,
+                  color: AppColors.textDisabled,
+                ),
                 padding: EdgeInsets.zero,
                 splashRadius: 16,
               ),
@@ -304,13 +290,11 @@ class _EmptyLists extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.playlist_add,
-                size: 32, color: AppColors.textDisabled),
+            Icon(Icons.playlist_add, size: 32, color: AppColors.textDisabled),
             const SizedBox(height: 10),
             Text('Nessuna lista', style: AppTextStyles.bodySmall),
             const SizedBox(height: 4),
-            Text('Usa + per aggiungerne una',
-                style: AppTextStyles.label),
+            Text('Usa + per aggiungerne una', style: AppTextStyles.label),
           ],
         ),
       ),
