@@ -91,7 +91,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Cubby',
+      title: 'CUBBY',
       theme: appTheme,
       routerConfig: appRouter,
       scaffoldMessengerKey: AppErrorHandler.scaffoldKey,

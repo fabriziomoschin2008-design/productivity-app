@@ -1,31 +1,52 @@
-# Supabase Sync Setup
+# Supabase Sync Setup - CUBBY
 
-Lo stato del progetto ora e' questo:
+## Stato attuale del sync
 
-- l'app inizializza Supabase
-- il sync worker invia i record locali verso le tabelle remote
-- i record locali sono pronti per avere ownership per utente con `user_id`
-- il worker, quando trova una sessione attiva, assegna il tuo `user_id` ai record locali che ancora non ce l'hanno
-- i payload inviati a Supabase includono `user_id`
-- le impostazioni utente come la chiave `TMDb` possono essere syncate tramite la tabella `user_settings`
+Il progetto e' gia' predisposto per:
 
-## Cosa fa il punto 2
+- login/logout utente con Supabase
+- push delle modifiche locali verso il cloud
+- pull dei dati remoti sulle altre piattaforme
+- ownership per utente tramite `user_id`
+- sync della chiave `TMDb` tramite `user_settings` con fallback ai metadata utente
 
-Il punto 2 e' la soluzione sicura:
+In pratica:
 
-1. ogni riga ha un proprietario (`user_id`)
-2. Supabase permette lettura e scrittura solo al proprietario
-3. anche se un altro utente si registra, non vede i tuoi dati
+- senza login l'app resta locale
+- con login il sync tra desktop, Android e Web puo' funzionare sugli oggetti supportati
 
-La regola chiave e':
+## Regola di sicurezza
+
+Ogni riga deve appartenere al suo proprietario:
 
 ```sql
 auth.uid() = user_id
 ```
 
-## SQL da eseguire su Supabase
+Questo evita che un altro utente autenticato possa leggere o modificare i tuoi dati.
 
-Apri il SQL Editor di Supabase ed esegui questo script.
+## Tabelle coinvolte
+
+Le tabelle syncate sono:
+
+- `accounts`
+- `transaction_entries`
+- `goals`
+- `todo_lists`
+- `todo_items`
+- `note_folders`
+- `notes`
+- `habits`
+- `habit_logs`
+- `calendar_events`
+- `note_goals`
+- `trackers`
+- `movies`
+- `tv_series`
+- `games`
+- `user_settings`
+
+## SQL base da eseguire
 
 ```sql
 alter table public.accounts add column if not exists user_id uuid;
@@ -54,7 +75,9 @@ create table if not exists public.user_settings (
 );
 ```
 
-Se nelle tabelle remote hai gia' dati tuoi e sei l'unico utente, puoi fare un backfill una sola volta sostituendo `<YOUR_USER_UUID>` con il tuo id utente Supabase:
+## Backfill iniziale
+
+Se nel database remoto hai gia' dati creati prima dell'introduzione di `user_id`, fai un backfill una sola volta sostituendo `<YOUR_USER_UUID>`:
 
 ```sql
 update public.accounts set user_id = '<YOUR_USER_UUID>' where user_id is null;
@@ -74,7 +97,7 @@ update public.tv_series set user_id = '<YOUR_USER_UUID>' where user_id is null;
 update public.games set user_id = '<YOUR_USER_UUID>' where user_id is null;
 ```
 
-Poi rendi obbligatorio `user_id`:
+Poi puoi rendere `user_id` obbligatorio:
 
 ```sql
 alter table public.accounts alter column user_id set not null;
@@ -94,7 +117,7 @@ alter table public.tv_series alter column user_id set not null;
 alter table public.games alter column user_id set not null;
 ```
 
-## Policy RLS consigliate
+## RLS consigliata
 
 Per ogni tabella:
 
@@ -132,50 +155,19 @@ to authenticated
 using (auth.uid() = user_id);
 ```
 
-Replica lo stesso schema per:
+Replica lo stesso schema per tutte le altre tabelle elencate sopra, inclusa `user_settings`.
 
-- `transaction_entries`
-- `goals`
-- `todo_lists`
-- `todo_items`
-- `note_folders`
-- `notes`
-- `habits`
-- `habit_logs`
-- `calendar_events`
-- `note_goals`
-- `trackers`
-- `movies`
-- `tv_series`
-- `games`
-- `user_settings`
+## Test minimo da fare
 
-## Come trovare il tuo user id
+1. login nell'app con il tuo account
+2. crea o modifica un dato
+3. verifica la presenza del record remoto con il tuo `user_id`
+4. apri l'app su un'altra piattaforma autenticata
+5. verifica che il dato venga scaricato correttamente
 
-Puoi recuperarlo in uno di questi modi:
+## Note pratiche
 
-- da Supabase Dashboard -> Authentication -> Users
-- facendo login nell'app e leggendo `Supabase.instance.client.auth.currentUser?.id`
+- la schermata `Impostazioni` dell'app ora centralizza account, sync manuale e chiave TMDb
+- la chiave TMDb si sincronizza in cloud quando l'utente e' autenticato
+- se non hai ancora creato `user_settings`, l'app usa il fallback sui metadata Supabase utente
 
-## Cosa manca dopo questo step
-
-Dopo aver eseguito lo script su Supabase, il test reale da fare e':
-
-1. login con il tuo utente
-2. creare o modificare un record nell'app
-3. verificare che compaia nella tabella remota con il tuo `user_id`
-4. aprire la stessa app su un'altra piattaforma e verificare il sync
-
-Al momento il codice e' pronto per inviare dati in modo sicuro, ma serve ancora applicare le modifiche SQL lato Supabase per sbloccare definitivamente gli `insert/upsert`.
-
-## Sync TMDb key
-
-Per la chiave TMDb il codice usa ora questa priorita':
-
-1. tabella Supabase `user_settings`
-2. fallback ai metadata utente Supabase se la tabella non esiste ancora
-
-Quindi:
-
-- se esegui lo script SQL sopra, la chiave TMDb si sincronizzera' tramite `user_settings`
-- se non lo esegui ancora, l'app continuera' a usare il fallback precedente

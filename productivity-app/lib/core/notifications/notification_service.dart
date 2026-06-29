@@ -23,7 +23,7 @@ class NotificationService {
       return;
     }
     try {
-      await localNotifier.setup(appName: 'Cubby');
+      await localNotifier.setup(appName: 'CUBBY');
       _ready = true;
       AppLogger.instance.info('NotificationService pronto');
     } catch (e, s) {
