@@ -1,5 +1,6 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
+#include <shobjidl_core.h>
 #include <windows.h>
 
 #include "flutter_window.h"
@@ -16,6 +17,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // Initialize COM, so that it is available for use in the library and/or
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
+  // Force a stable app identity so Windows taskbar uses the app branding
+  // instead of falling back to Flutter runner metadata or cached grouping.
+  ::SetCurrentProcessExplicitAppUserModelID(L"CUBBY.Desktop");
 
   flutter::DartProject project(L"data");
 
