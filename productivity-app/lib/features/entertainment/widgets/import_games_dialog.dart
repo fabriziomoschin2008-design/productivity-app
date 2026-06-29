@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../providers/entertainment_providers.dart';
@@ -37,9 +38,9 @@ class _ImportGamesDialogState extends ConsumerState<ImportGamesDialog> {
   // Format: "Title (achieved_obj) prossimo (next_obj) prossimo (future_obj)"
   // First () = done=true (current status), rest = done=false (upcoming)
   static ({String title, List<GameObjective> objectives}) _parseLine(
-      String line) {
-    final chunks =
-        line.split(RegExp(r'\s+prossimo\s+', caseSensitive: false));
+    String line,
+  ) {
+    final chunks = line.split(RegExp(r'\s+prossimo\s+', caseSensitive: false));
     final parenRegex = RegExp(r'\(([^)]+)\)');
 
     String title = '';
@@ -82,12 +83,13 @@ class _ImportGamesDialogState extends ConsumerState<ImportGamesDialog> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final dialogWidth = AdaptiveLayout.dialogWidth(context, 600);
     return Dialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 600,
+          maxWidth: dialogWidth,
           maxHeight: screenHeight * 0.85,
         ),
         child: Column(
@@ -100,14 +102,19 @@ class _ImportGamesDialogState extends ConsumerState<ImportGamesDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Importa giochi',
-                      style: AppTextStyles.headingCard.copyWith(
-                          fontSize: 18, fontWeight: FontWeight.w700)),
+                  Text(
+                    'Importa giochi',
+                    style: AppTextStyles.headingCard.copyWith(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     'Formato: Titolo (obiettivo raggiunto) prossimo (obiettivo futuro)',
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -119,13 +126,13 @@ class _ImportGamesDialogState extends ConsumerState<ImportGamesDialog> {
                       filled: true,
                       fillColor: AppColors.surfaceElevated,
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: AppColors.border)),
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
                       enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: AppColors.border)),
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
                       contentPadding: const EdgeInsets.all(12),
                     ),
                   ),
@@ -135,8 +142,9 @@ class _ImportGamesDialogState extends ConsumerState<ImportGamesDialog> {
                     icon: const Icon(Icons.preview_rounded, size: 16),
                     label: const Text('Anteprima'),
                     style: TextButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        padding: EdgeInsets.zero),
+                      foregroundColor: AppColors.primary,
+                      padding: EdgeInsets.zero,
+                    ),
                   ),
                 ],
               ),
@@ -150,36 +158,47 @@ class _ImportGamesDialogState extends ConsumerState<ImportGamesDialog> {
                   itemCount: _parsed.length,
                   itemBuilder: (_, i) {
                     final g = _parsed[i];
-                    final doneCount =
-                        g.objectives.where((o) => o.done).length;
+                    final doneCount = g.objectives.where((o) => o.done).length;
                     final total = g.objectives.length;
                     final hasPending = g.objectives.any((o) => !o.done);
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         children: [
-                          const Icon(Icons.videogame_asset_rounded,
-                              size: 14, color: AppColors.textSecondary),
+                          const Icon(
+                            Icons.videogame_asset_rounded,
+                            size: 14,
+                            color: AppColors.textSecondary,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(g.title,
-                                style: AppTextStyles.bodyRegular.copyWith(
-                                    fontWeight: FontWeight.w600)),
+                            child: Text(
+                              g.title,
+                              style: AppTextStyles.bodyRegular.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                           if (total > 0) ...[
-                            Text('$doneCount/$total obiettivi',
-                                style: AppTextStyles.label.copyWith(
-                                    color: AppColors.textSecondary)),
+                            Text(
+                              '$doneCount/$total obiettivi',
+                              style: AppTextStyles.label.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
                             const SizedBox(width: 8),
                           ],
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color: (hasPending
-                                      ? AppColors.primary
-                                      : AppColors.income)
-                                  .withValues(alpha: 0.12),
+                              color:
+                                  (hasPending
+                                          ? AppColors.primary
+                                          : AppColors.income)
+                                      .withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -203,38 +222,55 @@ class _ImportGamesDialogState extends ConsumerState<ImportGamesDialog> {
             const Divider(color: AppColors.divider),
             Padding(
               padding: const EdgeInsets.fromLTRB(28, 12, 28, 20),
-              child: Row(
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                runSpacing: 12,
+                spacing: 12,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text(
                     _parsed.isEmpty
                         ? 'Nessun gioco trovato'
                         : '${_parsed.length} giochi trovati',
-                    style: AppTextStyles.label
-                        .copyWith(color: AppColors.textSecondary),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Annulla'),
-                  ),
-                  const SizedBox(width: 12),
-                  FilledButton(
-                    onPressed: (_importing || _parsed.isEmpty) ? null : _import,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                    style: AppTextStyles.label.copyWith(
+                      color: AppColors.textSecondary,
                     ),
-                    child: _importing
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
-                          )
-                        : Text(_parsed.isEmpty
-                            ? 'Importa'
-                            : 'Importa ${_parsed.length} giochi'),
+                  ),
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Annulla'),
+                      ),
+                      FilledButton(
+                        onPressed: (_importing || _parsed.isEmpty)
+                            ? null
+                            : _import,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: _importing
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                _parsed.isEmpty
+                                    ? 'Importa'
+                                    : 'Importa ${_parsed.length} giochi',
+                              ),
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -72,6 +72,7 @@ class _AuthDialogState extends State<AuthDialog> {
     final dialogWidth = AdaptiveLayout.dialogWidth(context, 360);
 
     return AlertDialog(
+      scrollable: true,
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 8),

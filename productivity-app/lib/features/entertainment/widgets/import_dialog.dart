@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/services/app_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -28,10 +29,11 @@ class _SeriesEntry {
   final List<int> seasons;
   final bool originalLanguage;
 
-  const _SeriesEntry(
-      {required this.title,
-      required this.seasons,
-      required this.originalLanguage});
+  const _SeriesEntry({
+    required this.title,
+    required this.seasons,
+    required this.originalLanguage,
+  });
 }
 
 List<_ParsedItem> _parseList(String text) {
@@ -47,35 +49,39 @@ List<_ParsedItem> _parseList(String text) {
         .trim();
     if (line.isEmpty) continue;
 
-    final origLang = RegExp(r'\(lingua originale\)', caseSensitive: false)
-        .hasMatch(line);
+    final origLang = RegExp(
+      r'\(lingua originale\)',
+      caseSensitive: false,
+    ).hasMatch(line);
     line = line
         .replaceAll(RegExp(r'\(lingua originale\)', caseSensitive: false), '')
         .trim();
 
     // Detect season: "stagione N" or "sN" at end
-    final seasonMatch =
-        RegExp(r'\s+(?:stagione\s+(\d+)|s(\d+))$', caseSensitive: false)
-            .firstMatch(line);
+    final seasonMatch = RegExp(
+      r'\s+(?:stagione\s+(\d+)|s(\d+))$',
+      caseSensitive: false,
+    ).firstMatch(line);
 
     if (seasonMatch != null) {
-      final seasonNum =
-          int.parse(seasonMatch.group(1) ?? seasonMatch.group(2)!);
+      final seasonNum = int.parse(
+        seasonMatch.group(1) ?? seasonMatch.group(2)!,
+      );
       final seriesTitle = line.substring(0, seasonMatch.start).trim();
       if (seriesTitle.isNotEmpty) {
-        items.add(_ParsedItem(
-          title: seriesTitle,
-          isTv: true,
-          season: seasonNum,
-          originalLanguage: origLang,
-        ));
+        items.add(
+          _ParsedItem(
+            title: seriesTitle,
+            isTv: true,
+            season: seasonNum,
+            originalLanguage: origLang,
+          ),
+        );
       }
     } else if (line.isNotEmpty) {
-      items.add(_ParsedItem(
-        title: line,
-        isTv: false,
-        originalLanguage: origLang,
-      ));
+      items.add(
+        _ParsedItem(title: line, isTv: false, originalLanguage: origLang),
+      );
     }
   }
   return items;
@@ -127,9 +133,13 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
   Future<void> _run() async {
     final apiKey = AppSettings.tmdbApiKey;
     if (apiKey == null || apiKey.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
           content: Text(
-              'Configura prima la API key TMDb nelle impostazioni intrattenimento.')));
+            'Configura prima la API key TMDb nelle impostazioni intrattenimento.',
+          ),
+        ),
+      );
       return;
     }
     final tmdb = TmdbService(apiKey);
@@ -154,23 +164,28 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
         if (results.isNotEmpty) {
           final details = await tmdb.getMovieDetails(results.first.id);
           if (details != null) {
-            await ref.read(moviesProvider.notifier).addFromTmdb(
+            await ref
+                .read(moviesProvider.notifier)
+                .addFromTmdb(
                   details,
                   status: 'watched',
                   inOriginalLanguage: m.originalLanguage,
                 );
           } else {
-            await ref.read(moviesProvider.notifier).addManual(m.title,
-                inOriginalLanguage: m.originalLanguage);
+            await ref
+                .read(moviesProvider.notifier)
+                .addManual(m.title, inOriginalLanguage: m.originalLanguage);
           }
         } else {
-          await ref.read(moviesProvider.notifier).addManual(m.title,
-              inOriginalLanguage: m.originalLanguage);
+          await ref
+              .read(moviesProvider.notifier)
+              .addManual(m.title, inOriginalLanguage: m.originalLanguage);
           _failed++;
         }
       } catch (_) {
-        await ref.read(moviesProvider.notifier).addManual(m.title,
-            inOriginalLanguage: m.originalLanguage);
+        await ref
+            .read(moviesProvider.notifier)
+            .addManual(m.title, inOriginalLanguage: m.originalLanguage);
         _failed++;
       }
       _done++;
@@ -187,21 +202,27 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
         if (results.isNotEmpty) {
           final details = await tmdb.getTvDetails(results.first.id);
           if (details != null) {
-            await ref.read(tvProvider.notifier).addFromTmdb(
+            await ref
+                .read(tvProvider.notifier)
+                .addFromTmdb(
                   details,
                   entry.seasons,
                   status: 'watching',
                   inOriginalLanguage: entry.originalLanguage,
                 );
           } else {
-            await ref.read(tvProvider.notifier).addManual(
+            await ref
+                .read(tvProvider.notifier)
+                .addManual(
                   entry.title,
                   entry.seasons,
                   inOriginalLanguage: entry.originalLanguage,
                 );
           }
         } else {
-          await ref.read(tvProvider.notifier).addManual(
+          await ref
+              .read(tvProvider.notifier)
+              .addManual(
                 entry.title,
                 entry.seasons,
                 inOriginalLanguage: entry.originalLanguage,
@@ -209,7 +230,9 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           _failed++;
         }
       } catch (_) {
-        await ref.read(tvProvider.notifier).addManual(
+        await ref
+            .read(tvProvider.notifier)
+            .addManual(
               entry.title,
               entry.seasons,
               inOriginalLanguage: entry.originalLanguage,
@@ -226,25 +249,31 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final dialogWidth = AdaptiveLayout.dialogWidth(context, 520);
     return Dialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: SizedBox(
-        width: 520,
+        width: dialogWidth,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Importa lista',
-                  style: AppTextStyles.headingCard
-                      .copyWith(fontSize: 18, fontWeight: FontWeight.w700)),
+              Text(
+                'Importa lista',
+                style: AppTextStyles.headingCard.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 8),
               Text(
                 'Incolla la lista. Formato: una voce per riga. Serie TV con "s1"/"stagione 1" alla fine.',
-                style: AppTextStyles.bodySmall
-                    .copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 16),
               if (!_running) ...[
@@ -252,21 +281,22 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
                   controller: _ctrl,
                   maxLines: 14,
                   onChanged: (_) => setState(() {}),
-                  style: AppTextStyles.bodySmall
-                      .copyWith(fontFamily: 'monospace'),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontFamily: 'monospace',
+                  ),
                   decoration: InputDecoration(
                     hintText:
                         '- Breaking Bad stagione 1\n- Oppenheimer\n- Squid game s1 (lingua originale)',
                     filled: true,
                     fillColor: AppColors.surfaceElevated,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide:
-                            const BorderSide(color: AppColors.border)),
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
                     enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide:
-                            const BorderSide(color: AppColors.border)),
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
                   ),
                 ),
               ] else ...[
@@ -275,8 +305,9 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
                 LinearProgressIndicator(
                   value: _total > 0 ? _done / _total : 0,
                   backgroundColor: AppColors.divider,
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.primary,
+                  ),
                   minHeight: 6,
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -285,10 +316,13 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
                   Row(
                     children: [
                       const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: AppColors.primary)),
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -297,26 +331,33 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text('$_done / $_total',
-                          style: AppTextStyles.label),
+                      Text('$_done / $_total', style: AppTextStyles.label),
                     ],
                   ),
                 if (_finished) ...[
-                  Row(children: [
-                    const Icon(Icons.check_circle_rounded,
-                        color: AppColors.income, size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Importazione completata: $_done aggiunt${_done == 1 ? "o" : "i"}${_failed > 0 ? ", $_failed senza metadati" : ""}.',
-                      style: AppTextStyles.bodyRegular
-                          .copyWith(color: AppColors.income),
-                    ),
-                  ]),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppColors.income,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Importazione completata: $_done aggiunt${_done == 1 ? "o" : "i"}${_failed > 0 ? ", $_failed senza metadati" : ""}.',
+                        style: AppTextStyles.bodyRegular.copyWith(
+                          color: AppColors.income,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ],
               const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 12,
+                runSpacing: 8,
                 children: [
                   if (_finished)
                     FilledButton(
@@ -324,28 +365,31 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       child: const Text('Chiudi'),
                     )
                   else if (!_running) ...[
                     TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Annulla')),
-                    const SizedBox(width: 12),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Annulla'),
+                    ),
                     FilledButton(
                       onPressed: _ctrl.text.trim().isEmpty ? null : _run,
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       child: const Text('Importa'),
                     ),
                   ] else
-                    TextButton(
-                        onPressed: null,
-                        child: const Text('Importazione in corso...')),
+                    const TextButton(
+                      onPressed: null,
+                      child: Text('Importazione in corso...'),
+                    ),
                 ],
               ),
             ],

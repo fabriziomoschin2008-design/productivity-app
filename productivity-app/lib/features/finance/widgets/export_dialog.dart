@@ -68,14 +68,15 @@ class ExportDialog extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       child: const Text('Chiudi'),
                     ),
-                    const SizedBox(width: 8),
                     ElevatedButton.icon(
                       onPressed: _openDir,
                       icon: const Icon(Icons.folder_open, size: 16),

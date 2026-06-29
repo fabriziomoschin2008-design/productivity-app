@@ -84,8 +84,8 @@ class _ImportDialogState extends State<ImportDialog> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    Wrap(
+                      alignment: WrapAlignment.end,
                       children: [
                         TextButton(
                           onPressed: () => setState(() => _selectedFile = null),
@@ -96,14 +96,15 @@ class _ImportDialogState extends State<ImportDialog> {
                   ],
                 ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   TextButton(
                     onPressed: _isLoading ? null : () => Navigator.pop(context),
                     child: const Text('Chiudi'),
                   ),
-                  const SizedBox(width: 8),
                   if (_selectedFile != null)
                     ElevatedButton(
                       onPressed: _isLoading ? null : _import,

@@ -14,6 +14,7 @@ class FinanceScreen extends StatelessWidget {
         child: Column(
           children: const [
             TabBar(
+              isScrollable: true,
               tabs: [
                 Tab(text: 'Conti'),
                 Tab(text: 'Movimenti'),

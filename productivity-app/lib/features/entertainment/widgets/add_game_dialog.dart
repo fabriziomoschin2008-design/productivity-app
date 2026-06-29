@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../providers/entertainment_providers.dart';
@@ -55,7 +56,9 @@ class _AddGameDialogState extends ConsumerState<AddGameDialog> {
       (i) => GameObjective(desc: _objCtrls[i].text.trim(), done: _objDone[i]),
     ).where((o) => o.desc.isNotEmpty).toList();
 
-    await ref.read(gamesProvider.notifier).addGame(
+    await ref
+        .read(gamesProvider.notifier)
+        .addGame(
           title,
           platform: _platformCtrl.text.trim().isEmpty
               ? null
@@ -68,20 +71,25 @@ class _AddGameDialogState extends ConsumerState<AddGameDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final dialogWidth = AdaptiveLayout.dialogWidth(context, 500);
     return Dialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: SizedBox(
-        width: 500,
+        width: dialogWidth,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Aggiungi gioco',
-                  style: AppTextStyles.headingCard
-                      .copyWith(fontSize: 18, fontWeight: FontWeight.w700)),
+              Text(
+                'Aggiungi gioco',
+                style: AppTextStyles.headingCard.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 20),
               TextField(
                 controller: _titleCtrl,
@@ -102,9 +110,13 @@ class _AddGameDialogState extends ConsumerState<AddGameDialog> {
                 items: const [
                   DropdownMenuItem(value: 'playing', child: Text('In corso')),
                   DropdownMenuItem(
-                      value: 'completed', child: Text('Completato')),
+                    value: 'completed',
+                    child: Text('Completato'),
+                  ),
                   DropdownMenuItem(
-                      value: 'want_to_play', child: Text('Da giocare')),
+                    value: 'want_to_play',
+                    child: Text('Da giocare'),
+                  ),
                 ],
                 onChanged: (v) => setState(() => _status = v ?? _status),
               ),
@@ -132,8 +144,11 @@ class _AddGameDialogState extends ConsumerState<AddGameDialog> {
                         ),
                         IconButton(
                           onPressed: () => _removeObjective(i),
-                          icon: const Icon(Icons.remove_circle_outline,
-                              color: AppColors.expense, size: 18),
+                          icon: const Icon(
+                            Icons.remove_circle_outline,
+                            color: AppColors.expense,
+                            size: 18,
+                          ),
                           padding: const EdgeInsets.only(left: 8),
                         ),
                       ],
@@ -146,31 +161,36 @@ class _AddGameDialogState extends ConsumerState<AddGameDialog> {
                 icon: const Icon(Icons.add_rounded, size: 16),
                 label: const Text('Aggiungi obiettivo'),
                 style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    padding: EdgeInsets.zero),
+                  foregroundColor: AppColors.primary,
+                  padding: EdgeInsets.zero,
+                ),
               ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 12,
+                runSpacing: 8,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Annulla'),
                   ),
-                  const SizedBox(width: 12),
                   FilledButton(
                     onPressed: _saving ? null : _save,
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     child: _saving
                         ? const SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Text('Salva'),
                   ),
@@ -184,21 +204,22 @@ class _AddGameDialogState extends ConsumerState<AddGameDialog> {
   }
 
   InputDecoration _inputDec(String hint) => InputDecoration(
-        hintText: hint,
-        isDense: true,
-        filled: true,
-        fillColor: AppColors.surfaceElevated,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.border)),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.border)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide:
-                const BorderSide(color: AppColors.primary, width: 1.5)),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      );
+    hintText: hint,
+    isDense: true,
+    filled: true,
+    fillColor: AppColors.surfaceElevated,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: AppColors.border),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: AppColors.border),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+  );
 }

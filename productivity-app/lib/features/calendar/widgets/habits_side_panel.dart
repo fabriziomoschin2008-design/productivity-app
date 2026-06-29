@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../providers/calendar_providers.dart';
@@ -14,6 +15,7 @@ class HabitsSidePanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(calendarProvider);
     final byCategory = state.habitsByCategory;
+    final compact = AdaptiveLayout.isPhone(context);
 
     return SizedBox(
       width: 272,
@@ -23,15 +25,17 @@ class HabitsSidePanel extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Row(
               children: [
-                Text('Abitudini',
-                    style: AppTextStyles.headingCard.copyWith(fontSize: 15)),
+                Text(
+                  'Abitudini',
+                  style: AppTextStyles.headingCard.copyWith(fontSize: 15),
+                ),
                 const Spacer(),
                 SizedBox(
                   height: 30,
                   child: ElevatedButton.icon(
                     onPressed: () => showAddHabitDialog(context),
                     icon: const Icon(Icons.add, size: 14),
-                    label: const Text('Aggiungi'),
+                    label: Text(compact ? 'Nuova' : 'Aggiungi'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       textStyle: AppTextStyles.bodySmall,
@@ -61,19 +65,19 @@ class HabitsSidePanel extends ConsumerWidget {
                             ),
                         ],
                       // Eventuali categorie non standard
-                      for (final cat in byCategory.keys
-                          .where((c) => !_categoryOrder.contains(c)))
-                        ...[
-                          _CategoryHeader(cat),
-                          for (final h in byCategory[cat]!)
-                            _HabitTile(
-                              name: h.name,
-                              streak: state.streakForHabit(h.id),
-                              onDelete: () => ref
-                                  .read(calendarProvider.notifier)
-                                  .deleteHabit(h.id),
-                            ),
-                        ],
+                      for (final cat in byCategory.keys.where(
+                        (c) => !_categoryOrder.contains(c),
+                      )) ...[
+                        _CategoryHeader(cat),
+                        for (final h in byCategory[cat]!)
+                          _HabitTile(
+                            name: h.name,
+                            streak: state.streakForHabit(h.id),
+                            onDelete: () => ref
+                                .read(calendarProvider.notifier)
+                                .deleteHabit(h.id),
+                          ),
+                      ],
                     ],
                   ),
           ),
@@ -118,14 +122,15 @@ class _HabitTile extends StatelessWidget {
     return ListTile(
       dense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-      leading: const Icon(Icons.repeat, size: 16, color: AppColors.textDisabled),
+      leading: const Icon(
+        Icons.repeat,
+        size: 16,
+        color: AppColors.textDisabled,
+      ),
       title: Row(
         children: [
           Expanded(child: Text(name, style: AppTextStyles.bodySmall)),
-          if (streak > 0) ...[
-            const SizedBox(width: 4),
-            _StreakBadge(streak),
-          ],
+          if (streak > 0) ...[const SizedBox(width: 4), _StreakBadge(streak)],
         ],
       ),
       trailing: PopupMenuButton<String>(
@@ -137,7 +142,8 @@ class _HabitTile extends StatelessWidget {
               builder: (dialogCtx) => AlertDialog(
                 title: const Text('Elimina abitudine'),
                 content: const Text(
-                    'Vuoi eliminare questa abitudine? Verranno rimossi anche tutti i log.'),
+                  'Vuoi eliminare questa abitudine? Verranno rimossi anche tutti i log.',
+                ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(dialogCtx).pop(),
@@ -149,9 +155,12 @@ class _HabitTile extends StatelessWidget {
                       onDelete();
                     },
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.expense),
-                    child: const Text('Elimina',
-                        style: TextStyle(color: Colors.white)),
+                      backgroundColor: AppColors.expense,
+                    ),
+                    child: const Text(
+                      'Elimina',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ),
@@ -186,8 +195,7 @@ class _StreakBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.local_fire_department,
-              size: 11, color: AppColors.primary),
+          Icon(Icons.local_fire_department, size: 11, color: AppColors.primary),
           const SizedBox(width: 2),
           Text(
             '$streak',
@@ -215,9 +223,12 @@ class _EmptyHabits extends StatelessWidget {
         children: [
           const Icon(Icons.repeat, size: 36, color: AppColors.textDisabled),
           const SizedBox(height: 12),
-          Text('Nessuna abitudine',
-              style: AppTextStyles.bodyRegular
-                  .copyWith(color: AppColors.textSecondary)),
+          Text(
+            'Nessuna abitudine',
+            style: AppTextStyles.bodyRegular.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 8),
           TextButton(onPressed: onAdd, child: const Text('Aggiungi abitudine')),
         ],

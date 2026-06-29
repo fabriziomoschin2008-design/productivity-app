@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/services/app_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -50,7 +51,10 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
       setState(() => _results = []);
       return;
     }
-    _debounce = Timer(const Duration(milliseconds: 500), () => _search(q.trim()));
+    _debounce = Timer(
+      const Duration(milliseconds: 500),
+      () => _search(q.trim()),
+    );
   }
 
   Future<void> _search(String q) async {
@@ -58,7 +62,9 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
     if (tmdb == null) return;
     setState(() => _loading = true);
     try {
-      final res = widget.isTv ? await tmdb.searchTv(q) : await tmdb.searchMovies(q);
+      final res = widget.isTv
+          ? await tmdb.searchTv(q)
+          : await tmdb.searchMovies(q);
       if (mounted) setState(() => _results = res.take(6).toList());
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -87,14 +93,18 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
         final title = _searchCtrl.text.trim();
         if (title.isEmpty) return;
         if (widget.isTv) {
-          await ref.read(tvProvider.notifier).addManual(
+          await ref
+              .read(tvProvider.notifier)
+              .addManual(
                 title,
                 _watchedSeasons.toList(),
                 status: _status,
                 inOriginalLanguage: _inOriginalLanguage,
               );
         } else {
-          await ref.read(moviesProvider.notifier).addManual(
+          await ref
+              .read(moviesProvider.notifier)
+              .addManual(
                 title,
                 status: _status,
                 inOriginalLanguage: _inOriginalLanguage,
@@ -104,7 +114,9 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
         if (widget.isTv) {
           final details = await tmdb.getTvDetails(sel.id);
           if (details != null) {
-            await ref.read(tvProvider.notifier).addFromTmdb(
+            await ref
+                .read(tvProvider.notifier)
+                .addFromTmdb(
                   details,
                   _watchedSeasons.toList(),
                   status: _status,
@@ -114,7 +126,9 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
         } else {
           final details = await tmdb.getMovieDetails(sel.id);
           if (details != null) {
-            await ref.read(moviesProvider.notifier).addFromTmdb(
+            await ref
+                .read(moviesProvider.notifier)
+                .addFromTmdb(
                   details,
                   status: _status,
                   inOriginalLanguage: _inOriginalLanguage,
@@ -131,11 +145,12 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
   @override
   Widget build(BuildContext context) {
     final noApiKey = AppSettings.tmdbApiKey == null;
+    final dialogWidth = AdaptiveLayout.dialogWidth(context, 480);
     return Dialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: SizedBox(
-        width: 480,
+        width: dialogWidth,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(28),
           child: Column(
@@ -144,8 +159,10 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
             children: [
               Text(
                 widget.isTv ? 'Aggiungi serie TV' : 'Aggiungi film',
-                style: AppTextStyles.headingCard
-                    .copyWith(fontSize: 18, fontWeight: FontWeight.w700),
+                style: AppTextStyles.headingCard.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               if (noApiKey)
                 Padding(
@@ -159,14 +176,18 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.info_outline,
-                            color: AppColors.accent, size: 18),
+                        const Icon(
+                          Icons.info_outline,
+                          color: AppColors.accent,
+                          size: 18,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             'Nessuna API key TMDb. La ricerca automatica non è disponibile. Aggiungi la chiave nelle impostazioni o aggiungi manualmente il titolo.',
-                            style: AppTextStyles.bodySmall
-                                .copyWith(color: AppColors.textPrimary),
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ),
                       ],
@@ -181,39 +202,52 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
                 onChanged: _onSearchChanged,
                 decoration: InputDecoration(
                   hintText: 'Cerca titolo...',
-                  prefixIcon: const Icon(Icons.search_rounded,
-                      color: AppColors.textSecondary),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    color: AppColors.textSecondary,
+                  ),
                   suffixIcon: _loading
                       ? const Padding(
                           padding: EdgeInsets.all(12),
                           child: SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2)))
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
                       : null,
                   filled: true,
                   fillColor: AppColors.surfaceElevated,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: AppColors.border)),
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
                   enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: AppColors.border)),
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
                   focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                          color: AppColors.primary, width: 1.5)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                 ),
               ),
               if (_results.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                ..._results.map((r) => _ResultTile(
-                      result: r,
-                      selected: _selected?.id == r.id,
-                      onTap: () => _selectResult(r),
-                    )),
+                ..._results.map(
+                  (r) => _ResultTile(
+                    result: r,
+                    selected: _selected?.id == r.id,
+                    onTap: () => _selectResult(r),
+                  ),
+                ),
               ],
               // Season selector (TV only, after selection)
               if (widget.isTv && _totalSeasons > 0) ...[
@@ -239,7 +273,8 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
                       selectedColor: AppColors.primary.withValues(alpha: 0.15),
                       checkmarkColor: AppColors.primary,
                       side: BorderSide(
-                          color: sel ? AppColors.primary : AppColors.border),
+                        color: sel ? AppColors.primary : AppColors.border,
+                      ),
                     );
                   }),
                 ),
@@ -253,19 +288,25 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
                   filled: true,
                   fillColor: AppColors.surfaceElevated,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: AppColors.border)),
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
                   enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: AppColors.border)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                 ),
                 items: const [
                   DropdownMenuItem(value: 'watched', child: Text('Visto')),
                   DropdownMenuItem(value: 'watching', child: Text('In corso')),
                   DropdownMenuItem(
-                      value: 'want_to_watch', child: Text('Da vedere')),
+                    value: 'want_to_watch',
+                    child: Text('Da vedere'),
+                  ),
                 ],
                 onChanged: (v) => setState(() => _status = v ?? _status),
               ),
@@ -274,21 +315,27 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
               SwitchListTile(
                 dense: true,
                 contentPadding: EdgeInsets.zero,
-                title: Text('Lingua originale', style: AppTextStyles.bodyRegular),
+                title: Text(
+                  'Lingua originale',
+                  style: AppTextStyles.bodyRegular,
+                ),
                 value: _inOriginalLanguage,
                 activeThumbColor: AppColors.primary,
                 onChanged: (v) => setState(() => _inOriginalLanguage = v),
               ),
               const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 12,
+                runSpacing: 8,
                 children: [
                   TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Annulla')),
-                  const SizedBox(width: 12),
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Annulla'),
+                  ),
                   FilledButton(
-                    onPressed: (_adding ||
+                    onPressed:
+                        (_adding ||
                             (_selected == null &&
                                 _searchCtrl.text.trim().isEmpty))
                         ? null
@@ -296,14 +343,18 @@ class _AddMediaDialogState extends ConsumerState<AddMediaDialog> {
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     child: _adding
                         ? const SizedBox(
                             width: 18,
                             height: 18,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
                         : const Text('Aggiungi'),
                   ),
                 ],
@@ -321,8 +372,11 @@ class _ResultTile extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _ResultTile(
-      {required this.result, required this.selected, required this.onTap});
+  const _ResultTile({
+    required this.result,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -339,8 +393,9 @@ class _ResultTile extends StatelessWidget {
               : AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-              color: selected ? AppColors.primary : AppColors.border,
-              width: selected ? 1.5 : 1),
+            color: selected ? AppColors.primary : AppColors.border,
+            width: selected ? 1.5 : 1,
+          ),
         ),
         child: Row(
           children: [
@@ -350,10 +405,12 @@ class _ResultTile extends StatelessWidget {
                 width: 36,
                 height: 54,
                 child: posterUrl != null
-                    ? Image.network(posterUrl,
+                    ? Image.network(
+                        posterUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) =>
-                            const ColoredBox(color: AppColors.surfaceElevated))
+                            const ColoredBox(color: AppColors.surfaceElevated),
+                      )
                     : const ColoredBox(color: AppColors.surfaceElevated),
               ),
             ),
@@ -362,23 +419,31 @@ class _ResultTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(result.title,
-                      style: AppTextStyles.bodyRegular
-                          .copyWith(fontWeight: FontWeight.w600),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    result.title,
+                    style: AppTextStyles.bodyRegular.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   if (result.year.isNotEmpty)
-                    Text(result.year,
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textSecondary)),
+                    Text(
+                      result.year,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                 ],
               ),
             ),
             if (result.voteAverage != null) ...[
               const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
               const SizedBox(width: 2),
-              Text(result.voteAverage!.toStringAsFixed(1),
-                  style: AppTextStyles.bodySmall),
+              Text(
+                result.voteAverage!.toStringAsFixed(1),
+                style: AppTextStyles.bodySmall,
+              ),
             ],
           ],
         ),

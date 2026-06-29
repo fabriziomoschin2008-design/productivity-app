@@ -17,6 +17,7 @@ class TodoScreen extends StatelessWidget {
           child: Column(
             children: [
               TabBar(
+                isScrollable: true,
                 tabs: [
                   Tab(text: 'Liste'),
                   Tab(text: 'Attività'),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/layout/adaptive_layout.dart';
 import '../../../core/services/app_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -14,8 +15,7 @@ class RefreshMetadataDialog extends ConsumerStatefulWidget {
       _RefreshMetadataDialogState();
 }
 
-class _RefreshMetadataDialogState
-    extends ConsumerState<RefreshMetadataDialog> {
+class _RefreshMetadataDialogState extends ConsumerState<RefreshMetadataDialog> {
   bool _finished = false;
   int _total = 0;
   int _done = 0;
@@ -33,9 +33,13 @@ class _RefreshMetadataDialogState
     if (apiKey == null || apiKey.isEmpty) {
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(
-            'Configura prima la API key TMDb nelle impostazioni intrattenimento.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Configura prima la API key TMDb nelle impostazioni intrattenimento.',
+          ),
+        ),
+      );
       return;
     }
     final tmdb = TmdbService(apiKey);
@@ -55,8 +59,9 @@ class _RefreshMetadataDialogState
     if (_total == 0) {
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Tutti i poster sono già presenti.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tutti i poster sono già presenti.')),
+      );
       return;
     }
 
@@ -131,26 +136,32 @@ class _RefreshMetadataDialogState
 
   @override
   Widget build(BuildContext context) {
+    final dialogWidth = AdaptiveLayout.dialogWidth(context, 420);
     return Dialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: SizedBox(
-        width: 420,
+        width: dialogWidth,
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Aggiornamento poster',
-                  style: AppTextStyles.headingCard
-                      .copyWith(fontSize: 18, fontWeight: FontWeight.w700)),
+              Text(
+                'Aggiornamento poster',
+                style: AppTextStyles.headingCard.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 16),
               LinearProgressIndicator(
                 value: _total > 0 ? _done / _total : null,
                 backgroundColor: AppColors.divider,
-                valueColor:
-                    const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.primary,
+                ),
                 minHeight: 6,
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -159,10 +170,13 @@ class _RefreshMetadataDialogState
                 Row(
                   children: [
                     const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: AppColors.primary)),
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -176,22 +190,30 @@ class _RefreshMetadataDialogState
                   ],
                 ),
               if (_finished)
-                Row(children: [
-                  const Icon(Icons.check_circle_rounded,
-                      color: AppColors.income, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Completato: $_done aggiornati'
-                      '${_failed > 0 ? ', $_failed senza risultati' : ''}.',
-                      style: AppTextStyles.bodyRegular
-                          .copyWith(color: AppColors.income),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppColors.income,
+                      size: 18,
                     ),
-                  ),
-                ]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Completato: $_done aggiornati'
+                        '${_failed > 0 ? ', $_failed senza risultati' : ''}.',
+                        style: AppTextStyles.bodyRegular.copyWith(
+                          color: AppColors.income,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 12,
+                runSpacing: 8,
                 children: [
                   if (_finished)
                     FilledButton(
@@ -199,14 +221,15 @@ class _RefreshMetadataDialogState
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       child: const Text('Chiudi'),
                     )
                   else
-                    TextButton(
+                    const TextButton(
                       onPressed: null,
-                      child: const Text('Aggiornamento in corso...'),
+                      child: Text('Aggiornamento in corso...'),
                     ),
                 ],
               ),
