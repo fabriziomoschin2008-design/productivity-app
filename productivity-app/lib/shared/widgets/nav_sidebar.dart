@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/auth/auth_provider.dart';
 import '../../core/debug/debug_provider.dart';
-import '../../core/services/error_handler.dart';
-import '../../core/services/sync_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import 'auth_dialog.dart';
 
 class AppNavDestination {
   final IconData icon;
@@ -61,52 +56,13 @@ const appNavDestinations = <AppNavDestination>[
     mobileLabel: 'Media',
     path: '/entertainment',
   ),
+  AppNavDestination(
+    icon: Icons.settings_rounded,
+    label: 'Impostazioni',
+    mobileLabel: 'Impost.',
+    path: '/settings',
+  ),
 ];
-
-Future<void> handleAuthTap(BuildContext context, User? user) async {
-  final container = ProviderScope.containerOf(context, listen: false);
-  final syncWorker = container.read(syncWorkerProvider);
-  if (user == null) {
-    await showDialog<bool>(
-      context: context,
-      builder: (_) => const AuthDialog(),
-    );
-    return;
-  }
-
-  final confirm = await showDialog<bool>(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: const Text('Disconnetti'),
-      content: Text('Vuoi uscire da ${user.email ?? 'questo account'}?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Annulla'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Esci'),
-        ),
-      ],
-    ),
-  );
-  if (confirm != true || !context.mounted) return;
-  try {
-    final userId = user.id;
-    await Supabase.instance.client.auth.signOut();
-    await syncWorker.clearLocalSyncedData(userId);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Disconnessione effettuata'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  } catch (e, s) {
-    AppErrorHandler.handle(e, s);
-  }
-}
 
 class NavSidebar extends ConsumerWidget {
   const NavSidebar({super.key});
@@ -114,7 +70,6 @@ class NavSidebar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.path;
-    final authUser = ref.watch(authUserProvider).valueOrNull;
 
     return Container(
       width: 84,
@@ -140,130 +95,7 @@ class NavSidebar extends ConsumerWidget {
               path: destination.path,
               active: location.startsWith(destination.path),
             ),
-          const Spacer(),
-          _AuthNavItem(user: authUser),
-          const SizedBox(height: 16),
         ],
-      ),
-    );
-  }
-}
-
-class _AuthNavItem extends StatelessWidget {
-  final User? user;
-
-  const _AuthNavItem({required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    final isLoggedIn = user != null;
-    final label = isLoggedIn ? 'Cloud' : 'Accedi';
-    final icon = isLoggedIn ? Icons.cloud_done_rounded : Icons.login_rounded;
-
-    return Tooltip(
-      message: isLoggedIn
-          ? (user!.email ?? 'Sessione attiva')
-          : 'Accedi per attivare il sync',
-      preferBelow: false,
-      child: GestureDetector(
-        onTap: () => handleAuthTap(context, user),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: isLoggedIn
-                  ? AppColors.income.withValues(alpha: 0.10)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 22,
-                  color: isLoggedIn ? AppColors.income : AppColors.navItem,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: AppTextStyles.navLabel.copyWith(
-                    color: isLoggedIn ? AppColors.income : AppColors.navItem,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class MobileAuthButton extends ConsumerWidget {
-  const MobileAuthButton({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authUserProvider).valueOrNull;
-    final isLoggedIn = user != null;
-    final syncWorker = ref.read(syncWorkerProvider);
-    final compact = MediaQuery.sizeOf(context).width < 600;
-    final bottomInset = compact ? 74.0 : 82.0;
-
-    return SafeArea(
-      minimum: EdgeInsets.only(right: 12, bottom: bottomInset),
-      child: Align(
-        alignment: Alignment.bottomRight,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (isLoggedIn) ...[
-              FloatingActionButton.extended(
-                heroTag: 'mobile_sync_button',
-                onPressed: () async {
-                  await syncWorker.refreshNow(fullResync: true);
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Refresh cloud completato'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                icon: const Icon(Icons.sync_rounded, size: 18),
-                label: const Text('Sync'),
-                extendedPadding: const EdgeInsets.symmetric(horizontal: 14),
-                extendedIconLabelSpacing: 8,
-              ),
-              const SizedBox(height: 10),
-            ],
-            FloatingActionButton.extended(
-              heroTag: 'mobile_auth_button',
-              onPressed: () => handleAuthTap(context, user),
-              backgroundColor: isLoggedIn
-                  ? AppColors.income
-                  : AppColors.primary,
-              foregroundColor: Colors.white,
-              icon: Icon(
-                isLoggedIn ? Icons.cloud_done_rounded : Icons.login_rounded,
-                size: 18,
-              ),
-              label: Text(isLoggedIn ? 'Cloud' : 'Accedi'),
-              extendedPadding: const EdgeInsets.symmetric(horizontal: 14),
-              extendedIconLabelSpacing: 8,
-            ),
-          ],
-        ),
       ),
     );
   }

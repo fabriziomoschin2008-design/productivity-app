@@ -7,6 +7,7 @@ import '../../core/debug/debug_provider.dart';
 import '../../features/calendar/screens/calendar_screen.dart';
 import '../../features/finance/screens/finance_screen.dart';
 import '../../features/notes/screens/notes_screen.dart';
+import '../../features/settings/screens/settings_screen.dart';
 import '../../features/todo/screens/todo_screen.dart';
 import '../../features/entertainment/screens/entertainment_screen.dart';
 import '../../features/tracker/screens/tracker_screen.dart';
@@ -36,6 +37,10 @@ final appRouter = GoRouter(
           path: '/entertainment',
           builder: (ctx, state) => const EntertainmentScreen(),
         ),
+        GoRoute(
+          path: '/settings',
+          builder: (ctx, state) => const SettingsScreen(),
+        ),
       ],
     ),
   ],
@@ -64,7 +69,6 @@ class _AppShell extends ConsumerWidget {
                 Expanded(child: child),
               ],
             ),
-          if (compact) const MobileAuthButton(),
           if (debugMode) const DebugPanel(),
         ],
       ),
