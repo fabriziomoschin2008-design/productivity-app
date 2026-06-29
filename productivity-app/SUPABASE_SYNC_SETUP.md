@@ -7,6 +7,7 @@ Lo stato del progetto ora e' questo:
 - i record locali sono pronti per avere ownership per utente con `user_id`
 - il worker, quando trova una sessione attiva, assegna il tuo `user_id` ai record locali che ancora non ce l'hanno
 - i payload inviati a Supabase includono `user_id`
+- le impostazioni utente come la chiave `TMDb` possono essere syncate tramite la tabella `user_settings`
 
 ## Cosa fa il punto 2
 
@@ -42,6 +43,15 @@ alter table public.trackers add column if not exists user_id uuid;
 alter table public.movies add column if not exists user_id uuid;
 alter table public.tv_series add column if not exists user_id uuid;
 alter table public.games add column if not exists user_id uuid;
+
+create table if not exists public.user_settings (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  setting_key text not null,
+  value text,
+  updated_at timestamptz not null default timezone('utc', now()),
+  deleted_at timestamptz,
+  primary key (user_id, setting_key)
+);
 ```
 
 Se nelle tabelle remote hai gia' dati tuoi e sei l'unico utente, puoi fare un backfill una sola volta sostituendo `<YOUR_USER_UUID>` con il tuo id utente Supabase:
@@ -138,6 +148,7 @@ Replica lo stesso schema per:
 - `movies`
 - `tv_series`
 - `games`
+- `user_settings`
 
 ## Come trovare il tuo user id
 
@@ -156,3 +167,15 @@ Dopo aver eseguito lo script su Supabase, il test reale da fare e':
 4. aprire la stessa app su un'altra piattaforma e verificare il sync
 
 Al momento il codice e' pronto per inviare dati in modo sicuro, ma serve ancora applicare le modifiche SQL lato Supabase per sbloccare definitivamente gli `insert/upsert`.
+
+## Sync TMDb key
+
+Per la chiave TMDb il codice usa ora questa priorita':
+
+1. tabella Supabase `user_settings`
+2. fallback ai metadata utente Supabase se la tabella non esiste ancora
+
+Quindi:
+
+- se esegui lo script SQL sopra, la chiave TMDb si sincronizzera' tramite `user_settings`
+- se non lo esegui ancora, l'app continuera' a usare il fallback precedente

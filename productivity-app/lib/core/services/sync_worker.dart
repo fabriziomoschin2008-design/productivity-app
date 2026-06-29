@@ -74,6 +74,14 @@ class SyncWorker {
     await syncPending(forcePull: true);
   }
 
+  Future<void> _syncUserSettingsSafely() async {
+    try {
+      await AppSettings.syncTmdbApiKeyWithCloud();
+    } catch (e) {
+      AppLogger.instance.warning('Sync impostazioni utente fallita: $e');
+    }
+  }
+
   Future<void> clearLocalSyncedData(String userId) async {
     await _tearDownRealtime();
     await _resetPullState();
@@ -94,6 +102,7 @@ class SyncWorker {
       await _setUpRealtime(userId);
     }
 
+    await _syncUserSettingsSafely();
     await syncPending(forcePull: forcePull);
   }
 
@@ -175,6 +184,7 @@ class SyncWorker {
         }
       }
       if (forcePull || hadPendingEntries || _shouldPullNow()) {
+        await _syncUserSettingsSafely();
         await _pullRemoteChanges(session.user.id);
       }
     } finally {

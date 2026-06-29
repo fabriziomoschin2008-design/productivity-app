@@ -20,6 +20,15 @@ alter table public.movies add column if not exists user_id uuid;
 alter table public.tv_series add column if not exists user_id uuid;
 alter table public.games add column if not exists user_id uuid;
 
+create table if not exists public.user_settings (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  setting_key text not null,
+  value text,
+  updated_at timestamptz not null default timezone('utc', now()),
+  deleted_at timestamptz,
+  primary key (user_id, setting_key)
+);
+
 -- 2. Optional one-time backfill for existing remote rows
 -- Only run if you already inserted rows remotely before enabling the secure model.
 -- If your remote database is empty, you can skip this block.
@@ -72,6 +81,7 @@ create index if not exists trackers_user_id_idx on public.trackers(user_id);
 create index if not exists movies_user_id_idx on public.movies(user_id);
 create index if not exists tv_series_user_id_idx on public.tv_series(user_id);
 create index if not exists games_user_id_idx on public.games(user_id);
+create index if not exists user_settings_user_id_idx on public.user_settings(user_id);
 
 -- 5. Enable RLS
 alter table public.accounts enable row level security;
@@ -89,6 +99,7 @@ alter table public.trackers enable row level security;
 alter table public.movies enable row level security;
 alter table public.tv_series enable row level security;
 alter table public.games enable row level security;
+alter table public.user_settings enable row level security;
 
 -- 6. Drop old broad policies if present
 drop policy if exists "accounts_select_authenticated" on public.accounts;
@@ -213,6 +224,11 @@ drop policy if exists "games_insert_own" on public.games;
 drop policy if exists "games_update_own" on public.games;
 drop policy if exists "games_delete_own" on public.games;
 
+drop policy if exists "user_settings_select_own" on public.user_settings;
+drop policy if exists "user_settings_insert_own" on public.user_settings;
+drop policy if exists "user_settings_update_own" on public.user_settings;
+drop policy if exists "user_settings_delete_own" on public.user_settings;
+
 -- 8. Secure ownership policies
 create policy "accounts_select_own" on public.accounts for select to authenticated using (auth.uid() = user_id);
 create policy "accounts_insert_own" on public.accounts for insert to authenticated with check (auth.uid() = user_id);
@@ -288,5 +304,10 @@ create policy "games_select_own" on public.games for select to authenticated usi
 create policy "games_insert_own" on public.games for insert to authenticated with check (auth.uid() = user_id);
 create policy "games_update_own" on public.games for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "games_delete_own" on public.games for delete to authenticated using (auth.uid() = user_id);
+
+create policy "user_settings_select_own" on public.user_settings for select to authenticated using (auth.uid() = user_id);
+create policy "user_settings_insert_own" on public.user_settings for insert to authenticated with check (auth.uid() = user_id);
+create policy "user_settings_update_own" on public.user_settings for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "user_settings_delete_own" on public.user_settings for delete to authenticated using (auth.uid() = user_id);
 
 commit;

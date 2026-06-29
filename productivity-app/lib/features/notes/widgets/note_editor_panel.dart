@@ -26,17 +26,27 @@ class NoteEditorPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final note = ref.watch(notesProvider.select((s) => s.selectedNote));
-    if (note == null) return const _EmptyEditorState();
-    return _NoteEditor(key: ValueKey(note.id), note: note);
+    final selectedNoteId = ref.watch(
+      notesProvider.select((s) => s.selectedNoteId),
+    );
+    if (selectedNoteId == null) return const _EmptyEditorState();
+
+    final noteExists = ref.watch(
+      notesProvider.select(
+        (s) => s.notes.any((note) => note.id == selectedNoteId),
+      ),
+    );
+    if (!noteExists) return const _EmptyEditorState();
+
+    return _NoteEditor(key: ValueKey(selectedNoteId), noteId: selectedNoteId);
   }
 }
 
 // --- Editor ---
 
 class _NoteEditor extends ConsumerStatefulWidget {
-  final Note note;
-  const _NoteEditor({required super.key, required this.note});
+  final String noteId;
+  const _NoteEditor({required super.key, required this.noteId});
 
   @override
   ConsumerState<_NoteEditor> createState() => _NoteEditorState();
@@ -52,16 +62,22 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.note.title);
-    _initController();
+    final note = _currentNote;
+    _titleController = TextEditingController(text: note?.title ?? '');
+    _initController(note?.content ?? '');
   }
 
-  void _initController() {
-    if (widget.note.content.isEmpty) {
+  Note? get _currentNote {
+    final notes = ref.read(notesProvider).notes;
+    return notes.where((note) => note.id == widget.noteId).firstOrNull;
+  }
+
+  void _initController(String content) {
+    if (content.isEmpty) {
       _controller = QuillController.basic();
     } else {
       try {
-        final json = jsonDecode(widget.note.content) as List<dynamic>;
+        final json = jsonDecode(content) as List<dynamic>;
         _controller = QuillController(
           document: Document.fromJson(json),
           selection: const TextSelection.collapsed(offset: 0),
@@ -98,7 +114,7 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
     await ref
         .read(notesProvider.notifier)
         .updateNote(
-          id: widget.note.id,
+          id: widget.noteId,
           title: _titleController.text,
           content: jsonEncode(_controller.document.toDelta().toJson()),
         );
@@ -161,7 +177,7 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
     if (!mounted || result == null) return;
     for (final file in result.files) {
       if (file.path == null) continue;
-      final destDir = await AppPaths.attachmentsDir(widget.note.id);
+      final destDir = await AppPaths.attachmentsDir(widget.noteId);
       await destDir.create(recursive: true);
       final ext = file.name.contains('.') ? file.name.split('.').last : '';
       final fileId = _uuid.v4();
@@ -188,11 +204,8 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
     final isPinned = ref.watch(
       notesProvider.select(
         (s) =>
-            s.notes
-                .where((n) => n.id == widget.note.id)
-                .firstOrNull
-                ?.isPinned ??
-            widget.note.isPinned,
+            s.notes.where((n) => n.id == widget.noteId).firstOrNull?.isPinned ??
+            false,
       ),
     );
 
@@ -227,7 +240,7 @@ class _NoteEditorState extends ConsumerState<_NoteEditor> {
               ),
               IconButton(
                 onPressed: () =>
-                    ref.read(notesProvider.notifier).togglePin(widget.note.id),
+                    ref.read(notesProvider.notifier).togglePin(widget.noteId),
                 icon: Icon(
                   isPinned ? Icons.push_pin : Icons.push_pin_outlined,
                   size: 18,
